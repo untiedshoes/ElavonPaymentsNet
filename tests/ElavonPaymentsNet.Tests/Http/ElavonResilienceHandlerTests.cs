@@ -9,6 +9,7 @@ namespace ElavonPaymentsNet.Tests.Http;
 ///
 /// These tests verify non-retry behavior and constructor validation.
 /// </summary>
+[Trait("Category", "Unit")]
 public sealed class ElavonResilienceHandlerTests
 {
     /// <summary>

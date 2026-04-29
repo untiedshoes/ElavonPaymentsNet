@@ -2,6 +2,7 @@ using ElavonHttp = ElavonPaymentsNet.Http;
 
 namespace ElavonPaymentsNet.Tests.Client;
 
+[Trait("Category", "Unit")]
 public class ElavonPaymentsClientTests
 {
     [Fact]

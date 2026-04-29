@@ -7,6 +7,7 @@ namespace ElavonPaymentsNet.Tests.Http;
 /// <summary>
 /// Unit tests focused on retry behavior for <see cref="ElavonResilienceHandler"/>.
 /// </summary>
+[Trait("Category", "Unit")]
 public sealed class ElavonResilienceHandlerRetryTests
 {
     /// <summary>

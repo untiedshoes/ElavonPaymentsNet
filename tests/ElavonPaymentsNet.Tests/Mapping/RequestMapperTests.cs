@@ -4,6 +4,7 @@ using ElavonPaymentsNet.Models.Public;
 
 namespace ElavonPaymentsNet.Tests.Mapping;
 
+[Trait("Category", "Unit")]
 public class RequestMapperTests
 {
     /// <summary>

@@ -466,8 +466,15 @@ tests/
 +-- ElavonPaymentsNet.Tests/
     +-- Client/
     |   +-- ElavonPaymentsClientTests.cs
+    +-- Http/
+    |   +-- ElavonResilienceHandlerTests.cs
+    |   +-- ElavonResilienceHandlerRetryTests.cs
+    |   +-- Fakes/
+    |       +-- FakeHttpMessageHandler.cs
     +-- Mapping/
-        +-- RequestMapperTests.cs
+    |   +-- RequestMapperTests.cs
+    +-- Services/
+        +-- ElavonServicesTests.cs
 ```
 
 The internal `ElavonApiClient` is the only class that touches `HttpClient`. Services are thin orchestrators: map request -> call `ElavonApiClient` -> return typed response. No logic leaks between layers.
@@ -513,8 +520,11 @@ Unit tests cover:
 - `ElavonPaymentsClient` constructor guard clauses -- blank credentials throw `ArgumentException`
 - Environment URL resolution -- sandbox and live base URLs resolve correctly
 - `ElavonResilienceHandler` -- retries GET transient faults only, never retries POST, no retry on 4xx
+- Service-layer orchestration -- verifies route, verb, auth mode, and core payload mapping across all service methods
 
 `InternalsVisibleTo` exposes internal mappers and DTOs to the test project -- mapping is verified directly without going through HTTP. No live API calls required.
+
+`FakeHttpMessageHandler` is used in HTTP and service unit tests to keep tests fast, deterministic, and isolated. It allows each test to simulate exact API responses, failures, and cancellation behavior through `HttpClient` without real network calls.
 
 ```bash
 dotnet test
@@ -543,11 +553,9 @@ Integration tests against the Opayo sandbox are planned for a future phase.
 
 ### Testing Gaps to Close
 
-- Unit tests: add missing service-level tests (all service methods and exception mapping edges)
 - Contract tests: validate SDK request/response JSON shapes against `docs/schema/*` and `docs/sdk-surface.yaml`
 - Integration tests: add sandbox-backed tests with environment-variable gating and explicit skip behavior when credentials are not configured
 - Smoke tests: add a minimal fast sanity suite for CI (SDK bootstrapping + one safe end-to-end API flow)
-- Test taxonomy: tag tests by category (`Unit`, `Contract`, `Integration`, `Smoke`) and split CI execution by category
 
 ---
 

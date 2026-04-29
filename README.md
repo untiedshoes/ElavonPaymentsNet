@@ -541,6 +541,14 @@ Integration tests against the Opayo sandbox are planned for a future phase.
 - Expanded 3DS metadata (SCA fields, exemption indicators)
 - NuGet package publication
 
+### Testing Gaps to Close
+
+- Unit tests: add missing service-level tests (all service methods and exception mapping edges)
+- Contract tests: validate SDK request/response JSON shapes against `docs/schema/*` and `docs/sdk-surface.yaml`
+- Integration tests: add sandbox-backed tests with environment-variable gating and explicit skip behavior when credentials are not configured
+- Smoke tests: add a minimal fast sanity suite for CI (SDK bootstrapping + one safe end-to-end API flow)
+- Test taxonomy: tag tests by category (`Unit`, `Contract`, `Integration`, `Smoke`) and split CI execution by category
+
 ---
 
 ## References

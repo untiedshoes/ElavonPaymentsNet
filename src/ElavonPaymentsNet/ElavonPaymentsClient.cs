@@ -51,8 +51,21 @@ public sealed class ElavonPaymentsClient
     /// sourced from <c>IHttpClientFactory</c> via dependency injection.
     /// </remarks>
     public ElavonPaymentsClient(ElavonPaymentsClientOptions options)
-        : this(options, new HttpClient { BaseAddress = new Uri(options.ApiBaseUrl), Timeout = options.Timeout })
+        : this(options, CreateHttpClient(options))
     { }
+
+    private static HttpClient CreateHttpClient(ElavonPaymentsClientOptions options)
+    {
+        var resilienceHandler = new ElavonResilienceHandler(options.MaxRetryAttempts)
+        {
+            InnerHandler = new HttpClientHandler()
+        };
+        return new HttpClient(resilienceHandler)
+        {
+            BaseAddress = new Uri(options.ApiBaseUrl),
+            Timeout = options.Timeout
+        };
+    }
 
     /// <summary>
     /// Initialises the client with a provided <see cref="HttpClient"/>.

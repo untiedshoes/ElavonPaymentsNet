@@ -1,3 +1,5 @@
+using ElavonHttp = ElavonPaymentsNet.Http;
+
 namespace ElavonPaymentsNet.Tests.Client;
 
 public class ElavonPaymentsClientTests
@@ -53,7 +55,7 @@ public class ElavonPaymentsClientTests
             IntegrationPassword = "p"
         };
 
-        Assert.Equal(Http.ElavonEnvironment.Sandbox, options.Environment);
+        Assert.Equal(ElavonHttp.ElavonEnvironment.Sandbox, options.Environment);
         Assert.Contains("sandbox", options.ApiBaseUrl, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -64,7 +66,7 @@ public class ElavonPaymentsClientTests
         {
             IntegrationKey = "k",
             IntegrationPassword = "p",
-            Environment = Http.ElavonEnvironment.Live
+            Environment = ElavonHttp.ElavonEnvironment.Live
         };
 
         Assert.Contains("live", options.ApiBaseUrl, StringComparison.OrdinalIgnoreCase);

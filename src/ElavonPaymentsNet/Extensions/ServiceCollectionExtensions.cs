@@ -21,11 +21,13 @@ public static class ServiceCollectionExtensions
         configure(builder);
         var builtOptions = builder.Build();
 
-        services.AddHttpClient(nameof(ElavonPaymentsClient), client =>
-        {
-            client.BaseAddress = new Uri(builtOptions.ApiBaseUrl);
-            client.Timeout = builtOptions.Timeout;
-        });
+        services
+            .AddHttpClient(nameof(ElavonPaymentsClient), client =>
+            {
+                client.BaseAddress = new Uri(builtOptions.ApiBaseUrl);
+                client.Timeout = builtOptions.Timeout;
+            })
+            .AddHttpMessageHandler(() => new ElavonResilienceHandler(builtOptions.MaxRetryAttempts));
 
         services.AddSingleton(builtOptions);
         services.AddSingleton<ElavonPaymentsClient>(sp =>
@@ -49,12 +51,14 @@ public sealed class ElavonPaymentsClientOptionsBuilder
     public string IntegrationPassword { get; set; } = string.Empty;
     public ElavonEnvironment Environment { get; set; } = ElavonEnvironment.Sandbox;
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
+    public int MaxRetryAttempts { get; set; } = 3;
 
     internal ElavonPaymentsClientOptions Build() => new()
     {
         IntegrationKey = IntegrationKey,
         IntegrationPassword = IntegrationPassword,
         Environment = Environment,
-        Timeout = Timeout
+        Timeout = Timeout,
+        MaxRetryAttempts = MaxRetryAttempts
     };
 }

@@ -29,6 +29,13 @@ public sealed class ElavonPaymentsClientOptions
     /// </summary>
     public TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(30);
 
+    /// <summary>
+    /// Maximum number of retry attempts after a transient failure on GET requests.
+    /// Only GET requests are retried — POST requests are never retried to prevent
+    /// duplicate financial operations. Defaults to 3. Must be between 1 and 10.
+    /// </summary>
+    public int MaxRetryAttempts { get; init; } = 3;
+
     internal string ApiBaseUrl => Environment switch
     {
         ElavonEnvironment.Live => "https://live.opayo.eu.elavon.com/api/v1",

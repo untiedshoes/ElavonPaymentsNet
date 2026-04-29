@@ -481,6 +481,34 @@ The internal `ElavonApiClient` is the only class that touches `HttpClient`. Serv
 
 ---
 
+## Design Decisions
+
+### Why this SDK has no domain validators
+
+The SDK intentionally does not validate request payloads before sending them to the API. This is a deliberate design choice, not an oversight.
+
+**1. Different responsibility boundary**  
+This SDK's job is transport orchestration — authentication, serialisation, routing, and error mapping. Domain validation belongs to an Application or Domain layer in the calling service. Mixing those concerns here would blur the SDK's responsibility.
+
+**2. Opayo is the canonical source of truth**  
+Required and conditional field rules are gateway-defined and change between API versions. Duplicating those rules locally risks drift: the SDK could reject requests the API would accept, or accept requests the API now rejects.
+
+**3. Avoid false negatives in a payment context**  
+Over-strict local validators can silently block valid transactions. In financial integrations a false rejection is a worse outcome than delegating validation to the provider and surfacing a typed `ElavonApiException` with the precise `ErrorCode`.
+
+**4. Stripe-style thin client**  
+The design follows the Stripe SDK model — typed request/response models with minimal client-side guard rails. Server-side validation is canonical; the SDK exposes errors precisely via `ErrorCode` and `RawResponse`.
+
+**When client-side guards are appropriate**  
+A small number of invariant guards are enforced — values that will never be valid under any Opayo configuration:
+
+- Blank/missing `IntegrationKey` or `IntegrationPassword` → `ArgumentException` at construction time  
+- Invalid `MaxRetryAttempts` range (outside 1–10) → `ArgumentOutOfRangeException` at handler construction  
+
+These are permanent SDK-level invariants, not gateway business rules.
+
+---
+
 ## Tech Stack
 
 | Concern | Choice |

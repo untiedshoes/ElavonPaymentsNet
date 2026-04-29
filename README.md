@@ -20,6 +20,7 @@ The design is intentionally Stripe-style: a single client entry point with named
 - Typed exception hierarchy so consumers can handle payment errors, auth failures, and API errors distinctly
 - Service interfaces (`IElavonTransactionService` etc.) enabling clean mocking in consumer test suites
 - Clean DI registration via `IHttpClientFactory` for production use
+- Safe-by-default transient fault handling in the HTTP infrastructure layer only
 - Unit testing of mappers and client guard clauses without a live API
 
 ---
@@ -34,6 +35,8 @@ The design is intentionally Stripe-style: a single client entry point with named
 - Public interfaces on all service groups for consumer-side mocking
 - First-class `CancellationToken` support on all async operations
 - DI-friendly: register once via `services.AddElavonPayments(...)` using `IHttpClientFactory`
+- Polly-based retry policy in a central HTTP delegating handler (`ElavonResilienceHandler`)
+- Automatic retries are GET-only; POST operations are never retried to avoid duplicate financial side effects
 - Direct instantiation supported for console or scripting use cases
 - Target framework: `net10.0`
 
@@ -193,7 +196,7 @@ var result = await client.Transactions.CreateTransactionAsync(new CreateTransact
             CardNumber     = "4929000000006",
             ExpiryDate     = "1229",
             SecurityCode   = "123",
-            CardholderName = "Jane Smith"
+            CardholderName = "Craig Richards"
         }
     },
     BillingAddress = new BillingAddress
@@ -299,6 +302,38 @@ catch (ElavonApiException ex)
 
 ---
 
+## Resilience and Retry Safety
+
+Retry behavior is implemented in one place only: the HTTP infrastructure layer (`ElavonResilienceHandler`).
+It is not implemented in services, models, or public SDK methods.
+
+### Current retry policy
+
+- Retry scope: GET requests only
+- Retries up to 3 attempts after initial failure (`MaxRetryAttempts`, default `3`)
+- Backoff: exponential with jitter
+- Retries on:
+    - `HttpRequestException`
+    - `TaskCanceledException` (timeout)
+    - `5xx` HTTP responses
+- No retries on `4xx` HTTP responses
+
+### Why POST is never retried
+
+This SDK performs financial operations (payment, capture, refund, void, instruction, tokenisation) via POST endpoints.
+Automatically retrying those calls can create duplicate side effects if the first request reached Opayo but the response was lost.
+
+### Why no idempotency keys
+
+The Opayo PI REST API does not currently provide an `Idempotency-Key` request-header contract comparable to Stripe.
+Without a provider-enforced idempotency key guarantee, retrying POST is not considered safe.
+
+Decision rule used by the SDK:
+
+> Prefer not retrying over risking duplicate financial operations.
+
+---
+
 ## SDK Service Reference
 
 All methods are `async` and accept a `CancellationToken`. Each service group has a corresponding interface.
@@ -392,6 +427,7 @@ src/
     +-- ElavonPaymentsClientOptions.cs       # Configuration (key, password, environment, timeout)
     +-- Http/
     |   +-- ElavonApiClient.cs               # All HTTP, auth, serialisation, error mapping (internal)
+    |   +-- ElavonResilienceHandler.cs       # Central retry policy (GET-only, safe-by-default)
     |   +-- ElavonEnvironment.cs             # Sandbox / Live enum
     +-- Interfaces/
     |   +-- IElavonTransactionService.cs
@@ -476,6 +512,7 @@ Unit tests cover:
 - `RequestMapper` -- transactionType injection for all four `TransactionType` values, token wrapping, billing address mapping
 - `ElavonPaymentsClient` constructor guard clauses -- blank credentials throw `ArgumentException`
 - Environment URL resolution -- sandbox and live base URLs resolve correctly
+- `ElavonResilienceHandler` -- retries GET transient faults only, never retries POST, no retry on 4xx
 
 `InternalsVisibleTo` exposes internal mappers and DTOs to the test project -- mapping is verified directly without going through HTTP. No live API calls required.
 
@@ -500,7 +537,6 @@ Integration tests against the Opayo sandbox are planned for a future phase.
 ## Roadmap
 
 - Integration tests against the Opayo sandbox
-- Retry and transient-fault handling (configurable via `ElavonPaymentsClientOptions`)
 - `RetrieveTransactionAsync` -- fetch a transaction by ID
 - Expanded 3DS metadata (SCA fields, exemption indicators)
 - NuGet package publication

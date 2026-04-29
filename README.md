@@ -1,6 +1,6 @@
 # ElavonPaymentsNet
 
-[![CI](https://img.shields.io/github/actions/workflow/status/untiedshoes/ElavonPaymentsNet/ci.yml?label=CI)](https://github.com/untiedshoes/ElavonPaymentsNet/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/untiedshoes/ElavonPaymentsNet/dotnet.yml?label=CI)](https://github.com/untiedshoes/ElavonPaymentsNet/actions)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 [![License](https://img.shields.io/github/license/untiedshoes/ElavonPaymentsNet)](LICENSE)
 

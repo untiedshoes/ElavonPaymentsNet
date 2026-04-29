@@ -1,0 +1,7 @@
+{
+    "card": {
+        "cardNumber": "string",
+        "expiryDate": "MMYY",
+        "securityCode": "string"
+    }
+}

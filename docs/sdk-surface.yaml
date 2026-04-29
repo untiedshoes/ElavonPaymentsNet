@@ -1,0 +1,287 @@
+sdk:
+  name: ElavonPaymentsNet
+  version: 1.0.0
+  baseNamespace: ElavonPaymentsNet
+
+environments:
+  sandbox:
+    apiHost: https://sandbox.opayo.eu.elavon.com/api/v1
+    merchantSessionHost: https://sandbox.opayo.eu.elavon.com/api/v1
+  live:
+    apiHost: https://live.opayo.eu.elavon.com/api/v1
+    merchantSessionHost: https://live.opayo.eu.elavon.com/api/v1
+
+hosts:
+  api:
+    description: Core transaction API
+  merchantSession:
+    description: Merchant session key + wallet flows
+
+---
+
+operations:
+
+  # ============================================
+  # PAYMENTS
+  # ============================================
+
+  createPayment:
+    group: Payments
+    method: POST
+    path: /transactions
+    host: api
+
+    dto:
+      request: CreatePaymentRequestDto
+      response: CreatePaymentResponseDto
+
+    schema:
+      request: docs/schema/transactions/create-payment.request.json
+      response: docs/schema/transactions/create-payment.response.json
+
+    validation:
+      required:
+        - amount
+        - currency
+        - vendorTxCode
+        - transactionType
+        - paymentMethod
+
+  authorisePayment:
+    group: Payments
+    method: POST
+    path: /transactions
+    host: api
+
+    dto:
+      request: AuthorisePaymentRequestDto
+      response: AuthorisePaymentResponseDto
+
+    schema:
+      request: docs/schema/transactions/authorise-payment.request.json
+      response: docs/schema/transactions/authorise-payment.response.json
+
+  repeatPayment:
+    group: Payments
+    method: POST
+    path: /transactions
+    host: api
+
+    dto:
+      request: RepeatPaymentRequestDto
+      response: RepeatPaymentResponseDto
+
+    schema:
+      request: docs/schema/transactions/repeat-payment.request.json
+      response: docs/schema/transactions/repeat-payment.response.json
+
+  deferredPayment:
+    group: Payments
+    method: POST
+    path: /transactions
+    host: api
+
+    dto:
+      request: DeferredPaymentRequestDto
+      response: DeferredPaymentResponseDto
+
+    schema:
+      request: docs/schema/transactions/deferred-payment.request.json
+      response: docs/schema/transactions/deferred-payment.response.json
+
+---
+
+  # ============================================
+  # POST PAYMENT OPERATIONS
+  # ============================================
+
+  capturePayment:
+    group: PostPayment
+    method: POST
+    path: /transactions/{transactionId}/capture
+    host: api
+
+    dto:
+      request: CapturePaymentRequestDto
+      response: CapturePaymentResponseDto
+
+    schema:
+      request: docs/schema/postpayment/capture.request.json
+      response: docs/schema/postpayment/capture.response.json
+
+  refundPayment:
+    group: PostPayment
+    method: POST
+    path: /transactions/{transactionId}/refund
+    host: api
+
+    dto:
+      request: RefundPaymentRequestDto
+      response: RefundPaymentResponseDto
+
+    schema:
+      request: docs/schema/postpayment/refund.request.json
+      response: docs/schema/postpayment/refund.response.json
+
+  voidPayment:
+    group: PostPayment
+    method: POST
+    path: /transactions/{transactionId}/void
+    host: api
+
+    dto:
+      request: VoidPaymentRequestDto
+      response: VoidPaymentResponseDto
+
+    schema:
+      request: docs/schema/postpayment/void.request.json
+      response: docs/schema/postpayment/void.response.json
+
+---
+
+  # ============================================
+  # 3D SECURE
+  # ============================================
+
+  initialise3DS:
+    group: ThreeDS
+    method: POST
+    path: /transactions/{transactionId}/3d-secure
+    host: api
+
+    dto:
+      request: Initialise3DsRequestDto
+      response: Initialise3DsResponseDto
+
+    schema:
+      request: docs/schema/threeds/initialise.request.json
+      response: docs/schema/threeds/initialise.response.json
+
+  complete3DS:
+    group: ThreeDS
+    method: POST
+    path: /transactions/{transactionId}/3d-secure/complete
+    host: api
+
+    dto:
+      request: Complete3DsRequestDto
+      response: Complete3DsResponseDto
+
+    schema:
+      request: docs/schema/threeds/complete.request.json
+      response: docs/schema/threeds/complete.response.json
+
+---
+
+  # ============================================
+  # TOKENS
+  # ============================================
+
+  createToken:
+    group: Tokens
+    method: POST
+    path: /token
+    host: api
+
+    dto:
+      request: CreateTokenRequestDto
+      response: CreateTokenResponseDto
+
+    schema:
+      request: docs/schema/tokens/create-token.request.json
+      response: docs/schema/tokens/create-token.response.json
+
+  payWithToken:
+    group: Tokens
+    method: POST
+    path: /transactions
+    host: api
+
+    dto:
+      request: PayWithTokenRequestDto
+      response: PayWithTokenResponseDto
+
+    schema:
+      request: docs/schema/tokens/pay-with-token.request.json
+      response: docs/schema/tokens/pay-with-token.response.json
+
+---
+
+  # ============================================
+  # MERCHANT SESSION / APPLE PAY
+  # ============================================
+
+  createMerchantSession:
+    group: Wallets
+    method: POST
+    path: /merchant-session-keys
+    host: merchantSession
+
+    dto:
+      request: MerchantSessionRequestDto
+      response: MerchantSessionResponseDto
+
+    schema:
+      request: docs/schema/wallets/merchant-session.request.json
+      response: docs/schema/wallets/merchant-session.response.json
+
+  validateMerchantSession:
+    group: Wallets
+    method: POST
+    path: /merchant-session-keys/validation
+    host: merchantSession
+
+    dto:
+      request: MerchantSessionValidationRequestDto
+      response: MerchantSessionValidationResponseDto
+
+    schema:
+      request: docs/schema/wallets/merchant-session-validation.request.json
+      response: docs/schema/wallets/merchant-session-validation.response.json
+
+  createApplePaySession:
+    group: Wallets
+    method: POST
+    path: /applepay/session
+    host: merchantSession
+
+    dto:
+      request: ApplePaySessionRequestDto
+      response: ApplePaySessionResponseDto
+
+    schema:
+      request: docs/schema/wallets/applepay-session.request.json
+      response: docs/schema/wallets/applepay-session.response.json
+
+---
+
+# ============================================
+# VALIDATION MATRIX (DRIVES VALIDATORS)
+# ============================================
+
+validationProfiles:
+
+  payment:
+    rules:
+      - amount > 0
+      - currency length == 3
+      - vendorTxCode not empty
+
+  refund:
+    rules:
+      - amount > 0
+      - relatedTransactionId required
+
+  capture:
+    rules:
+      - transactionId required
+      - amount > 0
+
+  token:
+    rules:
+      - card details OR token required
+
+  threeDS:
+    rules:
+      - transactionId required
+      - acsUrl required for challenge flows

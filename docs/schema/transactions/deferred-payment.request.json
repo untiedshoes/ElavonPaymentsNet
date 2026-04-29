@@ -1,0 +1,12 @@
+{
+    "transactionType": "Deferred",
+    "vendorTxCode": "string",
+    "amount": 0,
+    "currency": "GBP",
+    "paymentMethod": {
+        "card": {
+            "cardNumber": "string",
+            "expiryDate": "MMYY"
+        }
+    }
+}

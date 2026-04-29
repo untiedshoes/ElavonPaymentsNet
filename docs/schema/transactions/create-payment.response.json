@@ -1,0 +1,9 @@
+{
+    "transactionId": "string",
+    "status": "Ok",
+    "statusCode": 0,
+    "statusDetail": "string",
+    "3DSecure": {
+        "status": "NotRequired"
+    }
+}

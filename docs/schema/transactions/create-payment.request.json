@@ -1,0 +1,22 @@
+{
+    "transactionType": "Payment",
+    "vendorTxCode": "string",
+    "amount": 0,
+    "currency": "GBP",
+    "description": "string",
+    "paymentMethod": {
+        "card": {
+            "cardNumber": "string",
+            "expiryDate": "MMYY",
+            "securityCode": "string",
+            "cardholderName": "string"
+        }
+    },
+    "billingAddress": {
+        "address1": "string",
+        "city": "string",
+        "postalCode": "string",
+        "country": "GB"
+    },
+    "customerEmail": "string"
+}

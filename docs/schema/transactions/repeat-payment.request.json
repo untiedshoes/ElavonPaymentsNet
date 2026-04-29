@@ -1,0 +1,7 @@
+{
+    "transactionType": "Repeat",
+    "vendorTxCode": "string",
+    "amount": 0,
+    "currency": "GBP",
+    "relatedTransactionId": "string"
+}

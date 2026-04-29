@@ -338,7 +338,7 @@ Decision rule used by the SDK:
 
 All methods are `async` and accept a `CancellationToken`. Each service group has a corresponding interface.
 
-### `client.Transactions` -- `IElavonTransactionService`
+## `client.Transactions` -- `IElavonTransactionService`
 
 | Method | Description |
 |---|---|
@@ -348,7 +348,7 @@ Returns `PaymentResponse` -- `TransactionId`, `Status`, `StatusCode`, `StatusDet
 
 ---
 
-### `client.PostPayments` -- `IElavonPostPaymentService`
+## `client.PostPayments` -- `IElavonPostPaymentService`
 
 | Method | Description |
 |---|---|
@@ -360,7 +360,7 @@ Returns `PostPaymentResponse` -- `TransactionId`, `Status`.
 
 ---
 
-### `client.Instructions` -- `IElavonInstructionsService`
+## `client.Instructions` -- `IElavonInstructionsService`
 
 | Method | Description |
 |---|---|
@@ -372,7 +372,7 @@ Returns `InstructionResponse` -- `InstructionType`, `Date`.
 
 ---
 
-### `client.ThreeDs` -- `IElavonThreeDsService`
+## `client.ThreeDs` -- `IElavonThreeDsService`
 
 | Method | Description |
 |---|---|
@@ -384,7 +384,7 @@ Returns `InstructionResponse` -- `InstructionType`, `Date`.
 
 ---
 
-### `client.Tokens` -- `IElavonTokensService`
+## `client.Tokens` -- `IElavonTokensService`
 
 | Method | Description |
 |---|---|
@@ -396,7 +396,7 @@ Returns `InstructionResponse` -- `InstructionType`, `Date`.
 
 ---
 
-### `client.Wallets` -- `IElavonWalletsService`
+## `client.Wallets` -- `IElavonWalletsService`
 
 | Method | Description |
 |---|---|
@@ -406,7 +406,7 @@ Returns `InstructionResponse` -- `InstructionType`, `Date`.
 
 ---
 
-### `client.CardIdentifiers` -- `IElavonCardIdentifiersService`
+## `client.CardIdentifiers` -- `IElavonCardIdentifiersService`
 
 | Method | Description |
 |---|---|
@@ -540,6 +540,37 @@ dotnet test
 
 ---
 
+## Playground (Sandbox Purchase)
+
+A standalone user-style playground is available outside the SDK source in `playground/ElavonPaymentsNet.Playground`.
+It references the SDK project and exercises a real purchase call through `ElavonPaymentsClient`.
+
+### Configure environment variables
+
+```bash
+export ELAVON_INTEGRATION_KEY="your-sandbox-integration-key"
+export ELAVON_INTEGRATION_PASSWORD="your-sandbox-integration-password"
+
+# Optional overrides (defaults are set in Program.cs)
+export ELAVON_TEST_CARD_NUMBER="4929000000006"
+export ELAVON_TEST_CARD_EXPIRY="1229"
+export ELAVON_TEST_CARD_CVV="123"
+export ELAVON_TEST_CARDHOLDER="Sandbox Tester"
+```
+
+### Run playground purchase test
+
+```bash
+dotnet run --project playground/ElavonPaymentsNet.Playground/ElavonPaymentsNet.Playground.csproj
+```
+
+Useful references:
+
+- Sandbox accounts: https://developer.elavon.com/products/en-uk/opayo/v1/api-reference#tag/Sandbox-Accounts
+- Test cards: https://developer.elavon.com/products/en-uk/opayo/v1/api-reference#tag/Test-Card-Details
+
+---
+
 ## Testing
 
 Unit tests cover:
@@ -578,6 +609,21 @@ Integration tests against the Opayo sandbox are planned for a future phase.
 - `RetrieveTransactionAsync` -- fetch a transaction by ID
 - Expanded 3DS metadata (SCA fields, exemption indicators)
 - NuGet package publication
+
+### Playground Coverage to Add
+
+#### Phase 1 (Core Post-Payment Flows)
+
+- Scenario presets: terminal menu for common sandbox test-card outcomes
+- Capture flow: authorise/deferred payment then `CaptureTransactionAsync`
+- Refund flow: create payment then `RefundTransactionAsync` (full and partial)
+- Void flow: create payment then `VoidTransactionAsync` before settlement
+
+#### Phase 2 (Advanced Flows)
+
+- 3DS playground script: `Initialise3DsAsync` and `Complete3DsAsync` path testing
+- Token flow playground: `CreateTokenAsync` then `PayWithTokenAsync`
+- Card identifier playground: `CreateMerchantSessionKeyAsync` + `CreateCardIdentifierAsync` + payment with token
 
 ### Testing Gaps to Close
 

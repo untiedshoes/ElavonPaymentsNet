@@ -5,4 +5,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/ElavonPaymentsNet.Tests/ElavonPaymentsNet.Tests.csproj" />
   </Folder>
+  <Folder Name="/playground/">
+    <Project Path="playground/ElavonPaymentsNet.Playground/ElavonPaymentsNet.Playground.csproj" />
+  </Folder>
 </Solution>

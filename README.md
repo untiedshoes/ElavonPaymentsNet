@@ -494,7 +494,7 @@ This SDK's job is transport orchestration — authentication, serialisation, rou
 Required and conditional field rules are gateway-defined and change between API versions. Duplicating those rules locally risks drift: the SDK could reject requests the API would accept, or accept requests the API now rejects.
 
 **3. Avoid false negatives in a payment context**  
-Over-strict local validators can silently block valid transactions. In financial integrations a false rejection is a worse outcome than delegating validation to the provider and surfacing a typed `ElavonApiException` with the precise `ErrorCode`.
+Over-strict local validators can silently block valid transactions. In financial integrations a false rejection is a worse outcome than delegating validation to the provider and surfacing a typed `ElavonApiException` with the precise `ErrorCode`. Nobody wants to be debugging a silent SDK rejection at 2am, only to discover the gateway would have happily accepted the request all along.
 
 **4. Stripe-style thin client**  
 The design follows the Stripe SDK model — typed request/response models with minimal client-side guard rails. Server-side validation is canonical; the SDK exposes errors precisely via `ErrorCode` and `RawResponse`.

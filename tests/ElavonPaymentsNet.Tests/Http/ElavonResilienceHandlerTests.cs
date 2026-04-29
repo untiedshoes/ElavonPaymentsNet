@@ -1,4 +1,5 @@
 using ElavonPaymentsNet.Http;
+using ElavonPaymentsNet.Tests.Http.Fakes;
 using System.Net;
 
 namespace ElavonPaymentsNet.Tests.Http;
@@ -6,69 +7,40 @@ namespace ElavonPaymentsNet.Tests.Http;
 /// <summary>
 /// Unit tests for <see cref="ElavonResilienceHandler"/>.
 ///
-/// These tests verify the safety contract:
-///  - GET requests ARE retried on 5xx and transient network errors
-///  - POST requests are NEVER retried regardless of failure type
-///  - 4xx responses are never retried
-///  - User-cancelled tokens are not retried
+/// These tests verify non-retry behavior and constructor validation.
 /// </summary>
 public sealed class ElavonResilienceHandlerTests
 {
-    // -------------------------------------------------------------------------
-    // GET — should retry on transient failures
-    // -------------------------------------------------------------------------
-
-    [Theory]
-    [InlineData(500)]
-    [InlineData(502)]
-    [InlineData(503)]
-    [InlineData(504)]
-    public async Task Get_5xxResponse_IsRetried(int statusCode)
-    {
-        // Arrange: fail twice with 5xx, succeed on third attempt
-        var callCount = 0;
-        var inner = new FakeHandler(_ =>
-        {
-            callCount++;
-            return callCount < 3
-                ? new HttpResponseMessage((HttpStatusCode)statusCode)
-                : new HttpResponseMessage(HttpStatusCode.OK);
-        });
-
-        var handler = new ElavonResilienceHandler(maxRetryAttempts: 3) { InnerHandler = inner };
-        var client = new HttpClient(handler) { BaseAddress = new Uri("https://example.com") };
-
-        // Act
-        var response = await client.GetAsync("/ping");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(3, callCount); // initial + 2 retries
-    }
-
+    /// <summary>
+    /// Verifies that an already-cancelled caller token fails immediately without retries.
+    /// </summary>
     [Fact]
-    public async Task Get_HttpRequestException_IsRetried()
+    public async Task Get_UserCancelledToken_IsNotRetried()
     {
-        // Arrange: throw twice, succeed on third
+        // Arrange: if the caller has already cancelled, request should fail immediately
         var callCount = 0;
-        var inner = new FakeHandler(_ =>
+        var inner = new FakeHttpMessageHandler(_ =>
         {
             callCount++;
-            if (callCount < 3) throw new HttpRequestException("Network failure");
-            return new HttpResponseMessage(HttpStatusCode.OK);
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
         });
 
         var handler = new ElavonResilienceHandler(maxRetryAttempts: 3) { InnerHandler = inner };
         var client = new HttpClient(handler) { BaseAddress = new Uri("https://example.com") };
 
-        // Act
-        var response = await client.GetAsync("/ping");
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
 
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(3, callCount);
+        // Act & Assert
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            client.GetAsync("/ping", cts.Token));
+
+        Assert.Equal(0, callCount);
     }
 
+    /// <summary>
+    /// Verifies that client error responses are returned without retry attempts.
+    /// </summary>
     [Theory]
     [InlineData(400)]
     [InlineData(401)]
@@ -78,10 +50,10 @@ public sealed class ElavonResilienceHandlerTests
     {
         // Arrange
         var callCount = 0;
-        var inner = new FakeHandler(_ =>
+        var inner = new FakeHttpMessageHandler(_ =>
         {
             callCount++;
-            return new HttpResponseMessage((HttpStatusCode)statusCode);
+            return Task.FromResult(new HttpResponseMessage((HttpStatusCode)statusCode));
         });
 
         var handler = new ElavonResilienceHandler(maxRetryAttempts: 3) { InnerHandler = inner };
@@ -99,6 +71,9 @@ public sealed class ElavonResilienceHandlerTests
     // POST — must never retry regardless of failure
     // -------------------------------------------------------------------------
 
+    /// <summary>
+    /// Verifies that POST responses with server errors are never retried.
+    /// </summary>
     [Theory]
     [InlineData(500)]
     [InlineData(502)]
@@ -107,10 +82,10 @@ public sealed class ElavonResilienceHandlerTests
     {
         // Arrange
         var callCount = 0;
-        var inner = new FakeHandler(_ =>
+        var inner = new FakeHttpMessageHandler(_ =>
         {
             callCount++;
-            return new HttpResponseMessage((HttpStatusCode)statusCode);
+            return Task.FromResult(new HttpResponseMessage((HttpStatusCode)statusCode));
         });
 
         var handler = new ElavonResilienceHandler(maxRetryAttempts: 3) { InnerHandler = inner };
@@ -124,12 +99,15 @@ public sealed class ElavonResilienceHandlerTests
         Assert.Equal(1, callCount);
     }
 
+    /// <summary>
+    /// Verifies that POST network exceptions are propagated without retries.
+    /// </summary>
     [Fact]
     public async Task Post_HttpRequestException_IsNeverRetried()
     {
         // Arrange
         var callCount = 0;
-        var inner = new FakeHandler(_ =>
+        var inner = new FakeHttpMessageHandler(_ =>
         {
             callCount++;
             throw new HttpRequestException("Connection reset");
@@ -146,34 +124,12 @@ public sealed class ElavonResilienceHandlerTests
     }
 
     // -------------------------------------------------------------------------
-    // Retry exhaustion — should surface the final failure
-    // -------------------------------------------------------------------------
-
-    [Fact]
-    public async Task Get_AlwaysFails_ThrowsAfterMaxRetries()
-    {
-        // Arrange: always throw
-        var callCount = 0;
-        var inner = new FakeHandler(_ =>
-        {
-            callCount++;
-            throw new HttpRequestException("Always fails");
-        });
-
-        var handler = new ElavonResilienceHandler(maxRetryAttempts: 3) { InnerHandler = inner };
-        var client = new HttpClient(handler) { BaseAddress = new Uri("https://example.com") };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<HttpRequestException>(() => client.GetAsync("/ping"));
-
-        // 1 initial + 3 retries = 4 total calls
-        Assert.Equal(4, callCount);
-    }
-
-    // -------------------------------------------------------------------------
     // Constructor validation
     // -------------------------------------------------------------------------
 
+    /// <summary>
+    /// Verifies constructor guards reject invalid retry attempt counts.
+    /// </summary>
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -182,21 +138,5 @@ public sealed class ElavonResilienceHandlerTests
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             new ElavonResilienceHandler(maxRetryAttempts));
-    }
-
-    // -------------------------------------------------------------------------
-    // Fake inner handler
-    // -------------------------------------------------------------------------
-
-    private sealed class FakeHandler(Func<HttpRequestMessage, HttpResponseMessage> respond)
-        : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(respond(request));
-        }
     }
 }

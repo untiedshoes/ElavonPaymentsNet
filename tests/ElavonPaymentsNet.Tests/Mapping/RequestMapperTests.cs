@@ -6,6 +6,9 @@ namespace ElavonPaymentsNet.Tests.Mapping;
 
 public class RequestMapperTests
 {
+    /// <summary>
+    /// Verifies that a payment transaction request maps all core fields and card details.
+    /// </summary>
     [Fact]
     public void CreateTransactionRequest_Payment_MapsTransactionType()
     {
@@ -42,6 +45,9 @@ public class RequestMapperTests
         Assert.Equal("Test User", dto.PaymentMethod.Card.CardholderName);
     }
 
+    /// <summary>
+    /// Verifies that an authorise transaction maps to the expected transaction type.
+    /// </summary>
     [Fact]
     public void CreateTransactionRequest_Authorise_MapsTransactionType()
     {
@@ -63,6 +69,9 @@ public class RequestMapperTests
         Assert.Equal("TX-002", dto.VendorTxCode);
     }
 
+    /// <summary>
+    /// Verifies that a deferred transaction maps to the expected transaction type.
+    /// </summary>
     [Fact]
     public void CreateTransactionRequest_Deferred_MapsTransactionType()
     {
@@ -83,6 +92,9 @@ public class RequestMapperTests
         Assert.Equal("Deferred", dto.TransactionType);
     }
 
+    /// <summary>
+    /// Verifies that a repeat transaction maps the related transaction identifier.
+    /// </summary>
     [Fact]
     public void CreateTransactionRequest_Repeat_MapsTransactionType()
     {
@@ -101,6 +113,9 @@ public class RequestMapperTests
         Assert.Equal("original-tx-id", dto.RelatedTransactionId);
     }
 
+    /// <summary>
+    /// Verifies that billing address fields are mapped correctly to the DTO.
+    /// </summary>
     [Fact]
     public void CreateTransactionRequest_WithBillingAddress_MapsAllAddressFields()
     {
@@ -133,6 +148,9 @@ public class RequestMapperTests
         Assert.Equal("GB", dto.BillingAddress.Country);
     }
 
+    /// <summary>
+    /// Verifies that pay-with-token requests map the token into payment method and omit card details.
+    /// </summary>
     [Fact]
     public void PayWithTokenRequest_MapsTokenIntoPaymentMethod()
     {

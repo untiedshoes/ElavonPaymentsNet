@@ -24,6 +24,7 @@ internal sealed class ElavonCardIdentifiersService : IElavonCardIdentifiersServi
     /// </summary>
     /// <param name="merchantSessionKey">A valid MSK obtained from <c>client.Wallets.CreateMerchantSessionKeyAsync</c>.</param>
     /// <param name="request">The card details to tokenise.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<CreateCardIdentifierResponse> CreateCardIdentifierAsync(string merchantSessionKey,CreateCardIdentifierRequest request,CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<CreateCardIdentifierRequest, CreateCardIdentifierResponse>(
@@ -37,6 +38,7 @@ internal sealed class ElavonCardIdentifiersService : IElavonCardIdentifiersServi
     /// </summary>
     /// <param name="cardIdentifier">The card identifier token returned by <see cref="CreateCardIdentifierAsync"/>.</param>
     /// <param name="request">The security code to link.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task LinkCardIdentifierAsync(string cardIdentifier,LinkCardIdentifierRequest request,CancellationToken cancellationToken = default)
     {
         await _api.SendVoidAsync<LinkCardIdentifierRequest>(

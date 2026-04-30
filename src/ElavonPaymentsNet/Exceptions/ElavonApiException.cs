@@ -16,6 +16,10 @@ public class ElavonApiException : Exception
     /// <summary>A machine-readable error code from the API response, if available.</summary>
     public string? ErrorCode { get; }
 
+    /// <summary>Initialises a new instance of <see cref="ElavonApiException"/>.</summary>
+    /// <param name="statusCode">The HTTP status code returned by the API.</param>
+    /// <param name="rawResponse">The raw response body, if available.</param>
+    /// <param name="errorCode">A machine-readable error code from the API response, if available.</param>
     public ElavonApiException(System.Net.HttpStatusCode statusCode, string? rawResponse, string? errorCode = null)
         : base(BuildMessage(statusCode, errorCode))
     {
@@ -24,6 +28,11 @@ public class ElavonApiException : Exception
         ErrorCode = errorCode;
     }
 
+    /// <summary>Initialises a new instance of <see cref="ElavonApiException"/> with an inner exception.</summary>
+    /// <param name="statusCode">The HTTP status code returned by the API.</param>
+    /// <param name="rawResponse">The raw response body, if available.</param>
+    /// <param name="errorCode">A machine-readable error code from the API response, if available.</param>
+    /// <param name="innerException">The exception that caused this exception.</param>
     public ElavonApiException(System.Net.HttpStatusCode statusCode, string? rawResponse, string? errorCode, Exception innerException)
         : base(BuildMessage(statusCode, errorCode), innerException)
     {

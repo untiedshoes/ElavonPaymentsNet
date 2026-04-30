@@ -16,6 +16,10 @@ public sealed class ElavonRateLimitException : ElavonApiException
     /// </summary>
     public TimeSpan? RetryAfter { get; }
 
+    /// <summary>Initialises a new instance of <see cref="ElavonRateLimitException"/>.</summary>
+    /// <param name="rawResponse">The raw response body, if available.</param>
+    /// <param name="errorCode">A machine-readable error code from the API response, if available.</param>
+    /// <param name="retryAfter">Parsed value of the <c>Retry-After</c> response header, if present.</param>
     public ElavonRateLimitException(string? rawResponse, string? errorCode = null, TimeSpan? retryAfter = null)
         : base(System.Net.HttpStatusCode.TooManyRequests, rawResponse, errorCode)
     {

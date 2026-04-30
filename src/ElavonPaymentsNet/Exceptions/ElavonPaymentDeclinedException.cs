@@ -9,6 +9,9 @@ namespace ElavonPaymentsNet.Exceptions;
 /// </summary>
 public sealed class ElavonPaymentDeclinedException : ElavonApiException
 {
+    /// <summary>Initialises a new instance of <see cref="ElavonPaymentDeclinedException"/>.</summary>
+    /// <param name="rawResponse">The raw response body, if available.</param>
+    /// <param name="errorCode">A machine-readable decline code from the API response, if available.</param>
     public ElavonPaymentDeclinedException(string? rawResponse, string? errorCode = null)
         : base(System.Net.HttpStatusCode.PaymentRequired, rawResponse, errorCode) { }
 }

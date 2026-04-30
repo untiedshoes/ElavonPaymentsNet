@@ -51,10 +51,15 @@ public static class ServiceCollectionExtensions
 /// </summary>
 public sealed class ElavonPaymentsClientOptionsBuilder
 {
+    /// <summary>The integration key (vendor name) issued by Elavon.</summary>
     public string IntegrationKey { get; set; } = string.Empty;
+    /// <summary>The integration password issued by Elavon.</summary>
     public string IntegrationPassword { get; set; } = string.Empty;
+    /// <summary>The target environment. Defaults to <see cref="ElavonEnvironment.Sandbox"/>.</summary>
     public ElavonEnvironment Environment { get; set; } = ElavonEnvironment.Sandbox;
+    /// <summary>HTTP request timeout. Defaults to 30 seconds.</summary>
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
+    /// <summary>Maximum number of retry attempts for eligible GET requests. Defaults to 3.</summary>
     public int MaxRetryAttempts { get; set; } = 3;
 
     internal ElavonPaymentsClientOptions Build()

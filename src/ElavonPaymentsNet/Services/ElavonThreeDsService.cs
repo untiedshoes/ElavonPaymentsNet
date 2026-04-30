@@ -24,6 +24,7 @@ internal sealed class ElavonThreeDsService : IElavonThreeDsService
     /// </summary>
     /// <param name="transactionId">The Elavon transaction ID requiring 3DS.</param>
     /// <param name="request">The 3DS initialise request containing the notification URL.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<Initialise3DsResponse> Initialise3DsAsync(string transactionId, Initialise3DsRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<Initialise3DsRequest, Initialise3DsResponse>(
@@ -36,6 +37,7 @@ internal sealed class ElavonThreeDsService : IElavonThreeDsService
     /// </summary>
     /// <param name="transactionId">The Elavon transaction ID.</param>
     /// <param name="request">The completion request containing the CRes value.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<Complete3DsResponse> Complete3DsAsync(string transactionId, Complete3DsRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<Complete3DsRequest, Complete3DsResponse>(

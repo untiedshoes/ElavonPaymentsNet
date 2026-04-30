@@ -15,10 +15,11 @@ public sealed class ElavonValidationException : ElavonApiException
     /// </summary>
     public IReadOnlyList<ElavonValidationError>? ValidationErrors { get; }
 
-    public ElavonValidationException(
-        string? rawResponse,
-        string? errorCode = null,
-        IReadOnlyList<ElavonValidationError>? validationErrors = null)
+    /// <summary>Initialises a new instance of <see cref="ElavonValidationException"/>.</summary>
+    /// <param name="rawResponse">The raw response body, if available.</param>
+    /// <param name="errorCode">A machine-readable error code from the API response, if available.</param>
+    /// <param name="validationErrors">Per-field validation failures returned by the API, if available.</param>
+    public ElavonValidationException(string? rawResponse, string? errorCode = null, IReadOnlyList<ElavonValidationError>? validationErrors = null)
         : base(System.Net.HttpStatusCode.BadRequest, rawResponse, errorCode)
     {
         ValidationErrors = validationErrors;

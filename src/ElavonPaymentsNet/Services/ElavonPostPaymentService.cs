@@ -23,6 +23,7 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
     /// </summary>
     /// <param name="transactionId">The Elavon transaction ID to capture.</param>
     /// <param name="request">The capture request specifying the amount.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<PostPaymentResponse> CaptureTransactionAsync(string transactionId, CapturePaymentRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<CapturePaymentRequest, PostPaymentResponse>(
@@ -35,6 +36,7 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
     /// </summary>
     /// <param name="transactionId">The Elavon transaction ID to refund.</param>
     /// <param name="request">The refund request specifying the amount.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<PostPaymentResponse> RefundTransactionAsync(string transactionId, RefundPaymentRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<RefundPaymentRequest, PostPaymentResponse>(
@@ -46,6 +48,7 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
     /// Voids a payment that has not yet been settled (same-day cancellation).
     /// </summary>
     /// <param name="transactionId">The Elavon transaction ID to void.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<PostPaymentResponse> VoidTransactionAsync(string transactionId, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<PostPaymentResponse>(

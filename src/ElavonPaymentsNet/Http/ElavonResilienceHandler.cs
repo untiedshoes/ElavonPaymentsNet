@@ -27,7 +27,7 @@ namespace ElavonPaymentsNet.Http;
 /// </para>
 /// <para>
 /// Backoff: exponential with jitter, base interval of 1 second, maximum of
-/// <paramref name="maxRetryAttempts"/> additional attempts after the first failure.
+/// <c>maxRetryAttempts</c> additional attempts after the first failure.
 /// </para>
 /// </remarks>
 internal sealed class ElavonResilienceHandler : DelegatingHandler

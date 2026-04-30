@@ -14,6 +14,6 @@ public enum TransactionType
     /// <summary>Defers a payment for later capture.</summary>
     Deferred,
 
-    /// <summary>Repeats a previously successful payment. Requires <see cref="CreateTransactionRequest.RelatedTransactionId"/>.</summary>
+    /// <summary>Repeats a previously successful payment. Requires <see cref="ElavonPaymentsNet.Models.Public.Requests.CreateTransactionRequest.RelatedTransactionId"/>.</summary>
     Repeat
 }

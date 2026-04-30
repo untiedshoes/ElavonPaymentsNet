@@ -57,12 +57,20 @@ public sealed class ElavonPaymentsClientOptionsBuilder
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
     public int MaxRetryAttempts { get; set; } = 3;
 
-    internal ElavonPaymentsClientOptions Build() => new()
+    internal ElavonPaymentsClientOptions Build()
     {
-        IntegrationKey = IntegrationKey,
-        IntegrationPassword = IntegrationPassword,
-        Environment = Environment,
-        Timeout = Timeout,
-        MaxRetryAttempts = MaxRetryAttempts
-    };
+        if (string.IsNullOrWhiteSpace(IntegrationKey))
+            throw new ArgumentException("IntegrationKey is required.", nameof(IntegrationKey));
+        if (string.IsNullOrWhiteSpace(IntegrationPassword))
+            throw new ArgumentException("IntegrationPassword is required.", nameof(IntegrationPassword));
+
+        return new()
+        {
+            IntegrationKey = IntegrationKey,
+            IntegrationPassword = IntegrationPassword,
+            Environment = Environment,
+            Timeout = Timeout,
+            MaxRetryAttempts = MaxRetryAttempts
+        };
+    }
 }

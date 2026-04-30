@@ -9,7 +9,7 @@ namespace ElavonPaymentsNet.Services;
 /// Provides instruction operations for managing transaction lifecycle states.
 /// Access via <c>client.Instructions</c>.
 /// </summary>
-public class ElavonInstructionsService : IElavonInstructionsService
+internal sealed class ElavonInstructionsService : IElavonInstructionsService
 {
     private readonly ElavonApiClient _api;
 

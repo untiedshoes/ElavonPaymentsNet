@@ -11,7 +11,7 @@ namespace ElavonPaymentsNet.Services;
 /// Provides operations for creating and managing payment transactions.
 /// Access via <c>client.Transactions</c>.
 /// </summary>
-public class ElavonTransactionService : IElavonTransactionService
+internal sealed class ElavonTransactionService : IElavonTransactionService
 {
     private readonly ElavonApiClient _api;
 

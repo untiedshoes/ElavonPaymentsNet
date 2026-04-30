@@ -11,7 +11,7 @@ namespace ElavonPaymentsNet.Services;
 /// Provides operations for creating and using stored card tokens.
 /// Access via <c>client.Tokens</c>.
 /// </summary>
-public class ElavonTokensService : IElavonTokensService
+internal sealed class ElavonTokensService : IElavonTokensService
 {
     private readonly ElavonApiClient _api;
 

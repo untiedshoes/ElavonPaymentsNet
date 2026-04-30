@@ -9,7 +9,7 @@ namespace ElavonPaymentsNet.Services;
 /// Provides merchant session key and Apple Pay wallet operations.
 /// Access via <c>client.Wallets</c>.
 /// </summary>
-public class ElavonWalletsService : IElavonWalletsService
+internal sealed class ElavonWalletsService : IElavonWalletsService
 {
     private readonly ElavonApiClient _api;
 

@@ -274,25 +274,43 @@ mockTransactions
 
 All API errors are mapped to typed exceptions -- the raw `HttpResponseMessage` never reaches the caller.
 
-| Exception | When thrown |
-|---|---|
-| `ElavonAuthenticationException` | 401 Unauthorised -- invalid or missing credentials |
-| `ElavonApiException` | Any other non-success HTTP status (4xx, 5xx) |
+| Exception | Status | When thrown |
+|---|---|---|
+| `ElavonAuthenticationException` | 401 | Invalid or missing credentials |
+| `ElavonValidationException` | 400 | Malformed or rejected request |
+| `ElavonPaymentDeclinedException` | 402 | Card declined by the issuer |
+| `ElavonRateLimitException` | 429 | Too many requests; exposes `RetryAfter` (`TimeSpan?`) |
+| `ElavonServerException` | 5xx | Server-side fault |
+| `ElavonApiException` | any | Base class; catch-all for unmapped status codes |
 
-Both expose `HttpStatusCode` (as `int`), `RawResponse` (the original API body), and optionally `ErrorCode`.
+All exceptions expose `HttpStatusCode` (as `int`), `RawResponse` (original API body), and optionally `ErrorCode`. All are catchable as `ElavonApiException`.
 
 ```csharp
 try
 {
     var result = await client.Transactions.CreateTransactionAsync(request);
 }
+catch (ElavonPaymentDeclinedException)
+{
+    // Card declined -- present to the user, do not retry
+}
+catch (ElavonRateLimitException ex)
+{
+    // Respect the Retry-After window before retrying
+    if (ex.RetryAfter.HasValue)
+        await Task.Delay(ex.RetryAfter.Value, cancellationToken);
+}
+catch (ElavonValidationException ex)
+{
+    // Malformed request -- inspect ex.ErrorCode and ex.RawResponse
+}
 catch (ElavonAuthenticationException)
 {
     // Invalid integration key or password
 }
-catch (ElavonApiException ex) when (ex.HttpStatusCode == 422)
+catch (ElavonServerException)
 {
-    // Validation error -- inspect ex.RawResponse for detail
+    // 5xx -- unknown state on POST; query by VendorTxCode before retrying
 }
 catch (ElavonApiException ex)
 {
@@ -304,7 +322,11 @@ catch (ElavonApiException ex)
 
 ## Resilience and Retry Safety
 
-Retry logic lives in `ElavonResilienceHandler` — the only place in the SDK it is implemented. The short version:
+Retry logic lives in a single `DelegatingHandler` — the only place in the SDK it is implemented. The pipeline in order:
+
+```
+ElavonLoggingHandler → ElavonAuthenticationHandler → ElavonResilienceHandler → HttpClientHandler
+```
 
 - **GET requests** are retried automatically (up to `MaxRetryAttempts`, default `3`) with exponential backoff and jitter.
 - **POST requests are never retried** — a payment that may have executed must not be sent again without reconciliation.
@@ -318,7 +340,7 @@ Retry logic lives in `ElavonResilienceHandler` — the only place in the SDK it 
 
 All methods are `async` and accept a `CancellationToken`. Each service group has a corresponding interface.
 
-## `client.Transactions` -- `IElavonTransactionService`
+**`client.Transactions` -- `IElavonTransactionService`**
 
 | Method | Description |
 |---|---|
@@ -328,7 +350,7 @@ Returns `PaymentResponse` -- `TransactionId`, `Status`, `StatusCode`, `StatusDet
 
 ---
 
-## `client.PostPayments` -- `IElavonPostPaymentService`
+**`client.PostPayments` -- `IElavonPostPaymentService`**
 
 | Method | Description |
 |---|---|
@@ -340,7 +362,7 @@ Returns `PostPaymentResponse` -- `TransactionId`, `Status`.
 
 ---
 
-## `client.Instructions` -- `IElavonInstructionsService`
+**`client.Instructions` -- `IElavonInstructionsService`**
 
 | Method | Description |
 |---|---|
@@ -352,7 +374,7 @@ Returns `InstructionResponse` -- `InstructionType`, `Date`.
 
 ---
 
-## `client.ThreeDs` -- `IElavonThreeDsService`
+**`client.ThreeDs` -- `IElavonThreeDsService`**
 
 | Method | Description |
 |---|---|
@@ -364,7 +386,7 @@ Returns `InstructionResponse` -- `InstructionType`, `Date`.
 
 ---
 
-## `client.Tokens` -- `IElavonTokensService`
+**`client.Tokens` -- `IElavonTokensService`**
 
 | Method | Description |
 |---|---|
@@ -376,7 +398,7 @@ Returns `InstructionResponse` -- `InstructionType`, `Date`.
 
 ---
 
-## `client.Wallets` -- `IElavonWalletsService`
+**`client.Wallets` -- `IElavonWalletsService`**
 
 | Method | Description |
 |---|---|
@@ -386,7 +408,7 @@ Returns `InstructionResponse` -- `InstructionType`, `Date`.
 
 ---
 
-## `client.CardIdentifiers` -- `IElavonCardIdentifiersService`
+**`client.CardIdentifiers` -- `IElavonCardIdentifiersService`**
 
 | Method | Description |
 |---|---|
@@ -404,10 +426,13 @@ Returns `InstructionResponse` -- `InstructionType`, `Date`.
 src/
 +-- ElavonPaymentsNet/
     +-- ElavonPaymentsClient.cs              # Entry point -- exposes all service groups
-    +-- ElavonPaymentsClientOptions.cs       # Configuration (key, password, environment, timeout)
+    +-- ElavonPaymentsClientOptions.cs       # Configuration (key, password, environment, timeout, retries)
     +-- Http/
-    |   +-- ElavonApiClient.cs               # All HTTP, auth, serialisation, error mapping (internal)
-    |   +-- ElavonResilienceHandler.cs       # Central retry policy (GET-only, safe-by-default)
+    |   +-- ElavonApiClient.cs               # Serialisation, error mapping, HTTP dispatch (internal)
+    |   +-- ElavonAuthenticationHandler.cs   # Basic / Bearer auth injection (DelegatingHandler)
+    |   +-- ElavonLoggingHandler.cs          # Request/response debug logging (DelegatingHandler)
+    |   +-- ElavonResilienceHandler.cs       # GET-only retry with exponential backoff (DelegatingHandler)
+    |   +-- ElavonRequestContext.cs          # HttpRequestOptionsKey for bearer token pass-through
     |   +-- ElavonEnvironment.cs             # Sandbox / Live enum
     +-- Interfaces/
     |   +-- IElavonTransactionService.cs
@@ -437,8 +462,12 @@ src/
     +-- Mapping/
     |   +-- RequestMapper.cs                 # Injects transactionType string into DTOs (internal)
     +-- Exceptions/
-    |   +-- ElavonApiException.cs
-    |   +-- ElavonAuthenticationException.cs
+    |   +-- ElavonApiException.cs            # Base exception (HttpStatusCode, RawResponse, ErrorCode)
+    |   +-- ElavonAuthenticationException.cs # 401
+    |   +-- ElavonValidationException.cs     # 400
+    |   +-- ElavonPaymentDeclinedException.cs# 402
+    |   +-- ElavonRateLimitException.cs      # 429 -- exposes RetryAfter (TimeSpan?)
+    |   +-- ElavonServerException.cs         # 5xx
     +-- Extensions/
         +-- ServiceCollectionExtensions.cs   # AddElavonPayments(...)
 
@@ -447,6 +476,7 @@ tests/
     +-- Client/
     |   +-- ElavonPaymentsClientTests.cs
     +-- Http/
+    |   +-- ElavonApiClientExceptionTests.cs # Typed exception hierarchy + Retry-After parsing
     |   +-- ElavonResilienceHandlerTests.cs
     |   +-- ElavonResilienceHandlerRetryTests.cs
     |   +-- Fakes/
@@ -457,7 +487,7 @@ tests/
         +-- ElavonServicesTests.cs
 ```
 
-The internal `ElavonApiClient` is the only class that touches `HttpClient`. Services are thin orchestrators: map request -> call `ElavonApiClient` -> return typed response. No logic leaks between layers.
+The internal `ElavonApiClient` is the only class that touches `HttpClient`. Auth, logging, and retry are each handled by a dedicated `DelegatingHandler` in the pipeline — `ElavonApiClient` sees only the final response. Services are thin orchestrators: map request → call `ElavonApiClient` → return typed response. No logic leaks between layers.
 
 ---
 

@@ -9,7 +9,7 @@ namespace ElavonPaymentsNet.Services;
 /// Provides card identifier operations for use with drop-in UI and server-side flows.
 /// Access via <c>client.CardIdentifiers</c>.
 /// </summary>
-public class ElavonCardIdentifiersService : IElavonCardIdentifiersService
+internal sealed class ElavonCardIdentifiersService : IElavonCardIdentifiersService
 {
     private readonly ElavonApiClient _api;
 

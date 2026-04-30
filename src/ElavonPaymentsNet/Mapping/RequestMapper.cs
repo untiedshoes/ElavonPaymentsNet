@@ -1,4 +1,5 @@
 using ElavonPaymentsNet.Models.Internal.Dto;
+using ElavonPaymentsNet.Models.Public;
 using ElavonPaymentsNet.Models.Public.Requests;
 
 namespace ElavonPaymentsNet.Mapping;
@@ -18,9 +19,7 @@ internal static class RequestMapper
             Amount = r.Amount,
             Currency = r.Currency,
             Description = r.Description,
-            PaymentMethod = r.PaymentMethod is null
-                ? new PaymentMethodDto()
-                : new PaymentMethodDto { Card = r.PaymentMethod.Card, Token = r.PaymentMethod.Token },
+            PaymentMethod = r.PaymentMethod,
             BillingAddress = r.BillingAddress,
             CustomerEmail = r.CustomerEmail,
             RelatedTransactionId = r.RelatedTransactionId
@@ -33,6 +32,6 @@ internal static class RequestMapper
             VendorTxCode = r.VendorTxCode,
             Amount = r.Amount,
             Currency = r.Currency,
-            PaymentMethod = new PaymentMethodDto { Token = r.Token }
+            PaymentMethod = new PaymentMethod { Token = r.Token }
         };
 }

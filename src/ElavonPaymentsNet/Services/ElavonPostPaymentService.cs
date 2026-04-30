@@ -9,7 +9,7 @@ namespace ElavonPaymentsNet.Services;
 /// Provides post-payment operations: capture, refund, and void.
 /// Access via <c>client.PostPayments</c>.
 /// </summary>
-public class ElavonPostPaymentService : IElavonPostPaymentService
+internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
 {
     private readonly ElavonApiClient _api;
 
@@ -48,8 +48,8 @@ public class ElavonPostPaymentService : IElavonPostPaymentService
     /// <param name="transactionId">The Elavon transaction ID to void.</param>
     public async Task<PostPaymentResponse> VoidTransactionAsync(string transactionId, CancellationToken cancellationToken = default)
     {
-        return await _api.SendEmptyAsync<PostPaymentResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/void", cancellationToken)
+        return await _api.SendAsync<PostPaymentResponse>(
+            HttpMethod.Post, $"/transactions/{transactionId}/void", null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

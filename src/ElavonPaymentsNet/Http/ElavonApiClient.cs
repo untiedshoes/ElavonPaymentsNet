@@ -1,5 +1,6 @@
 using ElavonPaymentsNet.Exceptions;
 using ElavonPaymentsNet.Models.Internal;
+using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -76,21 +77,6 @@ internal sealed class ElavonApiClient
         }
     }
 
-    /// <summary>Sends a request with an empty body (e.g. void) and deserialises the response.</summary>
-    internal async Task<TResponse> SendEmptyAsync<TResponse>(HttpMethod method, string path, CancellationToken cancellationToken)
-        where TResponse : class
-    {
-        using var request = BuildRequest<object>(method, path, null, null);
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-        var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-
-        if (!response.IsSuccessStatusCode)
-            ThrowApiException(response, body);
-
-        return Deserialise<TResponse>(body, response.StatusCode);
-    }
-
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
@@ -132,22 +118,32 @@ internal sealed class ElavonApiClient
     {
         var statusCode = response.StatusCode;
 
-        // Attempt to parse a machine-readable error code from the response body.
+        // Attempt to parse a machine-readable error code and field errors from the response body.
         // If parsing fails, fall back to raw body only — never swallow the response.
+        ApiErrorResponse? error = null;
         string? errorCode = null;
         try
         {
-            var error = JsonSerializer.Deserialize<ApiErrorResponse>(body, JsonOptions);
+            error = JsonSerializer.Deserialize<ApiErrorResponse>(body, JsonOptions);
             errorCode = error?.Code;
         }
         catch (JsonException) { /* ignore — use raw body only */ }
+
+        IReadOnlyList<ElavonValidationError>? validationErrors = error?.Errors?
+            .Select(e => new ElavonValidationError
+            {
+                Property = e.Property,
+                ClientMessage = e.ClientMessage,
+                Message = e.Message
+            })
+            .ToList();
 
         // Dispatch to the most specific typed exception for this status code.
         // All types inherit ElavonApiException so callers can catch at any level.
         throw statusCode switch
         {
             HttpStatusCode.Unauthorized    => new ElavonAuthenticationException(body),
-            HttpStatusCode.BadRequest      => new ElavonValidationException(body, errorCode),
+            HttpStatusCode.BadRequest      => new ElavonValidationException(body, errorCode, validationErrors),
             HttpStatusCode.PaymentRequired => new ElavonPaymentDeclinedException(body, errorCode),
             HttpStatusCode.TooManyRequests => new ElavonRateLimitException(body, errorCode, ParseRetryAfter(response)),
             _ when (int)statusCode >= 500  => new ElavonServerException(statusCode, body, errorCode),

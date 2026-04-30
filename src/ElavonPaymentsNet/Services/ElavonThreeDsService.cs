@@ -9,7 +9,7 @@ namespace ElavonPaymentsNet.Services;
 /// Provides 3D Secure (3DS) challenge flow operations.
 /// Access via <c>client.ThreeDs</c>.
 /// </summary>
-public class ElavonThreeDsService : IElavonThreeDsService
+internal sealed class ElavonThreeDsService : IElavonThreeDsService
 {
     private readonly ElavonApiClient _api;
 

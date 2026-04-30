@@ -564,15 +564,13 @@ export ELAVON_TEST_CARDHOLDER="Sandbox Tester"
 dotnet run --project playground/ElavonPaymentsNet.Playground/ElavonPaymentsNet.Playground.csproj
 ```
 
-### Interactive prompts and concurrency gate
+### Interactive prompts
 
 When the playground starts, it prompts for:
 
 - Card number, expiry, CVV, and cardholder name (press Enter to accept defaults)
-- Number of purchase requests
-- Max parallel requests
 
-By default, it runs one purchase request at a time. For higher volumes, it uses a bounded concurrency gate (`SemaphoreSlim`) so requests run in parallel only up to your chosen limit.
+Environment variables are used as the default values for each prompt if set.
 
 Useful references:
 

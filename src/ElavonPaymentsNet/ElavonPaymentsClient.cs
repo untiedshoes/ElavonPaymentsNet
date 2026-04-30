@@ -60,7 +60,15 @@ public sealed class ElavonPaymentsClient
         {
             InnerHandler = new HttpClientHandler()
         };
-        return new HttpClient(resilienceHandler)
+        var authHandler = new ElavonAuthenticationHandler(options.IntegrationKey, options.IntegrationPassword)
+        {
+            InnerHandler = resilienceHandler
+        };
+        var loggingHandler = new ElavonLoggingHandler
+        {
+            InnerHandler = authHandler
+        };
+        return new HttpClient(loggingHandler)
         {
             BaseAddress = new Uri(options.ApiBaseUrl),
             Timeout = options.Timeout
@@ -80,12 +88,12 @@ public sealed class ElavonPaymentsClient
 
         var api = new ElavonApiClient(httpClient);
 
-        Transactions = new ElavonTransactionService(api, options);
-        PostPayments = new ElavonPostPaymentService(api, options);
-        ThreeDs = new ElavonThreeDsService(api, options);
-        Tokens = new ElavonTokensService(api, options);
-        Wallets = new ElavonWalletsService(api, options);
-        CardIdentifiers = new ElavonCardIdentifiersService(api, options);
-        Instructions = new ElavonInstructionsService(api, options);
+        Transactions   = new ElavonTransactionService(api);
+        PostPayments   = new ElavonPostPaymentService(api);
+        ThreeDs        = new ElavonThreeDsService(api);
+        Tokens         = new ElavonTokensService(api);
+        Wallets        = new ElavonWalletsService(api);
+        CardIdentifiers = new ElavonCardIdentifiersService(api);
+        Instructions   = new ElavonInstructionsService(api);
     }
 }

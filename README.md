@@ -304,33 +304,13 @@ catch (ElavonApiException ex)
 
 ## Resilience and Retry Safety
 
-Retry behavior is implemented in one place only: the HTTP infrastructure layer (`ElavonResilienceHandler`).
-It is not implemented in services, models, or public SDK methods.
+Retry logic lives in `ElavonResilienceHandler` — the only place in the SDK it is implemented. The short version:
 
-### Current retry policy
+- **GET requests** are retried automatically (up to `MaxRetryAttempts`, default `3`) with exponential backoff and jitter.
+- **POST requests are never retried** — a payment that may have executed must not be sent again without reconciliation.
+- The Opayo API has no `Idempotency-Key` mechanism, so POST retry cannot be made safe by the SDK.
 
-- Retry scope: GET requests only
-- Retries up to 3 attempts after initial failure (`MaxRetryAttempts`, default `3`)
-- Backoff: exponential with jitter
-- Retries on:
-    - `HttpRequestException`
-    - `TaskCanceledException` (timeout)
-    - `5xx` HTTP responses
-- No retries on `4xx` HTTP responses
-
-### Why POST is never retried
-
-This SDK performs financial operations (payment, capture, refund, void, instruction, tokenisation) via POST endpoints.
-Automatically retrying those calls can create duplicate side effects if the first request reached Opayo but the response was lost.
-
-### Why no idempotency keys
-
-The Opayo PI REST API does not currently provide an `Idempotency-Key` request-header contract comparable to Stripe.
-Without a provider-enforced idempotency key guarantee, retrying POST is not considered safe.
-
-Decision rule used by the SDK:
-
-> Prefer not retrying over risking duplicate financial operations.
+> For the full retry policy, failure semantics, idempotency limitation, unknown-state recovery patterns, and production flow guidance, see **[RETRYING_AND_RELIABILITY.md](RETRYING_AND_RELIABILITY.md)**.
 
 ---
 

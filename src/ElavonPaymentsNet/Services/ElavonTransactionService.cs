@@ -14,12 +14,10 @@ namespace ElavonPaymentsNet.Services;
 public class ElavonTransactionService : IElavonTransactionService
 {
     private readonly ElavonApiClient _api;
-    private readonly ElavonPaymentsClientOptions _options;
 
-    internal ElavonTransactionService(ElavonApiClient api, ElavonPaymentsClientOptions options)
+    internal ElavonTransactionService(ElavonApiClient api)
     {
         _api = api;
-        _options = options;
     }
 
     /// <summary>
@@ -30,8 +28,7 @@ public class ElavonTransactionService : IElavonTransactionService
     {
         var dto = RequestMapper.ToDto(request);
         return await _api.SendAsync<CreateTransactionRequestDto, PaymentResponse>(
-            HttpMethod.Post, "/transactions", dto, null,
-            _options.IntegrationKey, _options.IntegrationPassword, cancellationToken)
+            HttpMethod.Post, "/transactions", dto, null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

@@ -12,12 +12,10 @@ namespace ElavonPaymentsNet.Services;
 public class ElavonInstructionsService : IElavonInstructionsService
 {
     private readonly ElavonApiClient _api;
-    private readonly ElavonPaymentsClientOptions _options;
 
-    internal ElavonInstructionsService(ElavonApiClient api, ElavonPaymentsClientOptions options)
+    internal ElavonInstructionsService(ElavonApiClient api)
     {
         _api = api;
-        _options = options;
     }
 
     /// <summary>
@@ -31,8 +29,7 @@ public class ElavonInstructionsService : IElavonInstructionsService
         CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<InstructionRequest, InstructionResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/instructions", request, null,
-            _options.IntegrationKey, _options.IntegrationPassword, cancellationToken)
+            HttpMethod.Post, $"/transactions/{transactionId}/instructions", request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

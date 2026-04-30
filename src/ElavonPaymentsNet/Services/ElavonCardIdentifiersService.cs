@@ -12,12 +12,10 @@ namespace ElavonPaymentsNet.Services;
 public class ElavonCardIdentifiersService : IElavonCardIdentifiersService
 {
     private readonly ElavonApiClient _api;
-    private readonly ElavonPaymentsClientOptions _options;
 
-    internal ElavonCardIdentifiersService(ElavonApiClient api, ElavonPaymentsClientOptions options)
+    internal ElavonCardIdentifiersService(ElavonApiClient api)
     {
         _api = api;
-        _options = options;
     }
 
     /// <summary>
@@ -32,8 +30,7 @@ public class ElavonCardIdentifiersService : IElavonCardIdentifiersService
         CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<CreateCardIdentifierRequest, CreateCardIdentifierResponse>(
-            HttpMethod.Post, "/card-identifiers", request, merchantSessionKey,
-            _options.IntegrationKey, _options.IntegrationPassword, cancellationToken)
+            HttpMethod.Post, "/card-identifiers", request, merchantSessionKey, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -49,8 +46,7 @@ public class ElavonCardIdentifiersService : IElavonCardIdentifiersService
         CancellationToken cancellationToken = default)
     {
         await _api.SendVoidAsync<LinkCardIdentifierRequest>(
-            HttpMethod.Post, $"/card-identifiers/{cardIdentifier}/security-code", request, null,
-            _options.IntegrationKey, _options.IntegrationPassword, cancellationToken)
+            HttpMethod.Post, $"/card-identifiers/{cardIdentifier}/security-code", request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

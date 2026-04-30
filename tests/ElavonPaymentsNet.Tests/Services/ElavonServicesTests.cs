@@ -350,61 +350,59 @@ public sealed class ElavonServicesTests
 
     private static ElavonTransactionService CreateTransactionService(Func<HttpRequestMessage, Task<HttpResponseMessage>> responder)
     {
-        var (api, options) = CreateApiAndOptions(responder);
-        return new ElavonTransactionService(api, options);
+        var api = CreateApi(responder);
+        return new ElavonTransactionService(api);
     }
 
     private static ElavonPostPaymentService CreatePostPaymentService(Func<HttpRequestMessage, Task<HttpResponseMessage>> responder)
     {
-        var (api, options) = CreateApiAndOptions(responder);
-        return new ElavonPostPaymentService(api, options);
+        var api = CreateApi(responder);
+        return new ElavonPostPaymentService(api);
     }
 
     private static ElavonThreeDsService CreateThreeDsService(Func<HttpRequestMessage, Task<HttpResponseMessage>> responder)
     {
-        var (api, options) = CreateApiAndOptions(responder);
-        return new ElavonThreeDsService(api, options);
+        var api = CreateApi(responder);
+        return new ElavonThreeDsService(api);
     }
 
     private static ElavonTokensService CreateTokensService(Func<HttpRequestMessage, Task<HttpResponseMessage>> responder)
     {
-        var (api, options) = CreateApiAndOptions(responder);
-        return new ElavonTokensService(api, options);
+        var api = CreateApi(responder);
+        return new ElavonTokensService(api);
     }
 
     private static ElavonWalletsService CreateWalletsService(Func<HttpRequestMessage, Task<HttpResponseMessage>> responder)
     {
-        var (api, options) = CreateApiAndOptions(responder);
-        return new ElavonWalletsService(api, options);
+        var api = CreateApi(responder);
+        return new ElavonWalletsService(api);
     }
 
     private static ElavonCardIdentifiersService CreateCardIdentifiersService(Func<HttpRequestMessage, Task<HttpResponseMessage>> responder)
     {
-        var (api, options) = CreateApiAndOptions(responder);
-        return new ElavonCardIdentifiersService(api, options);
+        var api = CreateApi(responder);
+        return new ElavonCardIdentifiersService(api);
     }
 
     private static ElavonInstructionsService CreateInstructionsService(Func<HttpRequestMessage, Task<HttpResponseMessage>> responder)
     {
-        var (api, options) = CreateApiAndOptions(responder);
-        return new ElavonInstructionsService(api, options);
+        var api = CreateApi(responder);
+        return new ElavonInstructionsService(api);
     }
 
-    private static (ElavonApiClient Api, ElavonPaymentsClientOptions Options) CreateApiAndOptions(
+    private static ElavonApiClient CreateApi(
         Func<HttpRequestMessage, Task<HttpResponseMessage>> responder)
     {
-        var httpClient = new HttpClient(new FakeHttpMessageHandler(responder))
+        // Wire the auth handler in front of the fake so auth assertions work.
+        var authHandler = new ElavonAuthenticationHandler("ik", "ip")
+        {
+            InnerHandler = new FakeHttpMessageHandler(responder)
+        };
+        var httpClient = new HttpClient(authHandler)
         {
             BaseAddress = new Uri("https://example.com")
         };
-
-        var options = new ElavonPaymentsClientOptions
-        {
-            IntegrationKey = "ik",
-            IntegrationPassword = "ip"
-        };
-
-        return (new ElavonApiClient(httpClient), options);
+        return new ElavonApiClient(httpClient);
     }
 
     private static string BasicParam() => Convert.ToBase64String(Encoding.ASCII.GetBytes("ik:ip"));

@@ -27,6 +27,10 @@ public static class ServiceCollectionExtensions
                 client.BaseAddress = new Uri(builtOptions.ApiBaseUrl);
                 client.Timeout = builtOptions.Timeout;
             })
+            // Pipeline (outermost first): Logging → Authentication → Resilience
+            .AddHttpMessageHandler(() => new ElavonLoggingHandler())
+            .AddHttpMessageHandler(() => new ElavonAuthenticationHandler(
+                builtOptions.IntegrationKey, builtOptions.IntegrationPassword))
             .AddHttpMessageHandler(() => new ElavonResilienceHandler(builtOptions.MaxRetryAttempts));
 
         services.AddSingleton(builtOptions);

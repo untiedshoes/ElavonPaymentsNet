@@ -12,12 +12,10 @@ namespace ElavonPaymentsNet.Services;
 public class ElavonThreeDsService : IElavonThreeDsService
 {
     private readonly ElavonApiClient _api;
-    private readonly ElavonPaymentsClientOptions _options;
 
-    internal ElavonThreeDsService(ElavonApiClient api, ElavonPaymentsClientOptions options)
+    internal ElavonThreeDsService(ElavonApiClient api)
     {
         _api = api;
-        _options = options;
     }
 
     /// <summary>
@@ -29,8 +27,7 @@ public class ElavonThreeDsService : IElavonThreeDsService
     public async Task<Initialise3DsResponse> Initialise3DsAsync(string transactionId, Initialise3DsRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<Initialise3DsRequest, Initialise3DsResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/3d-secure", request, null,
-            _options.IntegrationKey, _options.IntegrationPassword, cancellationToken)
+            HttpMethod.Post, $"/transactions/{transactionId}/3d-secure", request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -42,8 +39,7 @@ public class ElavonThreeDsService : IElavonThreeDsService
     public async Task<Complete3DsResponse> Complete3DsAsync(string transactionId, Complete3DsRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<Complete3DsRequest, Complete3DsResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/3d-secure/complete", request, null,
-            _options.IntegrationKey, _options.IntegrationPassword, cancellationToken)
+            HttpMethod.Post, $"/transactions/{transactionId}/3d-secure/complete", request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

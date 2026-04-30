@@ -12,12 +12,10 @@ namespace ElavonPaymentsNet.Services;
 public class ElavonWalletsService : IElavonWalletsService
 {
     private readonly ElavonApiClient _api;
-    private readonly ElavonPaymentsClientOptions _options;
 
-    internal ElavonWalletsService(ElavonApiClient api, ElavonPaymentsClientOptions options)
+    internal ElavonWalletsService(ElavonApiClient api)
     {
         _api = api;
-        _options = options;
     }
 
     /// <summary>
@@ -26,8 +24,7 @@ public class ElavonWalletsService : IElavonWalletsService
     public async Task<MerchantSessionResponse> CreateMerchantSessionKeyAsync(MerchantSessionRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<MerchantSessionRequest, MerchantSessionResponse>(
-            HttpMethod.Post, "/merchant-session-keys", request, null,
-            _options.IntegrationKey, _options.IntegrationPassword, cancellationToken)
+            HttpMethod.Post, "/merchant-session-keys", request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -37,8 +34,7 @@ public class ElavonWalletsService : IElavonWalletsService
     public async Task<MerchantSessionValidationResponse> ValidateMerchantSessionKeyAsync(MerchantSessionValidationRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<MerchantSessionValidationRequest, MerchantSessionValidationResponse>(
-            HttpMethod.Post, "/merchant-session-keys/validation", request, null,
-            _options.IntegrationKey, _options.IntegrationPassword, cancellationToken)
+            HttpMethod.Post, "/merchant-session-keys/validation", request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -49,8 +45,7 @@ public class ElavonWalletsService : IElavonWalletsService
     public async Task<ApplePaySessionResponse> CreateApplePaySessionAsync(ApplePaySessionRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<ApplePaySessionRequest, ApplePaySessionResponse>(
-            HttpMethod.Post, "/applepay/session", request, null,
-            _options.IntegrationKey, _options.IntegrationPassword, cancellationToken)
+            HttpMethod.Post, "/applepay/session", request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

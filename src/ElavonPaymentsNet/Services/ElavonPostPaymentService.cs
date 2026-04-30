@@ -12,12 +12,10 @@ namespace ElavonPaymentsNet.Services;
 public class ElavonPostPaymentService : IElavonPostPaymentService
 {
     private readonly ElavonApiClient _api;
-    private readonly ElavonPaymentsClientOptions _options;
 
-    internal ElavonPostPaymentService(ElavonApiClient api, ElavonPaymentsClientOptions options)
+    internal ElavonPostPaymentService(ElavonApiClient api)
     {
         _api = api;
-        _options = options;
     }
 
     /// <summary>
@@ -28,8 +26,7 @@ public class ElavonPostPaymentService : IElavonPostPaymentService
     public async Task<PostPaymentResponse> CaptureTransactionAsync(string transactionId, CapturePaymentRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<CapturePaymentRequest, PostPaymentResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/capture", request, null,
-            _options.IntegrationKey, _options.IntegrationPassword, cancellationToken)
+            HttpMethod.Post, $"/transactions/{transactionId}/capture", request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -41,8 +38,7 @@ public class ElavonPostPaymentService : IElavonPostPaymentService
     public async Task<PostPaymentResponse> RefundTransactionAsync(string transactionId, RefundPaymentRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<RefundPaymentRequest, PostPaymentResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/refund", request, null,
-            _options.IntegrationKey, _options.IntegrationPassword, cancellationToken)
+            HttpMethod.Post, $"/transactions/{transactionId}/refund", request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -53,8 +49,7 @@ public class ElavonPostPaymentService : IElavonPostPaymentService
     public async Task<PostPaymentResponse> VoidTransactionAsync(string transactionId, CancellationToken cancellationToken = default)
     {
         return await _api.SendEmptyAsync<PostPaymentResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/void",
-            _options.IntegrationKey, _options.IntegrationPassword, cancellationToken)
+            HttpMethod.Post, $"/transactions/{transactionId}/void", cancellationToken)
             .ConfigureAwait(false);
     }
 }

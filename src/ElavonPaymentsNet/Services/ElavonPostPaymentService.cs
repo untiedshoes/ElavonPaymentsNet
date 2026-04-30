@@ -26,7 +26,7 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
     public async Task<PostPaymentResponse> CaptureTransactionAsync(string transactionId, CapturePaymentRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<CapturePaymentRequest, PostPaymentResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/capture", request, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.TransactionCapture(transactionId), request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -38,7 +38,7 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
     public async Task<PostPaymentResponse> RefundTransactionAsync(string transactionId, RefundPaymentRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<RefundPaymentRequest, PostPaymentResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/refund", request, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.TransactionRefund(transactionId), request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -49,7 +49,7 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
     public async Task<PostPaymentResponse> VoidTransactionAsync(string transactionId, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<PostPaymentResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/void", null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.TransactionVoid(transactionId), null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

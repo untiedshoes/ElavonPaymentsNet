@@ -86,14 +86,14 @@ public sealed class ElavonPaymentsClient
         if (string.IsNullOrWhiteSpace(options.IntegrationPassword))
             throw new ArgumentException("IntegrationPassword is required.", nameof(options));
 
-        var api = new ElavonApiClient(httpClient);
+        var apiClient = new ElavonApiClient(httpClient);
 
-        Transactions   = new ElavonTransactionService(api);
-        PostPayments   = new ElavonPostPaymentService(api);
-        ThreeDs        = new ElavonThreeDsService(api);
-        Tokens         = new ElavonTokensService(api);
-        Wallets        = new ElavonWalletsService(api);
-        CardIdentifiers = new ElavonCardIdentifiersService(api);
-        Instructions   = new ElavonInstructionsService(api);
+        Transactions   = new ElavonTransactionService(apiClient);
+        PostPayments   = new ElavonPostPaymentService(apiClient);
+        ThreeDs        = new ElavonThreeDsService(apiClient);
+        Tokens         = new ElavonTokensService(apiClient);
+        Wallets        = new ElavonWalletsService(apiClient);
+        CardIdentifiers = new ElavonCardIdentifiersService(apiClient);
+        Instructions   = new ElavonInstructionsService(apiClient);
     }
 }

@@ -28,7 +28,7 @@ internal sealed class ElavonTransactionService : IElavonTransactionService
     {
         var dto = RequestMapper.ToDto(request);
         return await _api.SendAsync<CreateTransactionRequestDto, PaymentResponse>(
-            HttpMethod.Post, "/transactions", dto, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.Transactions, dto, null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

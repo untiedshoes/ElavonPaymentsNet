@@ -24,7 +24,7 @@ internal sealed class ElavonWalletsService : IElavonWalletsService
     public async Task<MerchantSessionResponse> CreateMerchantSessionKeyAsync(MerchantSessionRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<MerchantSessionRequest, MerchantSessionResponse>(
-            HttpMethod.Post, "/merchant-session-keys", request, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.MerchantSessionKeys, request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -34,7 +34,7 @@ internal sealed class ElavonWalletsService : IElavonWalletsService
     public async Task<MerchantSessionValidationResponse> ValidateMerchantSessionKeyAsync(MerchantSessionValidationRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<MerchantSessionValidationRequest, MerchantSessionValidationResponse>(
-            HttpMethod.Post, "/merchant-session-keys/validation", request, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.MerchantSessionKeyValidation, request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -45,7 +45,7 @@ internal sealed class ElavonWalletsService : IElavonWalletsService
     public async Task<ApplePaySessionResponse> CreateApplePaySessionAsync(ApplePaySessionRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<ApplePaySessionRequest, ApplePaySessionResponse>(
-            HttpMethod.Post, "/applepay/session", request, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.ApplePaySession, request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

@@ -23,13 +23,10 @@ internal sealed class ElavonInstructionsService : IElavonInstructionsService
     /// </summary>
     /// <param name="transactionId">The Elavon transaction ID to instruct.</param>
     /// <param name="request">The instruction to apply, including type and optional amount.</param>
-    public async Task<InstructionResponse> CreateInstructionAsync(
-        string transactionId,
-        InstructionRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<InstructionResponse> CreateInstructionAsync(string transactionId,InstructionRequest request,CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<InstructionRequest, InstructionResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/instructions", request, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.TransactionInstructions(transactionId), request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

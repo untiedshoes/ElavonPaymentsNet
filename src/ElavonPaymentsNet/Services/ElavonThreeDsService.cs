@@ -27,7 +27,7 @@ internal sealed class ElavonThreeDsService : IElavonThreeDsService
     public async Task<Initialise3DsResponse> Initialise3DsAsync(string transactionId, Initialise3DsRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<Initialise3DsRequest, Initialise3DsResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/3d-secure", request, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.Transaction3Ds(transactionId), request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -39,7 +39,7 @@ internal sealed class ElavonThreeDsService : IElavonThreeDsService
     public async Task<Complete3DsResponse> Complete3DsAsync(string transactionId, Complete3DsRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<Complete3DsRequest, Complete3DsResponse>(
-            HttpMethod.Post, $"/transactions/{transactionId}/3d-secure/complete", request, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.Transaction3DsComplete(transactionId), request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

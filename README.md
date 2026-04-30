@@ -619,6 +619,19 @@ Integration tests against the Opayo sandbox are planned for a future phase.
 - `ElavonEnvironment.Sandbox` is the default. Set `Environment = ElavonEnvironment.Live` explicitly for production.
 - `CancellationToken` is propagated through to `HttpClient.SendAsync` on every call.
 
+### Environment Base URLs
+
+This SDK resolves the server base URL from `ElavonEnvironment`.
+
+- `Sandbox` -> `https://sandbox.opayo.eu.elavon.com/api/v1`
+- `Live` -> `https://live.opayo.eu.elavon.com/api/v1`
+
+Legacy hostnames may still appear in older Opayo materials (`pi-test.sagepay.com`, `pi-live.sagepay.com`), but this SDK intentionally defaults to the Elavon domains above.
+
+You do **not** need to pass an environment server URL in normal usage. Set `Environment` and the SDK resolves the correct base URL internally.
+
+Use a custom server URL only if you explicitly need non-default routing (for example, a migration or compatibility scenario), and manage that override at your own integration boundary.
+
 ---
 
 ## Roadmap

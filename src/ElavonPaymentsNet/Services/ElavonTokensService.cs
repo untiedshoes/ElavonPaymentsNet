@@ -26,7 +26,7 @@ internal sealed class ElavonTokensService : IElavonTokensService
     public async Task<CreateTokenResponse> CreateTokenAsync(CreateTokenRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<CreateTokenRequest, CreateTokenResponse>(
-            HttpMethod.Post, "/token", request, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.Token, request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -37,7 +37,7 @@ internal sealed class ElavonTokensService : IElavonTokensService
     {
         var dto = RequestMapper.ToDto(request);
         return await _api.SendAsync<PayWithTokenRequestDto, PaymentResponse>(
-            HttpMethod.Post, "/transactions", dto, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.Transactions, dto, null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

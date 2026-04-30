@@ -24,13 +24,10 @@ internal sealed class ElavonCardIdentifiersService : IElavonCardIdentifiersServi
     /// </summary>
     /// <param name="merchantSessionKey">A valid MSK obtained from <c>client.Wallets.CreateMerchantSessionKeyAsync</c>.</param>
     /// <param name="request">The card details to tokenise.</param>
-    public async Task<CreateCardIdentifierResponse> CreateCardIdentifierAsync(
-        string merchantSessionKey,
-        CreateCardIdentifierRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<CreateCardIdentifierResponse> CreateCardIdentifierAsync(string merchantSessionKey,CreateCardIdentifierRequest request,CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<CreateCardIdentifierRequest, CreateCardIdentifierResponse>(
-            HttpMethod.Post, "/card-identifiers", request, merchantSessionKey, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.CardIdentifiers, request, merchantSessionKey, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -40,13 +37,10 @@ internal sealed class ElavonCardIdentifiersService : IElavonCardIdentifiersServi
     /// </summary>
     /// <param name="cardIdentifier">The card identifier token returned by <see cref="CreateCardIdentifierAsync"/>.</param>
     /// <param name="request">The security code to link.</param>
-    public async Task LinkCardIdentifierAsync(
-        string cardIdentifier,
-        LinkCardIdentifierRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task LinkCardIdentifierAsync(string cardIdentifier,LinkCardIdentifierRequest request,CancellationToken cancellationToken = default)
     {
         await _api.SendVoidAsync<LinkCardIdentifierRequest>(
-            HttpMethod.Post, $"/card-identifiers/{cardIdentifier}/security-code", request, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.CardIdentifierSecurityCode(cardIdentifier), request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

@@ -643,7 +643,18 @@ Unit tests cover:
 dotnet test
 ```
 
-Manual integration tests are available and gated by environment variables (`ELAVON_INTEGRATION_KEY`, `ELAVON_INTEGRATION_PASSWORD`, `ELAVON_SAFE_TRANSACTION_ID`). They are intended for safe sandbox verification and are not run by default in local test runs.
+Manual integration tests are available and run against the real Elavon/Opayo sandbox environment.
+
+**Sandbox credentials are hardcoded** directly in `SandboxCredentials.cs` — these are the standard Opayo PI REST API documentation credentials, publicly available, and safe to commit. They only work against the non-production sandbox environment, never live. No environment variable setup is required to run integration tests.
+
+```bash
+# Run all tests including integration tests
+dotnet test --filter "Category=Integration"
+```
+
+The only optional variable is `ELAVON_SAFE_TRANSACTION_ID`, which enables a read-only retrieve test against a known transaction ID in your sandbox account. All other integration tests are self-contained.
+
+Integration tests are tagged `[Trait("Category", "Integration")]` and excluded from the default `dotnet test` run to keep local development fast.
 
 ---
 

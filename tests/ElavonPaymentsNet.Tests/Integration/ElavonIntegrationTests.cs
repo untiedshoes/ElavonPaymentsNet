@@ -6,31 +6,29 @@ using ElavonPaymentsNet.Models.Public.Requests;
 namespace ElavonPaymentsNet.Tests.Integration;
 
 /// <summary>
-/// Manual integration tests against the real Elavon sandbox API.
-/// 
-/// Happy-path tests require safe test credentials and IDs via environment variables.
-/// Failure-scenario tests can run without environment setup by using deliberately invalid credentials.
+/// Integration tests against the real Elavon sandbox API.
+/// Sandbox credentials are hardcoded — they are publicly available in the Opayo PI REST API
+/// documentation and only work against the non-production sandbox environment.
+/// No environment variables are required to run these tests, except
+/// <c>ELAVON_SAFE_TRANSACTION_ID</c> for the retrieve-transaction test.
 /// </summary>
 [Trait("Category", "Integration")]
 public sealed class ElavonIntegrationTests
 {
-    private const string SkipMessage = "Set ELAVON_INTEGRATION_KEY, ELAVON_INTEGRATION_PASSWORD, ELAVON_VENDOR_NAME, and ELAVON_SAFE_TRANSACTION_ID to run happy-path integration tests.";
+    // ----------------------------------------------------------------
+    // Merchant session key
+    // ----------------------------------------------------------------
 
     /// <summary>
-    /// Verifies that a merchant session key can be created directly using sandbox credentials.
-    /// Requires ELAVON_INTEGRATION_KEY, ELAVON_INTEGRATION_PASSWORD, and ELAVON_VENDOR_NAME.
+    /// Verifies that a merchant session key can be created using the sandbox Basic profile.
     /// </summary>
     [Fact]
     public async Task CreateMerchantSessionKeyAsync_ReturnsSessionKeyAndExpiry()
     {
-        if (!HasTransactionEnvironment())
-            return;
-
-        var client = new ElavonPaymentsClient(CreateOptionsFromEnvironment());
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
 
         var response = await client.Wallets.CreateMerchantSessionKeyAsync(
-            new MerchantSessionRequest { VendorName = vendorName });
+            new MerchantSessionRequest { VendorName = SandboxCredentials.BasicVendorName });
 
         Assert.NotNull(response);
         Assert.False(string.IsNullOrWhiteSpace(response.MerchantSessionKey));
@@ -39,19 +37,14 @@ public sealed class ElavonIntegrationTests
 
     /// <summary>
     /// Verifies that a freshly created merchant session key validates successfully.
-    /// Requires ELAVON_INTEGRATION_KEY, ELAVON_INTEGRATION_PASSWORD, and ELAVON_VENDOR_NAME.
     /// </summary>
     [Fact]
     public async Task ValidateMerchantSessionKeyAsync_FreshKey_ReturnsValid()
     {
-        if (!HasTransactionEnvironment())
-            return;
-
-        var client = new ElavonPaymentsClient(CreateOptionsFromEnvironment());
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
 
         var session = await client.Wallets.CreateMerchantSessionKeyAsync(
-            new MerchantSessionRequest { VendorName = vendorName });
+            new MerchantSessionRequest { VendorName = SandboxCredentials.BasicVendorName });
 
         Assert.False(string.IsNullOrWhiteSpace(session.MerchantSessionKey));
 
@@ -62,33 +55,32 @@ public sealed class ElavonIntegrationTests
         Assert.True(response.Valid);
     }
 
+    // ----------------------------------------------------------------
+    // Card identifiers
+    // ----------------------------------------------------------------
+
     /// <summary>
-    /// Verifies that a card identifier can be created directly from a fresh merchant session key.
-    /// Requires ELAVON_INTEGRATION_KEY, ELAVON_INTEGRATION_PASSWORD, and ELAVON_VENDOR_NAME.
+    /// Verifies that a card identifier can be created from a fresh merchant session key.
     /// </summary>
     [Fact]
     public async Task CreateCardIdentifierAsync_ReturnsIdentifierExpiryAndCardType()
     {
-        if (!HasTransactionEnvironment())
-            return;
-
-        var client = new ElavonPaymentsClient(CreateOptionsFromEnvironment());
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
 
         var session = await client.Wallets.CreateMerchantSessionKeyAsync(
-            new MerchantSessionRequest { VendorName = vendorName });
+            new MerchantSessionRequest { VendorName = SandboxCredentials.BasicVendorName });
 
         Assert.False(string.IsNullOrWhiteSpace(session.MerchantSessionKey));
 
         var response = await client.CardIdentifiers.CreateCardIdentifierAsync(
-            session.MerchantSessionKey,
+            session.MerchantSessionKey!,
             new CreateCardIdentifierRequest
             {
                 CardDetails = new CardDetails
                 {
-                    CardNumber = "4929000000006",
-                    ExpiryDate = "1229",
-                    SecurityCode = "123",
+                    CardNumber     = "4929000000006",
+                    ExpiryDate     = "1229",
+                    SecurityCode   = "123",
                     CardholderName = "SUCCESSFUL"
                 }
             });
@@ -99,28 +91,25 @@ public sealed class ElavonIntegrationTests
         Assert.False(string.IsNullOrWhiteSpace(response.CardType));
     }
 
+    // ----------------------------------------------------------------
+    // Transactions — Payment
+    // ----------------------------------------------------------------
+
     /// <summary>
-    /// Verifies the full MSK + card-identifier + transaction flow against the sandbox,
-    /// using the SUCCESSFUL magic cardholder name and Apply3DSecure=Disable.
-    /// Requires ELAVON_INTEGRATION_KEY, ELAVON_INTEGRATION_PASSWORD, and ELAVON_VENDOR_NAME.
+    /// Verifies the full MSK + card-identifier + payment flow returns Ok.
     /// </summary>
     [Fact]
     public async Task CreateTransactionAsync_CardIdentifierFlow_ReturnsOk()
     {
-        if (!HasTransactionEnvironment())
-            return;
-
-        var options = CreateOptionsFromEnvironment();
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
-        var client = new ElavonPaymentsClient(options);
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
 
         var session = await client.Wallets.CreateMerchantSessionKeyAsync(
-            new MerchantSessionRequest { VendorName = vendorName });
+            new MerchantSessionRequest { VendorName = SandboxCredentials.BasicVendorName });
 
         Assert.False(string.IsNullOrWhiteSpace(session.MerchantSessionKey));
 
         var cardId = await client.CardIdentifiers.CreateCardIdentifierAsync(
-            session.MerchantSessionKey,
+            session.MerchantSessionKey!,
             new CreateCardIdentifierRequest
             {
                 CardDetails = new CardDetails
@@ -128,7 +117,7 @@ public sealed class ElavonIntegrationTests
                     CardNumber     = "4929000000006",
                     ExpiryDate     = "1229",
                     SecurityCode   = "123",
-                    CardholderName = "SUCCESSFUL"   // sandbox magic value: frictionless OK
+                    CardholderName = "SUCCESSFUL"
                 }
             });
 
@@ -167,27 +156,21 @@ public sealed class ElavonIntegrationTests
     }
 
     /// <summary>
-    /// Verifies the full MSK + card-identifier + transaction flow returns a bank decline
-    /// for the known sandbox decline card when 3DS is disabled.
-    /// Requires ELAVON_INTEGRATION_KEY, ELAVON_INTEGRATION_PASSWORD, and ELAVON_VENDOR_NAME.
+    /// Verifies that the known sandbox decline card (4929602110085639) returns
+    /// NotAuthed / 2000 / "Declined by the bank" when 3DS is disabled.
     /// </summary>
     [Fact]
     public async Task CreateTransactionAsync_CardIdentifierFlow_DeclineCard_ReturnsBankDecline()
     {
-        if (!HasTransactionEnvironment())
-            return;
-
-        var options = CreateOptionsFromEnvironment();
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
-        var client = new ElavonPaymentsClient(options);
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
 
         var session = await client.Wallets.CreateMerchantSessionKeyAsync(
-            new MerchantSessionRequest { VendorName = vendorName });
+            new MerchantSessionRequest { VendorName = SandboxCredentials.BasicVendorName });
 
         Assert.False(string.IsNullOrWhiteSpace(session.MerchantSessionKey));
 
         var cardId = await client.CardIdentifiers.CreateCardIdentifierAsync(
-            session.MerchantSessionKey,
+            session.MerchantSessionKey!,
             new CreateCardIdentifierRequest
             {
                 CardDetails = new CardDetails
@@ -235,26 +218,9 @@ public sealed class ElavonIntegrationTests
         Assert.Equal("The Authorisation was Declined by the bank.", result.StatusDetail);
     }
 
-    /// <summary>
-    /// Verifies that RetrieveTransactionAsync can read a known safe transaction in sandbox
-    /// when integration credentials and a safe transaction ID are supplied.
-    /// </summary>
-    [Fact]
-    public async Task RetrieveTransactionAsync_WithConfiguredSafeId_ReturnsResponse()
-    {
-        if (!HasIntegrationEnvironment())
-            return;
-
-        var options = CreateOptionsFromEnvironment();
-        var client = new ElavonPaymentsClient(options);
-        var transactionId = GetRequiredEnvironmentVariable("ELAVON_SAFE_TRANSACTION_ID");
-
-        var response = await client.Transactions.RetrieveTransactionAsync(transactionId);
-
-        Assert.NotNull(response);
-        Assert.Equal(transactionId, response.TransactionId);
-        Assert.False(string.IsNullOrWhiteSpace(response.Status));
-    }
+    // ----------------------------------------------------------------
+    // Transactions — Deferred & Repeat
+    // ----------------------------------------------------------------
 
     /// <summary>
     /// Verifies that a deferred transaction can be created with TransactionType.Deferred.
@@ -262,15 +228,10 @@ public sealed class ElavonIntegrationTests
     [Fact]
     public async Task CreateTransactionAsync_Deferred_ReturnsOk()
     {
-        if (!HasTransactionEnvironment())
-            return;
-
-        var options = CreateOptionsFromEnvironment();
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
-        var client = new ElavonPaymentsClient(options);
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
 
         var session = await client.Wallets.CreateMerchantSessionKeyAsync(
-            new MerchantSessionRequest { VendorName = vendorName });
+            new MerchantSessionRequest { VendorName = SandboxCredentials.BasicVendorName });
 
         var cardId = await client.CardIdentifiers.CreateCardIdentifierAsync(
             session.MerchantSessionKey!,
@@ -319,64 +280,17 @@ public sealed class ElavonIntegrationTests
 
     /// <summary>
     /// Verifies that a repeat transaction can be created from a completed payment.
+    /// Uses SandboxHelpers for the prerequisite payment — that path is covered by
+    /// CreateTransactionAsync_CardIdentifierFlow_ReturnsOk.
     /// </summary>
     [Fact]
     public async Task CreateTransactionAsync_Repeat_ReturnsOk()
     {
-        if (!HasTransactionEnvironment())
-            return;
+        var originalId = await SandboxHelpers.GetSuccessfulTransactionIdAsync(tag: "ORIG");
+        if (originalId is null) return;
 
-        var options = CreateOptionsFromEnvironment();
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
-        var client = new ElavonPaymentsClient(options);
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
 
-        // First, create the original payment to repeat
-        var session = await client.Wallets.CreateMerchantSessionKeyAsync(
-            new MerchantSessionRequest { VendorName = vendorName });
-
-        var cardId = await client.CardIdentifiers.CreateCardIdentifierAsync(
-            session.MerchantSessionKey!,
-            new CreateCardIdentifierRequest
-            {
-                CardDetails = new CardDetails
-                {
-                    CardNumber     = "4929000000006",
-                    ExpiryDate     = "1229",
-                    SecurityCode   = "123",
-                    CardholderName = "SUCCESSFUL"
-                }
-            });
-
-        var original = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
-        {
-            TransactionType   = TransactionType.Payment,
-            VendorTxCode      = $"INTEGRATION-ORIG-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}",
-            Amount            = 100,
-            Currency          = "GBP",
-            Description       = "Integration test original payment for repeat",
-            CustomerFirstName = "Integration",
-            CustomerLastName  = "Test",
-            PaymentMethod     = new PaymentMethod
-            {
-                Card = new CardDetails
-                {
-                    MerchantSessionKey = session.MerchantSessionKey,
-                    CardIdentifier     = cardId.CardIdentifier
-                }
-            },
-            BillingAddress = new BillingAddress
-            {
-                Address1   = "88",
-                City       = "London",
-                PostalCode = "412",
-                Country    = "GB"
-            },
-            Apply3DSecure = Apply3DSecureOption.Disable
-        });
-
-        Assert.Equal("Ok", original.Status);
-
-        // Now repeat it
         var repeat = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
         {
             TransactionType      = TransactionType.Repeat,
@@ -384,7 +298,7 @@ public sealed class ElavonIntegrationTests
             Amount               = 100,
             Currency             = "GBP",
             Description          = "Integration test repeat payment",
-            RelatedTransactionId = original.TransactionId
+            RelatedTransactionId = originalId
         });
 
         Assert.NotNull(repeat);
@@ -392,43 +306,57 @@ public sealed class ElavonIntegrationTests
         Assert.Equal("Ok", repeat.Status);
     }
 
+    // ----------------------------------------------------------------
+    // Transactions — Retrieve
+    // ----------------------------------------------------------------
+
     /// <summary>
-    /// Verifies that a transaction can be voided via PostPayments after creation.
+    /// Verifies that RetrieveTransactionAsync can read a known safe transaction from the sandbox.
+    /// Requires the <c>ELAVON_SAFE_TRANSACTION_ID</c> environment variable.
     /// </summary>
+    [Fact]
+    public async Task RetrieveTransactionAsync_WithConfiguredSafeId_ReturnsResponse()
+    {
+        var transactionId = Environment.GetEnvironmentVariable("ELAVON_SAFE_TRANSACTION_ID");
+        if (string.IsNullOrWhiteSpace(transactionId))
+            return; // Skipped — set ELAVON_SAFE_TRANSACTION_ID to a known sandbox transaction ID to run.
+
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
+
+        var response = await client.Transactions.RetrieveTransactionAsync(transactionId);
+
+        Assert.NotNull(response);
+        Assert.Equal(transactionId, response.TransactionId);
+        Assert.False(string.IsNullOrWhiteSpace(response.Status));
+    }
+
+    // ----------------------------------------------------------------
+    // Post-payment — Void, Refund, Capture
+    // ----------------------------------------------------------------
+
+    /// <summary>Verifies that a transaction can be voided via PostPayments.</summary>
     [Fact]
     public async Task VoidTransactionAsync_AfterPayment_ReturnsSuccess()
     {
-        if (!HasTransactionEnvironment())
-            return;
+        var txId = await SandboxHelpers.GetSuccessfulTransactionIdAsync(tag: "VOID");
+        if (txId is null) return;
 
-        var options = CreateOptionsFromEnvironment();
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
-        var client = new ElavonPaymentsClient(options);
-
-        var txId = await CreateSuccessfulPaymentTransactionAsync(client, vendorName, "VOID");
-
-        var result = await client.PostPayments.VoidTransactionAsync(txId);
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
+        var result  = await client.PostPayments.VoidTransactionAsync(txId);
 
         Assert.NotNull(result);
         Assert.False(string.IsNullOrWhiteSpace(result.TransactionId));
     }
 
-    /// <summary>
-    /// Verifies that a transaction can be refunded via PostPayments after creation.
-    /// </summary>
+    /// <summary>Verifies that a transaction can be refunded via PostPayments.</summary>
     [Fact]
     public async Task RefundTransactionAsync_AfterPayment_ReturnsSuccess()
     {
-        if (!HasTransactionEnvironment())
-            return;
+        var txId = await SandboxHelpers.GetSuccessfulTransactionIdAsync(tag: "REFUND");
+        if (txId is null) return;
 
-        var options = CreateOptionsFromEnvironment();
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
-        var client = new ElavonPaymentsClient(options);
-
-        var txId = await CreateSuccessfulPaymentTransactionAsync(client, vendorName, "REFUND");
-
-        var result = await client.PostPayments.RefundTransactionAsync(txId, new RefundPaymentRequest
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
+        var result  = await client.PostPayments.RefundTransactionAsync(txId, new RefundPaymentRequest
         {
             Amount       = 100,
             VendorTxCode = $"INTEGRATION-RFND-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}"
@@ -438,22 +366,15 @@ public sealed class ElavonIntegrationTests
         Assert.False(string.IsNullOrWhiteSpace(result.TransactionId));
     }
 
-    /// <summary>
-    /// Verifies that a deferred transaction can be captured via PostPayments.
-    /// </summary>
+    /// <summary>Verifies that a deferred transaction can be captured via PostPayments.</summary>
     [Fact]
     public async Task CaptureTransactionAsync_AfterDeferred_ReturnsSuccess()
     {
-        if (!HasTransactionEnvironment())
-            return;
+        var txId = await SandboxHelpers.GetDeferredTransactionIdAsync();
+        if (txId is null) return;
 
-        var options = CreateOptionsFromEnvironment();
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
-        var client = new ElavonPaymentsClient(options);
-
-        var txId = await CreateDeferredTransactionAsync(client, vendorName);
-
-        var result = await client.PostPayments.CaptureTransactionAsync(txId, new CapturePaymentRequest
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
+        var result  = await client.PostPayments.CaptureTransactionAsync(txId, new CapturePaymentRequest
         {
             Amount = 100
         });
@@ -462,22 +383,19 @@ public sealed class ElavonIntegrationTests
         Assert.False(string.IsNullOrWhiteSpace(result.TransactionId));
     }
 
-    /// <summary>
-    /// Verifies that a Void instruction can be posted to a completed payment.
-    /// </summary>
+    // ----------------------------------------------------------------
+    // Instructions — Void, Abort, Release
+    // ----------------------------------------------------------------
+
+    /// <summary>Verifies that a Void instruction can be posted to a completed payment.</summary>
     [Fact]
     public async Task CreateInstructionAsync_Void_ReturnsVoidInstruction()
     {
-        if (!HasTransactionEnvironment())
-            return;
+        var txId = await SandboxHelpers.GetSuccessfulTransactionIdAsync(tag: "INSTRVOID");
+        if (txId is null) return;
 
-        var options = CreateOptionsFromEnvironment();
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
-        var client = new ElavonPaymentsClient(options);
-
-        var txId = await CreateSuccessfulPaymentTransactionAsync(client, vendorName, "INSTRVOID");
-
-        var result = await client.Instructions.CreateInstructionAsync(txId, new InstructionRequest
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
+        var result  = await client.Instructions.CreateInstructionAsync(txId, new InstructionRequest
         {
             InstructionType = InstructionType.Void
         });
@@ -486,22 +404,15 @@ public sealed class ElavonIntegrationTests
         Assert.Equal(InstructionType.Void, result.InstructionType);
     }
 
-    /// <summary>
-    /// Verifies that an Abort instruction can be posted to a deferred transaction.
-    /// </summary>
+    /// <summary>Verifies that an Abort instruction can be posted to a deferred transaction.</summary>
     [Fact]
     public async Task CreateInstructionAsync_Abort_OnDeferred_ReturnsAbortInstruction()
     {
-        if (!HasTransactionEnvironment())
-            return;
+        var txId = await SandboxHelpers.GetDeferredTransactionIdAsync();
+        if (txId is null) return;
 
-        var options = CreateOptionsFromEnvironment();
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
-        var client = new ElavonPaymentsClient(options);
-
-        var txId = await CreateDeferredTransactionAsync(client, vendorName);
-
-        var result = await client.Instructions.CreateInstructionAsync(txId, new InstructionRequest
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
+        var result  = await client.Instructions.CreateInstructionAsync(txId, new InstructionRequest
         {
             InstructionType = InstructionType.Abort
         });
@@ -510,22 +421,15 @@ public sealed class ElavonIntegrationTests
         Assert.Equal(InstructionType.Abort, result.InstructionType);
     }
 
-    /// <summary>
-    /// Verifies that a Release instruction can be posted to a deferred transaction.
-    /// </summary>
+    /// <summary>Verifies that a Release instruction can be posted to a deferred transaction.</summary>
     [Fact]
     public async Task CreateInstructionAsync_Release_OnDeferred_ReturnsReleaseInstruction()
     {
-        if (!HasTransactionEnvironment())
-            return;
+        var txId = await SandboxHelpers.GetDeferredTransactionIdAsync();
+        if (txId is null) return;
 
-        var options = CreateOptionsFromEnvironment();
-        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
-        var client = new ElavonPaymentsClient(options);
-
-        var txId = await CreateDeferredTransactionAsync(client, vendorName);
-
-        var result = await client.Instructions.CreateInstructionAsync(txId, new InstructionRequest
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
+        var result  = await client.Instructions.CreateInstructionAsync(txId, new InstructionRequest
         {
             InstructionType = InstructionType.Release,
             Amount          = 100
@@ -536,164 +440,23 @@ public sealed class ElavonIntegrationTests
     }
 
     // ----------------------------------------------------------------
-    // Helpers shared by multiple tests
+    // Failure scenarios
     // ----------------------------------------------------------------
-
-    /// <summary>Creates a successful Payment transaction and returns its TransactionId.</summary>
-    private static async Task<string> CreateSuccessfulPaymentTransactionAsync(
-        ElavonPaymentsClient client, string vendorName, string tag)
-    {
-        var session = await client.Wallets.CreateMerchantSessionKeyAsync(
-            new MerchantSessionRequest { VendorName = vendorName });
-
-        var cardId = await client.CardIdentifiers.CreateCardIdentifierAsync(
-            session.MerchantSessionKey!,
-            new CreateCardIdentifierRequest
-            {
-                CardDetails = new CardDetails
-                {
-                    CardNumber     = "4929000000006",
-                    ExpiryDate     = "1229",
-                    SecurityCode   = "123",
-                    CardholderName = "SUCCESSFUL"
-                }
-            });
-
-        var result = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
-        {
-            TransactionType   = TransactionType.Payment,
-            VendorTxCode      = $"INTEGRATION-{tag}-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}",
-            Amount            = 100,
-            Currency          = "GBP",
-            Description       = $"Integration test payment ({tag})",
-            CustomerFirstName = "Integration",
-            CustomerLastName  = "Test",
-            PaymentMethod     = new PaymentMethod
-            {
-                Card = new CardDetails
-                {
-                    MerchantSessionKey = session.MerchantSessionKey,
-                    CardIdentifier     = cardId.CardIdentifier
-                }
-            },
-            BillingAddress = new BillingAddress
-            {
-                Address1   = "88",
-                City       = "London",
-                PostalCode = "412",
-                Country    = "GB"
-            },
-            Apply3DSecure = Apply3DSecureOption.Disable
-        });
-
-        return result.TransactionId!;
-    }
-
-    /// <summary>Creates a Deferred transaction and returns its TransactionId.</summary>
-    private static async Task<string> CreateDeferredTransactionAsync(
-        ElavonPaymentsClient client, string vendorName)
-    {
-        var session = await client.Wallets.CreateMerchantSessionKeyAsync(
-            new MerchantSessionRequest { VendorName = vendorName });
-
-        var cardId = await client.CardIdentifiers.CreateCardIdentifierAsync(
-            session.MerchantSessionKey!,
-            new CreateCardIdentifierRequest
-            {
-                CardDetails = new CardDetails
-                {
-                    CardNumber     = "4929000000006",
-                    ExpiryDate     = "1229",
-                    SecurityCode   = "123",
-                    CardholderName = "SUCCESSFUL"
-                }
-            });
-
-        var result = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
-        {
-            TransactionType   = TransactionType.Deferred,
-            VendorTxCode      = $"INTEGRATION-DEF-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}",
-            Amount            = 100,
-            Currency          = "GBP",
-            Description       = "Integration test deferred transaction",
-            CustomerFirstName = "Integration",
-            CustomerLastName  = "Test",
-            PaymentMethod     = new PaymentMethod
-            {
-                Card = new CardDetails
-                {
-                    MerchantSessionKey = session.MerchantSessionKey,
-                    CardIdentifier     = cardId.CardIdentifier
-                }
-            },
-            BillingAddress = new BillingAddress
-            {
-                Address1   = "88",
-                City       = "London",
-                PostalCode = "412",
-                Country    = "GB"
-            },
-            Apply3DSecure = Apply3DSecureOption.Disable
-        });
-
-        return result.TransactionId!;
-    }
 
     /// <summary>
     /// Verifies that invalid credentials are rejected by the real API with an authentication exception.
-    /// This test is intentionally independent of environment variables.
     /// </summary>
     [Fact]
     public async Task CreateMerchantSessionKeyAsync_WithInvalidCredentials_ThrowsAuthenticationException()
     {
-        if (!HasIntegrationEnvironment())
-            return;
-
         var client = new ElavonPaymentsClient(new ElavonPaymentsClientOptions
         {
-            IntegrationKey = "invalid-key",
+            IntegrationKey      = "invalid-key",
             IntegrationPassword = "invalid-password",
-            Environment = ElavonEnvironment.Sandbox
+            Environment         = ElavonEnvironment.Sandbox
         });
 
         await Assert.ThrowsAsync<ElavonAuthenticationException>(() =>
             client.Wallets.CreateMerchantSessionKeyAsync(new MerchantSessionRequest()));
-    }
-
-    /// <summary>
-    /// Checks whether credentials and vendor name are present (sufficient to create transactions).
-    /// </summary>
-    private static bool HasTransactionEnvironment()
-        => !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ELAVON_INTEGRATION_KEY"))
-           && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ELAVON_INTEGRATION_PASSWORD"))
-           && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ELAVON_VENDOR_NAME"));
-
-    /// <summary>
-    /// Checks whether all required environment variables for happy-path integration tests are present.
-    /// </summary>
-    private static bool HasIntegrationEnvironment()
-        => HasTransactionEnvironment()
-           && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ELAVON_SAFE_TRANSACTION_ID"));
-
-    /// <summary>
-    /// Builds options from required environment variables.
-    /// </summary>
-    private static ElavonPaymentsClientOptions CreateOptionsFromEnvironment() => new()
-    {
-        IntegrationKey = GetRequiredEnvironmentVariable("ELAVON_INTEGRATION_KEY"),
-        IntegrationPassword = GetRequiredEnvironmentVariable("ELAVON_INTEGRATION_PASSWORD"),
-        Environment = ElavonEnvironment.Sandbox
-    };
-
-    /// <summary>
-    /// Gets an environment variable value or throws if it is missing/blank.
-    /// </summary>
-    private static string GetRequiredEnvironmentVariable(string variableName)
-    {
-        var value = Environment.GetEnvironmentVariable(variableName);
-        if (string.IsNullOrWhiteSpace(value))
-            throw new InvalidOperationException($"{SkipMessage} Missing: {variableName}.");
-
-        return value;
     }
 }

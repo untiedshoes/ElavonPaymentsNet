@@ -4,9 +4,11 @@ using ElavonPaymentsNet.Http;
 using ElavonPaymentsNet.Models.Public;
 using ElavonPaymentsNet.Models.Public.Requests;
 
-var integrationKey = GetRequiredEnv("ELAVON_INTEGRATION_KEY");
-var integrationPassword = GetRequiredEnv("ELAVON_INTEGRATION_PASSWORD");
-var vendorName = GetRequiredEnv("ELAVON_VENDOR_NAME");
+// Sandbox credentials — publicly available from the Opayo PI REST API documentation.
+// Override with environment variables to use a different profile (e.g. sandboxEC).
+var integrationKey      = Environment.GetEnvironmentVariable("ELAVON_INTEGRATION_KEY")      ?? "hJYxsw7HLbj40cB8udES8CDRFLhuJ8G54O6rDpUXvE6hYDrria";
+var integrationPassword = Environment.GetEnvironmentVariable("ELAVON_INTEGRATION_PASSWORD") ?? "o2iHSrFybYMZpmWOQMuhsXP52V4fBtpuSDshrKDSWsBY1OiN6hwd9Kb12z4j5Us5u";
+var vendorName          = Environment.GetEnvironmentVariable("ELAVON_VENDOR_NAME")          ?? "sandbox";
 
 // Card details can be entered interactively for quick sandbox testing.
 // Environment variables are still supported as defaults.
@@ -72,22 +74,6 @@ await ExecuteSingleAsync(
     testCardholderName,
     magicCardholderName,
     apply3DSecure);
-
-static string GetRequiredEnv(string name)
-{
-    // Credentials are required to run against sandbox; fail fast with a clear warning.
-    var value = Environment.GetEnvironmentVariable(name);
-    if (string.IsNullOrWhiteSpace(value))
-    {
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine($"Warning: {name} is not configured.");
-        Console.WriteLine("Set sandbox credentials before running the playground.");
-        Console.ResetColor();
-        throw new InvalidOperationException($"Environment variable '{name}' is required.");
-    }
-
-    return value;
-}
 
 static string PromptWithDefault(string label, string defaultValue)
 {

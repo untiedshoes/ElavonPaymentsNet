@@ -19,9 +19,9 @@ internal sealed class ElavonLoggingHandler : DelegatingHandler
 {
     private readonly ILogger _logger;
 
-    internal ElavonLoggingHandler(ILogger? logger = null)
+    internal ElavonLoggingHandler(ILoggerFactory? loggerFactory = null)
     {
-        _logger = logger ?? NullLogger.Instance;
+        _logger = loggerFactory?.CreateLogger<ElavonLoggingHandler>() ?? NullLogger<ElavonLoggingHandler>.Instance;
     }
 
     /// <inheritdoc/>

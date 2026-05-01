@@ -1,5 +1,6 @@
 using ElavonPaymentsNet.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace ElavonPaymentsNet.Extensions;
 
@@ -28,7 +29,7 @@ public static class ServiceCollectionExtensions
                 client.Timeout = builtOptions.Timeout;
             })
             // Pipeline (outermost first): Logging → Authentication → Resilience
-            .AddHttpMessageHandler(() => new ElavonLoggingHandler())
+            .AddHttpMessageHandler(sp => new ElavonLoggingHandler(sp.GetService<ILoggerFactory>()))
             .AddHttpMessageHandler(() => new ElavonAuthenticationHandler(
                 builtOptions.IntegrationKey, builtOptions.IntegrationPassword))
             .AddHttpMessageHandler(() => new ElavonResilienceHandler(builtOptions.MaxRetryAttempts));

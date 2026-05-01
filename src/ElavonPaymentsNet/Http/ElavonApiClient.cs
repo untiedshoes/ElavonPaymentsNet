@@ -29,6 +29,9 @@ internal sealed class ElavonApiClient
     {
         ArgumentNullException.ThrowIfNull(httpClient);
 
+        if (httpClient.BaseAddress is not null)
+            httpClient.BaseAddress = new Uri(httpClient.BaseAddress.AbsoluteUri.TrimEnd('/') + "/");
+
         _httpClient = httpClient;
         _httpClient.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
@@ -86,7 +89,7 @@ internal sealed class ElavonApiClient
     private static HttpRequestMessage BuildRequest<TRequest>(HttpMethod method, string path, TRequest? payload, string? bearerToken)
         where TRequest : class
     {
-        var request = new HttpRequestMessage(method, path);
+        var request = new HttpRequestMessage(method, path.TrimStart('/'));
 
         // Store the bearer token in the property bag so ElavonAuthenticationHandler
         // can apply the correct Authorization header without touching credentials here.

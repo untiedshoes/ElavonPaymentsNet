@@ -49,6 +49,37 @@ public sealed class ElavonServicesTests
     }
 
     /// <summary>
+    /// Verifies that SDK routes preserve the /api/v1 base path when BaseAddress has no trailing slash.
+    /// </summary>
+    [Fact]
+    public async Task Transactions_CreateTransaction_PreservesApiBasePath()
+    {
+        HttpRequestMessage? captured = null;
+        var service = CreateTransactionService(
+            async request =>
+            {
+                captured = request;
+                return Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-base\",\"status\":\"Ok\"}");
+            },
+            baseAddress: "https://example.com/api/v1");
+
+        _ = await service.CreateTransactionAsync(new CreateTransactionRequest
+        {
+            TransactionType = TransactionType.Payment,
+            VendorTxCode = "ORDER-BASE",
+            Amount = 100,
+            Currency = "GBP",
+            PaymentMethod = new PaymentMethod
+            {
+                Card = new CardDetails { CardNumber = "4929000000006", ExpiryDate = "1229" }
+            }
+        });
+
+        Assert.NotNull(captured);
+        Assert.Equal("/api/v1/transactions", captured!.RequestUri!.AbsolutePath);
+    }
+
+    /// <summary>
     /// Verifies that transaction retrieval sends GET /transactions/{id} using Basic auth.
     /// </summary>
     [Fact]
@@ -439,9 +470,11 @@ public sealed class ElavonServicesTests
         Assert.Equal("Basic", captured.Headers.Authorization!.Scheme);
     }
 
-    private static ElavonTransactionService CreateTransactionService(Func<HttpRequestMessage, Task<HttpResponseMessage>> responder)
+    private static ElavonTransactionService CreateTransactionService(
+        Func<HttpRequestMessage, Task<HttpResponseMessage>> responder,
+        string baseAddress = "https://example.com")
     {
-        var api = CreateApi(responder);
+        var api = CreateApi(responder, baseAddress);
         return new ElavonTransactionService(api);
     }
 
@@ -482,7 +515,8 @@ public sealed class ElavonServicesTests
     }
 
     private static ElavonApiClient CreateApi(
-        Func<HttpRequestMessage, Task<HttpResponseMessage>> responder)
+        Func<HttpRequestMessage, Task<HttpResponseMessage>> responder,
+        string baseAddress = "https://example.com")
     {
         // Wire the auth handler in front of the fake so auth assertions work.
         var authHandler = new ElavonAuthenticationHandler("ik", "ip")
@@ -491,7 +525,7 @@ public sealed class ElavonServicesTests
         };
         var httpClient = new HttpClient(authHandler)
         {
-            BaseAddress = new Uri("https://example.com")
+            BaseAddress = new Uri(baseAddress)
         };
         return new ElavonApiClient(httpClient);
     }

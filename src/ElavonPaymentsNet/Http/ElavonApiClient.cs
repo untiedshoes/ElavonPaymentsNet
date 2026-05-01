@@ -105,6 +105,9 @@ internal sealed class ElavonApiClient
     private static TResponse Deserialise<TResponse>(string body, HttpStatusCode statusCode)
         where TResponse : class
     {
+        if (string.IsNullOrWhiteSpace(body))
+            throw new ElavonApiException(statusCode, body, "EmptyResponse");
+
         try
         {
             return JsonSerializer.Deserialize<TResponse>(body, JsonOptions)

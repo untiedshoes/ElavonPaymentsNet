@@ -22,6 +22,11 @@ var testSecurityCode = PromptWithDefault(
 var testCardholderName = PromptWithDefault(
     "Cardholder name",
     Environment.GetEnvironmentVariable("ELAVON_TEST_CARDHOLDER") ?? "Sandbox Tester");
+// Magic cardholder value controls the 3DS simulation outcome in the sandbox.
+// SUCCESSFUL = frictionless OK, NOTAUTH = fail, CHALLENGE = challenge flow, etc.
+var magicCardholderName = PromptWithDefault(
+    "Magic cardholder (3DS simulation)",
+    Environment.GetEnvironmentVariable("ELAVON_MAGIC_CARDHOLDER") ?? "SUCCESSFUL");
 
 var client = new ElavonPaymentsClient(new ElavonPaymentsClientOptions
 {
@@ -40,7 +45,8 @@ await ExecuteSingleAsync(
     testCardNumber,
     testExpiryDate,
     testSecurityCode,
-    testCardholderName);
+    testCardholderName,
+    magicCardholderName);
 
 static string GetRequiredEnv(string name)
 {
@@ -93,11 +99,12 @@ static CreateTransactionRequest BuildCardIdentifierPurchaseRequest(
         },
         BillingAddress = new BillingAddress
         {
-            Address1 = "1 Sandbox Street",
+            Address1 = "88",
             City = "London",
-            PostalCode = "EC1A 1BB",
+            PostalCode = "412",
             Country = "GB"
-        }
+        },
+        Apply3DSecure = Apply3DSecureOption.Disable
     };
 }
 
@@ -119,7 +126,8 @@ static async Task ExecuteSingleAsync(
     string cardNumber,
     string expiryDate,
     string securityCode,
-    string cardholderName)
+    string cardholderName,
+    string magicCardholderName)
 {
     try
     {
@@ -142,7 +150,7 @@ static async Task ExecuteSingleAsync(
                         CardNumber = cardNumber,
                         ExpiryDate = expiryDate,
                         SecurityCode = securityCode,
-                        CardholderName = cardholderName
+                        CardholderName = magicCardholderName
                     }
                 })
             .ConfigureAwait(false);
@@ -164,9 +172,9 @@ static async Task ExecuteSingleAsync(
         Console.WriteLine($"StatusDetail: {result.StatusDetail}");
         Console.WriteLine($"TransactionId: {result.TransactionId}");
 
-        if (result.ThreeDSecure is not null)
+        if (result.ThreeDSecure is not null && result.Status != "Ok")
         {
-            Console.WriteLine("3DS response detected. Complete the 3DS flow if required.");
+            Console.WriteLine($"3DS status: {result.ThreeDSecure.Status}. Complete the 3DS flow if required.");
         }
 
     }

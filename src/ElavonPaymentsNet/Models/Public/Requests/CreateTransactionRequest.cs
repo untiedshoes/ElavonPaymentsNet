@@ -37,6 +37,12 @@ public class CreateTransactionRequest
     public string? CustomerLastName { get; init; }
 
     /// <summary>
+    /// Controls whether 3D Secure authentication is applied, overriding the account-level setting.
+    /// Set to <see cref="Apply3DSecureOption.Disable"/> to bypass 3DS for this transaction.
+    /// </summary>
+    public Apply3DSecureOption? Apply3DSecure { get; init; }
+
+    /// <summary>
     /// The transaction ID of the original payment to repeat.
     /// Required when <see cref="TransactionType"/> is <see cref="TransactionType.Repeat"/>.
     /// </summary>

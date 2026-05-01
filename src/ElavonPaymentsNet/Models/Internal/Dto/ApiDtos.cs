@@ -21,6 +21,7 @@ internal sealed class CreateTransactionRequestDto
     public string? CustomerEmail { get; init; }
     public string? CustomerFirstName { get; init; }
     public string? CustomerLastName { get; init; }
+    public string? Apply3DSecure { get; init; }
     public string? RelatedTransactionId { get; init; }
 }
 

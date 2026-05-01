@@ -148,7 +148,7 @@ DROP-IN / CARD IDENTIFIER FLOW (MSK + Bearer auth)
    |<----------------------|                             |
    |                       |                             |
    | CreateTransactionAsync|  POST /transactions         |
-   |  (Token=cardIdent.)   |  Authorization: Basic ...   |
+   |  (Card={msk,cardId})  |  Authorization: Basic ...   |
    |---------------------->|---------------------------->|
    |                       |<----------------------------|
    | PaymentResponse       |                             |
@@ -174,6 +174,8 @@ POST-PAYMENT & INSTRUCTIONS
 
 ## Quick Example
 
+The Opayo PI API uses a **merchant session key + card identifier** flow. Card details are tokenised against a short-lived session key before the transaction is submitted — raw PAN is never sent to your server.
+
 ```csharp
 var client = new ElavonPaymentsClient(new ElavonPaymentsClientOptions
 {
@@ -182,30 +184,50 @@ var client = new ElavonPaymentsClient(new ElavonPaymentsClientOptions
     Environment         = ElavonEnvironment.Sandbox
 });
 
-var result = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
-{
-    TransactionType = TransactionType.Payment,
-    VendorTxCode    = "ORDER-001",
-    Amount          = 1999,   // pence -- GBP 19.99
-    Currency        = "GBP",
-    Description     = "Widget purchase",
-    PaymentMethod   = new PaymentMethod
+// Step 1: Obtain a short-lived merchant session key
+var session = await client.Wallets.CreateMerchantSessionKeyAsync(
+    new MerchantSessionRequest { VendorName = "your-vendor-name" });
+
+// Step 2: Tokenise the card details against the session key
+var cardId = await client.CardIdentifiers.CreateCardIdentifierAsync(
+    session.MerchantSessionKey,
+    new CreateCardIdentifierRequest
     {
-        Card = new CardDetails
+        CardDetails = new CardDetails
         {
             CardNumber     = "4929000000006",
             ExpiryDate     = "1229",
             SecurityCode   = "123",
             CardholderName = "Craig Richards"
         }
+    });
+
+// Step 3: Submit the transaction using the card identifier
+var result = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
+{
+    TransactionType   = TransactionType.Payment,
+    VendorTxCode      = "ORDER-001",
+    Amount            = 1999,   // pence -- GBP 19.99
+    Currency          = "GBP",
+    Description       = "Widget purchase",
+    CustomerFirstName = "Craig",
+    CustomerLastName  = "Richards",
+    PaymentMethod     = new PaymentMethod
+    {
+        Card = new CardDetails
+        {
+            MerchantSessionKey = session.MerchantSessionKey,
+            CardIdentifier     = cardId.CardIdentifier
+        }
     },
     BillingAddress = new BillingAddress
     {
-        Address1   = "88 Test Street",
+        Address1   = "88",
         City       = "London",
-        PostalCode = "EC1A 1BB",
+        PostalCode = "412",
         Country    = "GB"
-    }
+    },
+    Apply3DSecure = Apply3DSecureOption.Disable   // omit to use account default
 });
 
 Console.WriteLine($"Status: {result.Status}");
@@ -454,8 +476,7 @@ src/
     +-- Models/
     |   +-- Public/
     |   |   +-- Requests/                    # All public request models
-    |   |   +-- Responses/                   # All public response models
-    |   |   +-- TransactionType.cs
+    |   |   +-- Responses/                   # All public response models    |   |   +-- Apply3DSecureOption.cs    |   |   +-- TransactionType.cs
     |   |   +-- InstructionType.cs
     |   +-- Internal/
     |       +-- ApiErrorResponse.cs          # API error payload (internal)
@@ -565,12 +586,14 @@ It references the SDK project and exercises a real purchase call through `Elavon
 ```bash
 export ELAVON_INTEGRATION_KEY="your-sandbox-integration-key"
 export ELAVON_INTEGRATION_PASSWORD="your-sandbox-integration-password"
+export ELAVON_VENDOR_NAME="sandbox"   # or sandboxEC for the Extra Checks profile
 
-# Optional overrides (defaults are set in Program.cs)
+# Optional card overrides (defaults are set in Program.cs)
 export ELAVON_TEST_CARD_NUMBER="4929000000006"
 export ELAVON_TEST_CARD_EXPIRY="1229"
 export ELAVON_TEST_CARD_CVV="123"
 export ELAVON_TEST_CARDHOLDER="Sandbox Tester"
+export ELAVON_MAGIC_CARDHOLDER="SUCCESSFUL"   # controls 3DS simulation outcome
 ```
 
 ### Run playground purchase test
@@ -583,9 +606,14 @@ dotnet run --project playground/ElavonPaymentsNet.Playground/ElavonPaymentsNet.P
 
 When the playground starts, it prompts for:
 
-- Card number, expiry, CVV, and cardholder name (press Enter to accept defaults)
+- **Card number, expiry, CVV, cardholder name** — press Enter to accept defaults
+- **Magic cardholder (3DS simulation)** — controls the sandbox 3DS outcome via the cardholder name on the card identifier. Defaults to `SUCCESSFUL` (frictionless OK). Other values: `NOTAUTH`, `CHALLENGE`, `PROOFATTEMPT`, `REJECT`, `TECHDIFFICULTIES`, `ERROR`.
 
 Environment variables are used as the default values for each prompt if set.
+
+### Sandbox billing address for AVS checks
+
+The playground uses `address1: "88"` and `postalCode: "412"` — the values required to pass AVS checks on the Extra Checks profile (`sandboxEC`). These are Opayo magic test values and not real addresses.
 
 Useful references:
 
@@ -661,7 +689,6 @@ Use a custom server URL only if you explicitly need non-default routing (for exa
 
 - 3DS playground script: `Initialise3DsAsync` and `Complete3DsAsync` path testing
 - Token flow playground: `CreateTokenAsync` then `PayWithTokenAsync`
-- Card identifier playground: `CreateMerchantSessionKeyAsync` + `CreateCardIdentifierAsync` + payment with token
 
 ### Testing Gaps to Close
 

@@ -24,6 +24,7 @@ internal static class RequestMapper
             CustomerEmail = r.CustomerEmail,
             CustomerFirstName = r.CustomerFirstName,
             CustomerLastName = r.CustomerLastName,
+            Apply3DSecure = r.Apply3DSecure?.ToString(),
             RelatedTransactionId = r.RelatedTransactionId
         };
 

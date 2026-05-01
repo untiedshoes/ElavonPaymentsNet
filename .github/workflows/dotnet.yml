@@ -5,42 +5,64 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build-and-test:
-    name: Build & Test
+  build-test:
+    name: Build + Unit and Contract Tests
     runs-on: ubuntu-latest
-    env:
-      RUN_CONTRACT_TESTS: ${{ vars.RUN_CONTRACT_TESTS || 'false' }}
-      RUN_INTEGRATION_TESTS: ${{ vars.RUN_INTEGRATION_TESTS || 'false' }}
-      RUN_SMOKE_TESTS: ${{ vars.RUN_SMOKE_TESTS || 'false' }}
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: 10.0.x
 
-      - name: Restore
+      - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build
+      - name: Build solution
         run: dotnet build --no-restore --configuration Release
 
-      - name: Test (Unit)
+      - name: Run unit tests
         run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category=Unit"
 
-      - name: Test (Contract)
-        if: env.RUN_CONTRACT_TESTS == 'true'
+      - name: Run contract tests
         run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category=Contract"
 
-      - name: Test (Integration)
-        if: env.RUN_INTEGRATION_TESTS == 'true'
-        run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category=Integration"
+  integration-test:
+    name: Manual Integration Test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
 
-      - name: Test (Smoke)
-        if: env.RUN_SMOKE_TESTS == 'true'
-        run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category=Smoke"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run integration tests with safe credentials and IDs
+        shell: bash
+        env:
+          ELAVON_INTEGRATION_KEY: ${{ secrets.ELAVON_INTEGRATION_KEY }}
+          ELAVON_INTEGRATION_PASSWORD: ${{ secrets.ELAVON_INTEGRATION_PASSWORD }}
+          ELAVON_SAFE_TRANSACTION_ID: ${{ secrets.ELAVON_SAFE_TRANSACTION_ID }}
+        run: |
+          if [ -z "$ELAVON_INTEGRATION_KEY" ] || [ -z "$ELAVON_INTEGRATION_PASSWORD" ] || [ -z "$ELAVON_SAFE_TRANSACTION_ID" ]; then
+            echo "Skipping integration tests: required Elavon integration secrets are not configured."
+            exit 0
+          fi
+
+          dotnet test --no-build --configuration Release --verbosity normal --filter "Category=Integration"

@@ -53,6 +53,11 @@ internal static class ElavonApiRoutes
     /// <returns>The relative API route for transaction instructions.</returns>
     internal static string TransactionInstructions(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/instructions";
 
+    /// <summary>Builds the route to retrieve a specific transaction by its ID.</summary>
+    /// <param name="transactionId">The Elavon transaction identifier.</param>
+    /// <returns>The relative API route for retrieving a transaction.</returns>
+    internal static string TransactionById(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}";
+
     /// <summary>Builds the security-code linking route for a card identifier.</summary>
     /// <param name="cardIdentifier">The card identifier token.</param>
     /// <returns>The relative API route for linking a security code.</returns>

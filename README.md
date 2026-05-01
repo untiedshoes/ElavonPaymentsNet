@@ -345,6 +345,7 @@ All methods are `async` and accept a `CancellationToken`. Each service group has
 | Method | Description |
 |---|---|
 | `CreateTransactionAsync(request)` | Create a transaction -- `TransactionType` determines behaviour: `Payment`, `Authorise`, `Deferred`, or `Repeat` |
+| `RetrieveTransactionAsync(transactionId)` | Retrieve a previously created transaction by its Elavon transaction ID |
 
 Returns `PaymentResponse` -- `TransactionId`, `Status`, `StatusCode`, `StatusDetail`, `ThreeDSecure`.
 
@@ -481,6 +482,10 @@ tests/
     |   +-- ElavonResilienceHandlerRetryTests.cs
     |   +-- Fakes/
     |       +-- FakeHttpMessageHandler.cs
+    +-- Contract/
+    |   +-- SchemaContractTests.cs
+    +-- Integration/
+    |   +-- ElavonIntegrationTests.cs
     +-- Mapping/
     |   +-- RequestMapperTests.cs
     +-- Services/
@@ -610,7 +615,7 @@ Unit tests cover:
 dotnet test
 ```
 
-Integration tests against the Opayo sandbox are planned for a future phase.
+Manual integration tests are available and gated by environment variables (`ELAVON_INTEGRATION_KEY`, `ELAVON_INTEGRATION_PASSWORD`, `ELAVON_SAFE_TRANSACTION_ID`). They are intended for safe sandbox verification and are not run by default in local test runs.
 
 ---
 
@@ -640,7 +645,6 @@ Use a custom server URL only if you explicitly need non-default routing (for exa
 ## Roadmap
 
 - Integration tests against the Opayo sandbox
-- `RetrieveTransactionAsync` -- fetch a transaction by ID
 - Expanded 3DS metadata (SCA fields, exemption indicators)
 - NuGet package publication
 
@@ -661,8 +665,7 @@ Use a custom server URL only if you explicitly need non-default routing (for exa
 
 ### Testing Gaps to Close
 
-- **Contract tests**: validate SDK request/response JSON shapes against `docs/schema/*` and `docs/sdk-surface.yaml` — schema files exist in the repo; a parameterised xUnit theory over the JSON files would close this quickly
-- **Integration tests**: sandbox-backed tests with environment-variable gating and explicit skip when credentials are absent — blocked on sandbox credentials, but the test structure is ready to receive them
+- **Integration breadth**: expand sandbox-backed scenarios (additional happy paths and controlled failure paths) using environment-variable gating and explicit skip behavior when credentials are absent
 - **Smoke tests**: a minimal fast CI suite covering SDK bootstrapping and one safe end-to-end API flow (e.g. `GET /merchant-session-keys` validation call)
 
 ---

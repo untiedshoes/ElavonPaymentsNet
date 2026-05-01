@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace ElavonPaymentsNet.Models.Public.Responses;
 
 /// <summary>Response returned after creating or authorising a payment transaction.</summary>
@@ -18,5 +20,6 @@ public sealed class PaymentResponse
     public string? StatusDetail { get; init; }
 
     /// <summary>3D Secure result, if applicable.</summary>
+    [JsonPropertyName("3DSecure")]
     public ThreeDSecureInfo? ThreeDSecure { get; init; }
 }

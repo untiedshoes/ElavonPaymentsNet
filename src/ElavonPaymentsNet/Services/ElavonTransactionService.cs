@@ -31,4 +31,14 @@ internal sealed class ElavonTransactionService : IElavonTransactionService
             HttpMethod.Post, ElavonApiRoutes.Transactions, dto, null, cancellationToken)
             .ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// Retrieves an existing transaction by its Elavon-assigned transaction ID.
+    /// </summary>
+    public async Task<PaymentResponse> RetrieveTransactionAsync(string transactionId, CancellationToken cancellationToken = default)
+    {
+        return await _api.SendAsync<PaymentResponse>(
+            HttpMethod.Get, ElavonApiRoutes.TransactionById(transactionId), null, cancellationToken)
+            .ConfigureAwait(false);
+    }
 }

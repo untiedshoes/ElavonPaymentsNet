@@ -49,6 +49,28 @@ public sealed class ElavonServicesTests
     }
 
     /// <summary>
+    /// Verifies that transaction retrieval sends GET /transactions/{id} using Basic auth.
+    /// </summary>
+    [Fact]
+    public async Task Transactions_RetrieveTransaction_UsesExpectedRouteAndVerb()
+    {
+        HttpRequestMessage? captured = null;
+        var service = CreateTransactionService(async request =>
+        {
+            captured = request;
+            return Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-2\",\"status\":\"Ok\"}");
+        });
+
+        var response = await service.RetrieveTransactionAsync("tx-2");
+
+        Assert.Equal("tx-2", response.TransactionId);
+        Assert.NotNull(captured);
+        Assert.Equal(HttpMethod.Get, captured!.Method);
+        Assert.Equal("/transactions/tx-2", captured.RequestUri!.AbsolutePath);
+        Assert.Equal("Basic", captured.Headers.Authorization!.Scheme);
+    }
+
+    /// <summary>
     /// Verifies that capture posts to /transactions/{id}/capture using Basic auth.
     /// </summary>
     [Fact]

@@ -30,6 +30,12 @@ public class CreateTransactionRequest
     /// <summary>Customer's email address.</summary>
     public string? CustomerEmail { get; init; }
 
+    /// <summary>Customer first name.</summary>
+    public string? CustomerFirstName { get; init; }
+
+    /// <summary>Customer last name.</summary>
+    public string? CustomerLastName { get; init; }
+
     /// <summary>
     /// The transaction ID of the original payment to repeat.
     /// Required when <see cref="TransactionType"/> is <see cref="TransactionType.Repeat"/>.

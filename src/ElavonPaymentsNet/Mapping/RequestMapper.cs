@@ -22,6 +22,8 @@ internal static class RequestMapper
             PaymentMethod = r.PaymentMethod,
             BillingAddress = r.BillingAddress,
             CustomerEmail = r.CustomerEmail,
+            CustomerFirstName = r.CustomerFirstName,
+            CustomerLastName = r.CustomerLastName,
             RelatedTransactionId = r.RelatedTransactionId
         };
 

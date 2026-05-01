@@ -14,6 +14,7 @@ public sealed class PaymentResponse
     public string? Status { get; init; }
 
     /// <summary>A numeric status code accompanying the status.</summary>
+    [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
     public int? StatusCode { get; init; }
 
     /// <summary>A human-readable description of the status.</summary>

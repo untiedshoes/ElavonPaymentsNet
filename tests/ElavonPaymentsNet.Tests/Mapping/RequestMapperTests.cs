@@ -1,6 +1,7 @@
 using ElavonPaymentsNet.Mapping;
 using ElavonPaymentsNet.Models.Internal.Dto;
 using ElavonPaymentsNet.Models.Public;
+using ElavonPaymentsNet.Models.Public.Requests;
 
 namespace ElavonPaymentsNet.Tests.Mapping;
 
@@ -168,5 +169,70 @@ public class RequestMapperTests
         Assert.Equal("Payment", dto.TransactionType);
         Assert.Equal("stored-card-token", dto.PaymentMethod.Token);
         Assert.Null(dto.PaymentMethod.Card);
+    }
+
+    /// <summary>
+    /// Verifies that customer name fields are mapped to the DTO.
+    /// </summary>
+    [Fact]
+    public void CreateTransactionRequest_WithCustomerName_MapsBothNameFields()
+    {
+        var request = new CreateTransactionRequest
+        {
+            TransactionType = TransactionType.Payment,
+            VendorTxCode = "TX-007",
+            Amount = 100,
+            Currency = "GBP",
+            CustomerFirstName = "Craig",
+            CustomerLastName = "Richards"
+        };
+
+        var dto = RequestMapper.ToDto(request);
+
+        Assert.Equal("Craig", dto.CustomerFirstName);
+        Assert.Equal("Richards", dto.CustomerLastName);
+    }
+
+    /// <summary>
+    /// Verifies that Apply3DSecure maps to its string representation when set.
+    /// </summary>
+    [Theory]
+    [InlineData(Apply3DSecureOption.Disable, "Disable")]
+    [InlineData(Apply3DSecureOption.Force, "Force")]
+    [InlineData(Apply3DSecureOption.ForceIgnoringRules, "ForceIgnoringRules")]
+    [InlineData(Apply3DSecureOption.UseMSPSetting, "UseMSPSetting")]
+    public void CreateTransactionRequest_WithApply3DSecure_MapsToString(Apply3DSecureOption option, string expected)
+    {
+        var request = new CreateTransactionRequest
+        {
+            TransactionType = TransactionType.Payment,
+            VendorTxCode = "TX-008",
+            Amount = 100,
+            Currency = "GBP",
+            Apply3DSecure = option
+        };
+
+        var dto = RequestMapper.ToDto(request);
+
+        Assert.Equal(expected, dto.Apply3DSecure);
+    }
+
+    /// <summary>
+    /// Verifies that Apply3DSecure maps to null when not set, so it is omitted from the wire payload.
+    /// </summary>
+    [Fact]
+    public void CreateTransactionRequest_WithoutApply3DSecure_MapsToNull()
+    {
+        var request = new CreateTransactionRequest
+        {
+            TransactionType = TransactionType.Payment,
+            VendorTxCode = "TX-009",
+            Amount = 100,
+            Currency = "GBP"
+        };
+
+        var dto = RequestMapper.ToDto(request);
+
+        Assert.Null(dto.Apply3DSecure);
     }
 }

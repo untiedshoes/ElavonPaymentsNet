@@ -182,6 +182,46 @@ public sealed class ElavonApiClientExceptionTests
     // Exception hierarchy
     // -------------------------------------------------------------------------
 
+    // -------------------------------------------------------------------------
+    // 2xx with unparseable body
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Verifies that a 200 OK response with an empty body throws <see cref="ElavonApiException"/>
+    /// with <c>ErrorCode == "EmptyResponse"</c>, because the JSON deserialiser returns null.
+    /// </summary>
+    [Fact]
+    public async Task Returns200WithEmptyBody_ThrowsElavonApiExceptionEmptyResponse()
+    {
+        var service = CreateService(_ => Task.FromResult(StatusResponse(HttpStatusCode.OK, string.Empty)));
+
+        var ex = await Assert.ThrowsAsync<ElavonApiException>(
+            () => service.CreateTransactionAsync(MinimalRequest()));
+
+        Assert.Equal(200, ex.HttpStatusCode);
+        Assert.Equal("EmptyResponse", ex.ErrorCode);
+    }
+
+    /// <summary>
+    /// Verifies that a 200 OK response with invalid JSON throws <see cref="ElavonApiException"/>
+    /// with <c>ErrorCode == "DeserializationError"</c>.
+    /// </summary>
+    [Fact]
+    public async Task Returns200WithMalformedJson_ThrowsElavonApiExceptionDeserializationError()
+    {
+        var service = CreateService(_ => Task.FromResult(StatusResponse(HttpStatusCode.OK, "not-json")));
+
+        var ex = await Assert.ThrowsAsync<ElavonApiException>(
+            () => service.CreateTransactionAsync(MinimalRequest()));
+
+        Assert.Equal(200, ex.HttpStatusCode);
+        Assert.Equal("DeserializationError", ex.ErrorCode);
+    }
+
+    // -------------------------------------------------------------------------
+    // Exception hierarchy
+    // -------------------------------------------------------------------------
+
     /// <summary>
     /// Verifies that all typed exceptions are catchable as <see cref="ElavonApiException"/>.
     /// </summary>

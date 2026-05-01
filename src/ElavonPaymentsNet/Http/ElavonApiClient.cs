@@ -27,6 +27,8 @@ internal sealed class ElavonApiClient
 
     internal ElavonApiClient(HttpClient httpClient)
     {
+        ArgumentNullException.ThrowIfNull(httpClient);
+
         _httpClient = httpClient;
         _httpClient.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));

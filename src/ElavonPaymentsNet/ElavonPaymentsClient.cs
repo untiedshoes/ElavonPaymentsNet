@@ -1,6 +1,7 @@
 using ElavonPaymentsNet.Http;
 using ElavonPaymentsNet.Interfaces;
 using ElavonPaymentsNet.Services;
+using Microsoft.Extensions.Logging;
 
 namespace ElavonPaymentsNet;
 
@@ -50,12 +51,29 @@ public sealed class ElavonPaymentsClient
     /// For production use, prefer the overload that accepts an <see cref="HttpClient"/>
     /// sourced from <c>IHttpClientFactory</c> via dependency injection.
     /// </remarks>
+    /// <param name="options">Client configuration including credentials and environment.</param>
     public ElavonPaymentsClient(ElavonPaymentsClientOptions options)
         : this(options, CreateHttpClient(options))
     { }
 
+    /// <summary>
+    /// Initialises the client using the supplied <paramref name="options"/>
+    /// and an internally managed <see cref="HttpClient"/>, with logging sourced
+    /// from the provided <paramref name="loggerFactory"/>.
+    /// </summary>
+    /// <param name="options">Client configuration including credentials and environment.</param>
+    /// <param name="loggerFactory">The logger factory used to create the SDK HTTP logger.</param>
+    public ElavonPaymentsClient(ElavonPaymentsClientOptions options, ILoggerFactory loggerFactory)
+        : this(options, CreateHttpClient(options, loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory))))
+    { }
+
     private static HttpClient CreateHttpClient(ElavonPaymentsClientOptions options)
+        => CreateHttpClient(options, loggerFactory: null);
+
+    private static HttpClient CreateHttpClient(ElavonPaymentsClientOptions options, ILoggerFactory? loggerFactory)
     {
+        ArgumentNullException.ThrowIfNull(options);
+
         var resilienceHandler = new ElavonResilienceHandler(options.MaxRetryAttempts)
         {
             InnerHandler = new HttpClientHandler()
@@ -64,7 +82,7 @@ public sealed class ElavonPaymentsClient
         {
             InnerHandler = resilienceHandler
         };
-        var loggingHandler = new ElavonLoggingHandler
+        var loggingHandler = new ElavonLoggingHandler(loggerFactory)
         {
             InnerHandler = authHandler
         };
@@ -79,8 +97,13 @@ public sealed class ElavonPaymentsClient
     /// Initialises the client with a provided <see cref="HttpClient"/>.
     /// Use this overload when managing the client lifetime via <c>IHttpClientFactory</c>.
     /// </summary>
+    /// <param name="options">Client configuration including credentials and environment.</param>
+    /// <param name="httpClient">The preconfigured HTTP client used for all SDK requests.</param>
     public ElavonPaymentsClient(ElavonPaymentsClientOptions options, HttpClient httpClient)
     {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(httpClient);
+
         if (string.IsNullOrWhiteSpace(options.IntegrationKey))
             throw new ArgumentException("IntegrationKey is required.", nameof(options));
         if (string.IsNullOrWhiteSpace(options.IntegrationPassword))

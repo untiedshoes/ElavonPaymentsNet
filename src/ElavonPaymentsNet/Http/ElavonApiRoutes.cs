@@ -26,35 +26,43 @@ internal static class ElavonApiRoutes
     /// <summary>Builds the capture route for a specific transaction.</summary>
     /// <param name="transactionId">The Elavon transaction identifier.</param>
     /// <returns>The relative API route for capture.</returns>
-    internal static string TransactionCapture(string transactionId) => $"/transactions/{transactionId}/capture";
+    internal static string TransactionCapture(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/capture";
 
     /// <summary>Builds the refund route for a specific transaction.</summary>
     /// <param name="transactionId">The Elavon transaction identifier.</param>
     /// <returns>The relative API route for refund.</returns>
-    internal static string TransactionRefund(string transactionId) => $"/transactions/{transactionId}/refund";
+    internal static string TransactionRefund(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/refund";
 
     /// <summary>Builds the void route for a specific transaction.</summary>
     /// <param name="transactionId">The Elavon transaction identifier.</param>
     /// <returns>The relative API route for void.</returns>
-    internal static string TransactionVoid(string transactionId) => $"/transactions/{transactionId}/void";
+    internal static string TransactionVoid(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/void";
 
     /// <summary>Builds the 3D Secure initialise route for a specific transaction.</summary>
     /// <param name="transactionId">The Elavon transaction identifier.</param>
     /// <returns>The relative API route for 3D Secure initialisation.</returns>
-    internal static string Transaction3Ds(string transactionId) => $"/transactions/{transactionId}/3d-secure";
+    internal static string Transaction3Ds(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/3d-secure";
 
     /// <summary>Builds the 3D Secure completion route for a specific transaction.</summary>
     /// <param name="transactionId">The Elavon transaction identifier.</param>
     /// <returns>The relative API route for 3D Secure completion.</returns>
-    internal static string Transaction3DsComplete(string transactionId) => $"/transactions/{transactionId}/3d-secure/complete";
+    internal static string Transaction3DsComplete(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/3d-secure/complete";
 
     /// <summary>Builds the instructions route for a specific transaction.</summary>
     /// <param name="transactionId">The Elavon transaction identifier.</param>
     /// <returns>The relative API route for transaction instructions.</returns>
-    internal static string TransactionInstructions(string transactionId) => $"/transactions/{transactionId}/instructions";
+    internal static string TransactionInstructions(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/instructions";
 
     /// <summary>Builds the security-code linking route for a card identifier.</summary>
     /// <param name="cardIdentifier">The card identifier token.</param>
     /// <returns>The relative API route for linking a security code.</returns>
-    internal static string CardIdentifierSecurityCode(string cardIdentifier) => $"/card-identifiers/{cardIdentifier}/security-code";
+    internal static string CardIdentifierSecurityCode(string cardIdentifier) => $"/card-identifiers/{PathSegment(cardIdentifier, nameof(cardIdentifier))}/security-code";
+
+    private static string PathSegment(string value, string paramName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("Value cannot be null or whitespace.", paramName);
+
+        return Uri.EscapeDataString(value);
+    }
 }

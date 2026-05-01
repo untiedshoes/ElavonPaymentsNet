@@ -27,6 +27,9 @@ internal sealed class ElavonCardIdentifiersService : IElavonCardIdentifiersServi
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<CreateCardIdentifierResponse> CreateCardIdentifierAsync(string merchantSessionKey,CreateCardIdentifierRequest request,CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(merchantSessionKey))
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(merchantSessionKey));
+
         return await _api.SendAsync<CreateCardIdentifierRequest, CreateCardIdentifierResponse>(
             HttpMethod.Post, ElavonApiRoutes.CardIdentifiers, request, merchantSessionKey, cancellationToken)
             .ConfigureAwait(false);

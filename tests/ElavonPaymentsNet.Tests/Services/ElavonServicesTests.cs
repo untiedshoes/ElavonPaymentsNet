@@ -328,6 +328,75 @@ public sealed class ElavonServicesTests
     }
 
     /// <summary>
+    /// Verifies that blank transaction identifiers are rejected before sending a capture request.
+    /// </summary>
+    [Fact]
+    public async Task PostPayments_Capture_BlankTransactionId_ThrowsArgumentException()
+    {
+        var service = CreatePostPaymentService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-c\",\"status\":\"Ok\"}")));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.CaptureTransactionAsync(" ", new CapturePaymentRequest { Amount = 50 }));
+
+        Assert.Equal("transactionId", ex.ParamName);
+    }
+
+    /// <summary>
+    /// Verifies that transaction identifiers are URI-escaped before building instruction routes.
+    /// </summary>
+    [Fact]
+    public async Task Instructions_Create_EscapesTransactionIdInRoute()
+    {
+        HttpRequestMessage? captured = null;
+        var service = CreateInstructionsService(async request =>
+        {
+            captured = request;
+            return Json(HttpStatusCode.OK, "{\"instructionType\":\"Void\",\"date\":\"2026-01-01T00:00:00Z\"}");
+        });
+
+        await service.CreateInstructionAsync("tx/with space", new InstructionRequest { InstructionType = InstructionType.Void });
+
+        Assert.NotNull(captured);
+        Assert.Equal("/transactions/tx%2Fwith%20space/instructions", captured!.RequestUri!.AbsolutePath);
+    }
+
+    /// <summary>
+    /// Verifies that blank merchant session keys are rejected before creating card identifiers.
+    /// </summary>
+    [Fact]
+    public async Task CardIdentifiers_Create_BlankMerchantSessionKey_ThrowsArgumentException()
+    {
+        var service = CreateCardIdentifiersService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{\"cardIdentifier\":\"cid_1\"}")));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.CreateCardIdentifierAsync(" ", new CreateCardIdentifierRequest
+            {
+                CardDetails = new CardDetails { CardNumber = "4929000000006", ExpiryDate = "1229" }
+            }));
+
+        Assert.Equal("merchantSessionKey", ex.ParamName);
+    }
+
+    /// <summary>
+    /// Verifies that card identifiers are URI-escaped before building the security-code route.
+    /// </summary>
+    [Fact]
+    public async Task CardIdentifiers_LinkSecurityCode_EscapesCardIdentifierInRoute()
+    {
+        HttpRequestMessage? captured = null;
+        var service = CreateCardIdentifiersService(async request =>
+        {
+            captured = request;
+            return Json(HttpStatusCode.OK, "{}");
+        });
+
+        await service.LinkCardIdentifierAsync("cid/with space", new LinkCardIdentifierRequest { SecurityCode = "123" });
+
+        Assert.NotNull(captured);
+        Assert.Equal("/card-identifiers/cid%2Fwith%20space/security-code", captured!.RequestUri!.AbsolutePath);
+    }
+
+    /// <summary>
     /// Verifies that instruction creation posts to /transactions/{id}/instructions using Basic auth.
     /// </summary>
     [Fact]

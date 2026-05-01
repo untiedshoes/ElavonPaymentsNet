@@ -476,7 +476,7 @@ tests/
     +-- Client/
     |   +-- ElavonPaymentsClientTests.cs
     +-- Http/
-    |   +-- ElavonApiClientExceptionTests.cs # Typed exception hierarchy + Retry-After parsing
+    |   +-- ElavonApiClientExceptionTests.cs # Typed exception hierarchy, Retry-After parsing, empty/malformed 2xx body
     |   +-- ElavonResilienceHandlerTests.cs
     |   +-- ElavonResilienceHandlerRetryTests.cs
     |   +-- Fakes/
@@ -594,10 +594,13 @@ Useful references:
 Unit tests cover:
 
 - `RequestMapper` -- transactionType injection for all four `TransactionType` values, token wrapping, billing address mapping
-- `ElavonPaymentsClient` constructor guard clauses -- blank credentials throw `ArgumentException`
+- `ElavonPaymentsClient` constructor guard clauses -- blank credentials, null `ILoggerFactory`, and null `HttpClient` all throw at construction time
 - Environment URL resolution -- sandbox and live base URLs resolve correctly
 - `ElavonResilienceHandler` -- retries GET transient faults only, never retries POST, no retry on 4xx
+- `ElavonApiClient` error mapping -- all HTTP status code paths, Retry-After header parsing, and empty/malformed 2xx body deserialization
 - Service-layer orchestration -- verifies route, verb, auth mode, and core payload mapping across all service methods
+- Path parameter validation and URI encoding -- blank path parameters throw `ArgumentException`; special characters are percent-encoded before dispatch
+- Input guard coverage -- blank `merchantSessionKey` throws before the HTTP call is made
 
 `InternalsVisibleTo` exposes internal mappers and DTOs to the test project -- mapping is verified directly without going through HTTP. No live API calls required.
 
@@ -658,9 +661,9 @@ Use a custom server URL only if you explicitly need non-default routing (for exa
 
 ### Testing Gaps to Close
 
-- Contract tests: validate SDK request/response JSON shapes against `docs/schema/*` and `docs/sdk-surface.yaml`
-- Integration tests: add sandbox-backed tests with environment-variable gating and explicit skip behavior when credentials are not configured
-- Smoke tests: add a minimal fast sanity suite for CI (SDK bootstrapping + one safe end-to-end API flow)
+- **Contract tests**: validate SDK request/response JSON shapes against `docs/schema/*` and `docs/sdk-surface.yaml` — schema files exist in the repo; a parameterised xUnit theory over the JSON files would close this quickly
+- **Integration tests**: sandbox-backed tests with environment-variable gating and explicit skip when credentials are absent — blocked on sandbox credentials, but the test structure is ready to receive them
+- **Smoke tests**: a minimal fast CI suite covering SDK bootstrapping and one safe end-to-end API flow (e.g. `GET /merchant-session-keys` validation call)
 
 ---
 

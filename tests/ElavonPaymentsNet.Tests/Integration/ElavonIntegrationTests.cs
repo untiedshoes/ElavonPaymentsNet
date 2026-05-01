@@ -84,6 +84,75 @@ public sealed class ElavonIntegrationTests
     }
 
     /// <summary>
+    /// Verifies the full MSK + card-identifier + transaction flow returns a bank decline
+    /// for the known sandbox decline card when 3DS is disabled.
+    /// Requires ELAVON_INTEGRATION_KEY, ELAVON_INTEGRATION_PASSWORD, and ELAVON_VENDOR_NAME.
+    /// </summary>
+    [Fact]
+    public async Task CreateTransactionAsync_CardIdentifierFlow_DeclineCard_ReturnsBankDecline()
+    {
+        if (!HasTransactionEnvironment())
+            return;
+
+        var options = CreateOptionsFromEnvironment();
+        var vendorName = GetRequiredEnvironmentVariable("ELAVON_VENDOR_NAME");
+        var client = new ElavonPaymentsClient(options);
+
+        var session = await client.Wallets.CreateMerchantSessionKeyAsync(
+            new MerchantSessionRequest { VendorName = vendorName });
+
+        Assert.False(string.IsNullOrWhiteSpace(session.MerchantSessionKey));
+
+        var cardId = await client.CardIdentifiers.CreateCardIdentifierAsync(
+            session.MerchantSessionKey,
+            new CreateCardIdentifierRequest
+            {
+                CardDetails = new CardDetails
+                {
+                    CardNumber     = "4929602110085639",
+                    ExpiryDate     = "1229",
+                    SecurityCode   = "123",
+                    CardholderName = "SUCCESSFUL"
+                }
+            });
+
+        Assert.False(string.IsNullOrWhiteSpace(cardId.CardIdentifier));
+
+        var result = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
+        {
+            TransactionType   = TransactionType.Payment,
+            VendorTxCode      = $"INTEGRATION-DECLINE-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}",
+            Amount            = 100,
+            Currency          = "GBP",
+            Description       = "Integration test bank decline payment",
+            CustomerFirstName = "Integration",
+            CustomerLastName  = "Test",
+            PaymentMethod     = new PaymentMethod
+            {
+                Card = new CardDetails
+                {
+                    MerchantSessionKey = session.MerchantSessionKey,
+                    CardIdentifier     = cardId.CardIdentifier
+                }
+            },
+            BillingAddress = new BillingAddress
+            {
+                Address1   = "88",
+                City       = "London",
+                PostalCode = "412",
+                Country    = "GB"
+            },
+            Apply3DSecure = Apply3DSecureOption.Disable
+        });
+
+        Assert.NotNull(result);
+        Assert.False(string.IsNullOrWhiteSpace(result.TransactionId));
+        Assert.Equal("NotAuthed", result.Status);
+        Assert.Equal(2000, result.StatusCode);
+        Assert.Equal("The Authorisation was Declined by the bank.", result.StatusDetail);
+    }
+
+    /// <summary>
     /// Verifies that RetrieveTransactionAsync can read a known safe transaction in sandbox
     /// when integration credentials and a safe transaction ID are supplied.
     /// </summary>

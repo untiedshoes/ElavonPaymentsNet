@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-test:
-    name: Build + Unit and Contract Tests
+    name: Build + All Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -33,36 +33,5 @@ jobs:
       - name: Run contract tests
         run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category=Contract"
 
-  integration-test:
-    name: Manual Integration Test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build solution
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Run integration tests with safe credentials and IDs
-        shell: bash
-        env:
-          ELAVON_INTEGRATION_KEY: ${{ secrets.ELAVON_INTEGRATION_KEY }}
-          ELAVON_INTEGRATION_PASSWORD: ${{ secrets.ELAVON_INTEGRATION_PASSWORD }}
-          ELAVON_SAFE_TRANSACTION_ID: ${{ secrets.ELAVON_SAFE_TRANSACTION_ID }}
-        run: |
-          if [ -z "$ELAVON_INTEGRATION_KEY" ] || [ -z "$ELAVON_INTEGRATION_PASSWORD" ] || [ -z "$ELAVON_SAFE_TRANSACTION_ID" ]; then
-            echo "Skipping integration tests: required Elavon integration secrets are not configured."
-            exit 0
-          fi
-
-          dotnet test --no-build --configuration Release --verbosity normal --filter "Category=Integration"
+      - name: Run integration tests
+        run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category=Integration"

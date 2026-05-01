@@ -116,9 +116,29 @@ static CreateTransactionRequest BuildCardIdentifierPurchaseRequest(
             PostalCode = "412",
             Country = "GB"
         },
-        Apply3DSecure = apply3DSecure
+        Apply3DSecure = apply3DSecure,
+        StrongCustomerAuthentication = BuildSandboxStrongCustomerAuthentication()
     };
 }
+
+static StrongCustomerAuthentication BuildSandboxStrongCustomerAuthentication() =>
+    new()
+    {
+        NotificationURL = Environment.GetEnvironmentVariable("ELAVON_NOTIFICATION_URL") ?? "https://example.com/3ds-notify",
+        BrowserIP = Environment.GetEnvironmentVariable("ELAVON_BROWSER_IP") ?? "203.0.113.10",
+        BrowserAcceptHeader = Environment.GetEnvironmentVariable("ELAVON_BROWSER_ACCEPT") ?? "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        BrowserJavascriptEnabled = true,
+        BrowserJavaEnabled = false,
+        BrowserLanguage = Environment.GetEnvironmentVariable("ELAVON_BROWSER_LANGUAGE") ?? "en-GB",
+        BrowserColorDepth = Environment.GetEnvironmentVariable("ELAVON_BROWSER_COLOR_DEPTH") ?? "24",
+        BrowserScreenHeight = Environment.GetEnvironmentVariable("ELAVON_BROWSER_SCREEN_HEIGHT") ?? "1080",
+        BrowserScreenWidth = Environment.GetEnvironmentVariable("ELAVON_BROWSER_SCREEN_WIDTH") ?? "1920",
+        BrowserTZ = Environment.GetEnvironmentVariable("ELAVON_BROWSER_TZ") ?? "0",
+        BrowserUserAgent = Environment.GetEnvironmentVariable("ELAVON_BROWSER_USER_AGENT") ?? "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        ChallengeWindowSize = Environment.GetEnvironmentVariable("ELAVON_CHALLENGE_WINDOW_SIZE") ?? "FullScreen",
+        TransType = Environment.GetEnvironmentVariable("ELAVON_TRANS_TYPE") ?? "GoodsAndServicePurchase",
+        ThreeDSRequestorChallengeInd = Environment.GetEnvironmentVariable("ELAVON_3DS_REQUESTOR_CHALLENGE_IND") ?? "03"
+    };
 
 static (string FirstName, string LastName) SplitName(string fullName)
 {

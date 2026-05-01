@@ -29,6 +29,7 @@ The design is intentionally Stripe-style: a single client entry point with named
 
 - Full coverage of the Opayo PI REST API: payments, post-payment operations, 3D Secure, tokenisation, Apple Pay, card identifiers, and instructions
 - Typed request and response models -- no raw JSON or `dynamic` in the public API
+- Strong Customer Authentication (EMV 3DS v2) request support via `StrongCustomerAuthentication` on transaction requests
 - `Basic` authentication for all standard API calls; `Bearer` token support for MSK/drop-in flows
 - All HTTP errors converted to typed `ElavonApiException` -- raw HTTP responses never surface to the caller
 - `ElavonAuthenticationException` on 401 so authentication failures are always unambiguous
@@ -96,23 +97,23 @@ STANDARD PAYMENT FLOW (Basic auth throughout)
    | CreateTransactionAsync|                             |
    |---------------------->|  POST /transactions         |
    |                       |---------------------------->|
-   |                       |  202 { status: "3DAuth",   |
-   |                       |        acsUrl, cReq }      |
+    |                       |  202 { status: "3DAuth" }  |
    |                       |<----------------------------|
    | PaymentResponse       |                             |
    | (.Status="3DAuth")    |                             |
    |<----------------------|                             |
    |                       |                             |
-   |  [redirect cardholder to acsUrl with cReq]         |
-   |  [ACS authenticates, posts cRes to your callback]  |
-   |                       |                             |
    | Initialise3DsAsync    |  POST /transactions/{id}   |
    |---------------------->|       /3d-secure            |
    |                       |---------------------------->|
+    |                       |  200 { status, acsUrl, cReq }|
    |                       |<----------------------------|
    | Initialise3DsResponse |                             |
    |<----------------------|                             |
    |                       |                             |
+    |  [redirect cardholder to acsUrl with cReq]         |
+    |  [ACS authenticates, posts cRes to your callback]  |
+    |                       |                             |
    | Complete3DsAsync(cRes)|  POST /transactions/{id}   |
    |---------------------->|       /3d-secure/complete   |
    |                       |---------------------------->|
@@ -161,9 +162,9 @@ POST-PAYMENT & INSTRUCTIONS
 
   After Authorise or Deferred:
 
-  CaptureTransactionAsync   ->  POST /transactions/{id}/capture
-  RefundTransactionAsync    ->  POST /transactions/{id}/refund
-  VoidTransactionAsync      ->  POST /transactions/{id}/void
+    CaptureTransactionAsync   ->  POST /transactions/{id}/instructions (Release)
+    RefundTransactionAsync    ->  POST /transactions (Refund + referenceTransactionId)
+    VoidTransactionAsync      ->  POST /transactions/{id}/instructions (Void)
 
   Lifecycle instructions (Void, Abort, Release, Cancel):
 
@@ -227,7 +228,24 @@ var result = await client.Transactions.CreateTransactionAsync(new CreateTransact
         PostalCode = "412",
         Country    = "GB"
     },
-    Apply3DSecure = Apply3DSecureOption.Disable   // omit to use account default
+    Apply3DSecure = Apply3DSecureOption.Disable,   // omit to use account default
+    StrongCustomerAuthentication = new StrongCustomerAuthentication
+    {
+        NotificationURL             = "https://example.com/3ds-notify",
+        BrowserIP                   = "203.0.113.10",
+        BrowserAcceptHeader         = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        BrowserJavascriptEnabled    = true,
+        BrowserJavaEnabled          = false,
+        BrowserLanguage             = "en-GB",
+        BrowserColorDepth           = "24",
+        BrowserScreenHeight         = "1080",
+        BrowserScreenWidth          = "1920",
+        BrowserTZ                   = "0",
+        BrowserUserAgent            = "Mozilla/5.0",
+        ChallengeWindowSize         = "FullScreen",
+        TransType                   = "GoodsAndServicePurchase",
+        ThreeDSRequestorChallengeInd= "03"
+    }
 });
 
 Console.WriteLine($"Status: {result.Status}");
@@ -299,7 +317,7 @@ All API errors are mapped to typed exceptions -- the raw `HttpResponseMessage` n
 | Exception | Status | When thrown |
 |---|---|---|
 | `ElavonAuthenticationException` | 401 | Invalid or missing credentials |
-| `ElavonValidationException` | 400 | Malformed or rejected request |
+| `ElavonValidationException` | 400, 422 | Malformed or rejected request |
 | `ElavonPaymentDeclinedException` | 402 | Card declined by the issuer |
 | `ElavonRateLimitException` | 429 | Too many requests; exposes `RetryAfter` (`TimeSpan?`) |
 | `ElavonServerException` | 5xx | Server-side fault |
@@ -476,7 +494,10 @@ src/
     +-- Models/
     |   +-- Public/
     |   |   +-- Requests/                    # All public request models
-    |   |   +-- Responses/                   # All public response models    |   |   +-- Apply3DSecureOption.cs    |   |   +-- TransactionType.cs
+    |   |   +-- Responses/                   # All public response models
+    |   |   +-- Apply3DSecureOption.cs
+    |   |   +-- StrongCustomerAuthentication.cs
+    |   |   +-- TransactionType.cs
     |   |   +-- InstructionType.cs
     |   +-- Internal/
     |       +-- ApiErrorResponse.cs          # API error payload (internal)
@@ -486,7 +507,7 @@ src/
     +-- Exceptions/
     |   +-- ElavonApiException.cs            # Base exception (HttpStatusCode, RawResponse, ErrorCode)
     |   +-- ElavonAuthenticationException.cs # 401
-    |   +-- ElavonValidationException.cs     # 400
+    |   +-- ElavonValidationException.cs     # 400 / 422
     |   +-- ElavonPaymentDeclinedException.cs# 402
     |   +-- ElavonRateLimitException.cs      # 429 -- exposes RetryAfter (TimeSpan?)
     |   +-- ElavonServerException.cs         # 5xx
@@ -594,6 +615,13 @@ export ELAVON_TEST_CARD_EXPIRY="1229"
 export ELAVON_TEST_CARD_CVV="123"
 export ELAVON_TEST_CARDHOLDER="Sandbox Tester"
 export ELAVON_MAGIC_CARDHOLDER="SUCCESSFUL"   # controls 3DS simulation outcome
+
+# Optional 3DS / SCA overrides (playground has safe defaults)
+export ELAVON_NOTIFICATION_URL="https://example.com/3ds-notify" # must be valid https URL
+export ELAVON_BROWSER_IP="203.0.113.10"
+export ELAVON_BROWSER_USER_AGENT="Mozilla/5.0"
+export ELAVON_BROWSER_LANGUAGE="en-GB"
+export ELAVON_APPLY_3DS="Disable"             # Disable / Force / UseMSPSetting
 ```
 
 ### Run playground purchase test
@@ -608,8 +636,17 @@ When the playground starts, it prompts for:
 
 - **Card number, expiry, CVV, cardholder name** — press Enter to accept defaults
 - **Magic cardholder (3DS simulation)** — controls the sandbox 3DS outcome via the cardholder name on the card identifier. Defaults to `SUCCESSFUL` (frictionless OK). Other values: `NOTAUTH`, `CHALLENGE`, `PROOFATTEMPT`, `REJECT`, `TECHDIFFICULTIES`, `ERROR`.
+- **Apply3DSecure override** — `Disable`, `Force`, `UseMSPSetting`, or blank to use account default.
 
 Environment variables are used as the default values for each prompt if set.
+
+### Forcing a visible 3DS challenge in the playground
+
+Use these values to reliably trigger challenge status in sandbox testing:
+
+- `Magic cardholder` = `CHALLENGE`
+- `Apply3DSecure` = `Force`
+- `ELAVON_NOTIFICATION_URL` must be a valid fully-qualified `https://` URL (do not use localhost)
 
 ### Sandbox billing address for AVS checks
 
@@ -684,7 +721,7 @@ Use a custom server URL only if you explicitly need non-default routing (for exa
 ## Roadmap
 
 - Integration tests against the Opayo sandbox
-- Expanded 3DS metadata (SCA fields, exemption indicators)
+- Expanded 3DS metadata beyond baseline browser fields (risk indicators, prior auth, exemptions)
 - NuGet package publication
 
 ### Playground Coverage to Add
@@ -698,7 +735,7 @@ Use a custom server URL only if you explicitly need non-default routing (for exa
 
 #### Phase 2 (Advanced Flows)
 
-- 3DS playground script: `Initialise3DsAsync` and `Complete3DsAsync` path testing
+- 3DS playground script hardening: complete challenge payload alignment and callback ergonomics
 - Token flow playground: `CreateTokenAsync` then `PayWithTokenAsync`
 
 ### Testing Gaps to Close

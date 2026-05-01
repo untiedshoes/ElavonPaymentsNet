@@ -235,4 +235,34 @@ public class RequestMapperTests
 
         Assert.Null(dto.Apply3DSecure);
     }
+
+    /// <summary>
+    /// Verifies that strongCustomerAuthentication is preserved on payment transactions.
+    /// </summary>
+    [Fact]
+    public void CreateTransactionRequest_WithStrongCustomerAuthentication_MapsObject()
+    {
+        var request = new CreateTransactionRequest
+        {
+            TransactionType = TransactionType.Payment,
+            VendorTxCode = "TX-010",
+            Amount = 100,
+            Currency = "GBP",
+            StrongCustomerAuthentication = new StrongCustomerAuthentication
+            {
+                BrowserIP = "203.0.113.10",
+                BrowserLanguage = "en-GB",
+                BrowserUserAgent = "Mozilla/5.0",
+                ThreeDSRequestorChallengeInd = "03"
+            }
+        };
+
+        var dto = RequestMapper.ToDto(request);
+
+        Assert.NotNull(dto.StrongCustomerAuthentication);
+        Assert.Equal("203.0.113.10", dto.StrongCustomerAuthentication!.BrowserIP);
+        Assert.Equal("en-GB", dto.StrongCustomerAuthentication.BrowserLanguage);
+        Assert.Equal("Mozilla/5.0", dto.StrongCustomerAuthentication.BrowserUserAgent);
+        Assert.Equal("03", dto.StrongCustomerAuthentication.ThreeDSRequestorChallengeInd);
+    }
 }

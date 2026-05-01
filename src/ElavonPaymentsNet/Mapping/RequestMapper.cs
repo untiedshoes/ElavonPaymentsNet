@@ -28,7 +28,8 @@ internal static class RequestMapper
             CustomerFirstName = isRepeat ? null : r.CustomerFirstName,
             CustomerLastName = isRepeat ? null : r.CustomerLastName,
             Apply3DSecure = isRepeat ? null : r.Apply3DSecure?.ToString(),
-            ReferenceTransactionId = r.RelatedTransactionId
+            ReferenceTransactionId = r.RelatedTransactionId,
+            StrongCustomerAuthentication = isRepeat ? null : r.StrongCustomerAuthentication
         };
     }
 

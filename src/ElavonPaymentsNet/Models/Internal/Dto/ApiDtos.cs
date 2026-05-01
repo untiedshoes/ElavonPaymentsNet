@@ -23,6 +23,7 @@ internal sealed class CreateTransactionRequestDto
     public string? CustomerLastName { get; init; }
     public string? Apply3DSecure { get; init; }
     public string? ReferenceTransactionId { get; init; }
+    public StrongCustomerAuthentication? StrongCustomerAuthentication { get; init; }
 }
 
 // ---------------------------------------------------------------------------

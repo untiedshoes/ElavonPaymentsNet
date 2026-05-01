@@ -47,4 +47,11 @@ public class CreateTransactionRequest
     /// Required when <see cref="TransactionType"/> is <see cref="TransactionType.Repeat"/>.
     /// </summary>
     public string? RelatedTransactionId { get; init; }
+
+    /// <summary>
+    /// Browser and device data required for EMV 3DS v2 (Strong Customer Authentication).
+    /// Should be included on all Payment and Authorise transactions where 3DS may be
+    /// triggered, to allow the issuer to perform a frictionless or challenge flow.
+    /// </summary>
+    public StrongCustomerAuthentication? StrongCustomerAuthentication { get; init; }
 }

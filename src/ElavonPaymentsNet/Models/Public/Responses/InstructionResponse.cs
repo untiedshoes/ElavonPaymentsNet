@@ -7,5 +7,5 @@ public sealed class InstructionResponse
     public InstructionType InstructionType { get; init; }
 
     /// <summary>The date and time the instruction was processed.</summary>
-    public DateTime Date { get; init; }
+    public DateTimeOffset Date { get; init; }
 }

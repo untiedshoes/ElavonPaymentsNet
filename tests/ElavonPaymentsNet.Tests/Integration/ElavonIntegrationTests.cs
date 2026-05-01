@@ -359,7 +359,8 @@ public sealed class ElavonIntegrationTests
         var result  = await client.PostPayments.RefundTransactionAsync(txId, new RefundPaymentRequest
         {
             Amount       = 100,
-            VendorTxCode = $"INTEGRATION-RFND-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}"
+            VendorTxCode = $"INTEGRATION-RFND-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}",
+            Description  = "Integration test refund payment"
         });
 
         Assert.NotNull(result);

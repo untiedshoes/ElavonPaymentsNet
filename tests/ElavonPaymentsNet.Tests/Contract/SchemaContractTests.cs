@@ -140,13 +140,14 @@ public sealed class SchemaContractTests
                 "transactions/repeat-payment",
                 new CreateTransactionRequestDto
                 {
-                    TransactionType    = "Repeat",
-                    VendorTxCode       = "ORDER-4",
-                    Amount             = 100,
-                    Currency           = "GBP",
-                    RelatedTransactionId = "tx-orig"
+                    TransactionType         = "Repeat",
+                    VendorTxCode            = "ORDER-4",
+                    Amount                  = 100,
+                    Currency                = "GBP",
+                    Description             = "Repeat payment",
+                    ReferenceTransactionId  = "tx-orig"
                 },
-                new[] { "transactionType", "vendorTxCode", "amount", "currency", "relatedTransactionId" }
+                new[] { "transactionType", "vendorTxCode", "amount", "currency", "description", "referenceTransactionId" }
             },
             {
                 "postpayment/capture",
@@ -155,8 +156,8 @@ public sealed class SchemaContractTests
             },
             {
                 "postpayment/refund",
-                new RefundPaymentRequest { Amount = 50, VendorTxCode = "REFUND-1" },
-                new[] { "amount", "vendorTxCode" }
+                new RefundPaymentRequest { Amount = 50, VendorTxCode = "REFUND-1", Description = "Refund payment" },
+                new[] { "amount", "vendorTxCode", "description" }
             },
             {
                 "threeds/complete",

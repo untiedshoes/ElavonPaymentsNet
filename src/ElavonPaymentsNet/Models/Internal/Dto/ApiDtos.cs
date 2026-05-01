@@ -14,7 +14,7 @@ internal sealed class CreateTransactionRequestDto
     public required string TransactionType { get; init; }
     public required string VendorTxCode { get; init; }
     public required int Amount { get; init; }
-    public required string Currency { get; init; }
+    public string? Currency { get; init; }
     public string? Description { get; init; }
     public PaymentMethod? PaymentMethod { get; init; }
     public BillingAddress? BillingAddress { get; init; }
@@ -22,7 +22,7 @@ internal sealed class CreateTransactionRequestDto
     public string? CustomerFirstName { get; init; }
     public string? CustomerLastName { get; init; }
     public string? Apply3DSecure { get; init; }
-    public string? RelatedTransactionId { get; init; }
+    public string? ReferenceTransactionId { get; init; }
 }
 
 // ---------------------------------------------------------------------------

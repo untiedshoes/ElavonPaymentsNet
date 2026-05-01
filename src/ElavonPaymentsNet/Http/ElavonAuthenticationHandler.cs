@@ -31,7 +31,7 @@ internal sealed class ElavonAuthenticationHandler : DelegatingHandler
     }
 
     /// <inheritdoc/>
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken cancellationToken)
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         // Check for a Bearer token stored in the request property bag by ElavonApiClient.
         // If present, use it; otherwise fall back to Basic auth with the SDK credentials.

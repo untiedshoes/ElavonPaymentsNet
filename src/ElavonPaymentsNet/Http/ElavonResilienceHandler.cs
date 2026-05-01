@@ -63,7 +63,7 @@ internal sealed class ElavonResilienceHandler : DelegatingHandler
     }
 
     /// <inheritdoc/>
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken cancellationToken)
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         // POST, PUT, PATCH, DELETE — all financial mutating operations.
         // Never retry: a server-side effect may have occurred before the connection dropped.

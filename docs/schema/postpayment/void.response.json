@@ -1,4 +1,4 @@
 {
     "transactionId": "string",
-    "status": "Voided"
+    "status": "Ok"
 }

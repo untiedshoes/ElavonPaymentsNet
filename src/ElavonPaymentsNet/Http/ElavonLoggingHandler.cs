@@ -25,7 +25,7 @@ internal sealed class ElavonLoggingHandler : DelegatingHandler
     }
 
     /// <inheritdoc/>
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken cancellationToken)
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         _logger.LogDebug(
             "Elavon SDK → {Method} {Uri}",

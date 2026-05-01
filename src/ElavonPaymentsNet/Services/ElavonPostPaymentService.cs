@@ -1,5 +1,7 @@
 using ElavonPaymentsNet.Http;
 using ElavonPaymentsNet.Interfaces;
+using ElavonPaymentsNet.Models.Internal.Dto;
+using ElavonPaymentsNet.Models.Public;
 using ElavonPaymentsNet.Models.Public.Requests;
 using ElavonPaymentsNet.Models.Public.Responses;
 
@@ -26,9 +28,22 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<PostPaymentResponse> CaptureTransactionAsync(string transactionId, CapturePaymentRequest request, CancellationToken cancellationToken = default)
     {
-        return await _api.SendAsync<CapturePaymentRequest, PostPaymentResponse>(
-            HttpMethod.Post, ElavonApiRoutes.TransactionCapture(transactionId), request, null, cancellationToken)
-            .ConfigureAwait(false);
+        _ = await _api.SendAsync<InstructionRequest, InstructionResponse>(
+            HttpMethod.Post,
+            ElavonApiRoutes.TransactionInstructions(transactionId),
+            new InstructionRequest
+            {
+                InstructionType = InstructionType.Release,
+                Amount = request.Amount
+            },
+            null,
+            cancellationToken).ConfigureAwait(false);
+
+        return new PostPaymentResponse
+        {
+            TransactionId = transactionId,
+            Status = "Ok"
+        };
     }
 
     /// <summary>
@@ -39,9 +54,25 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<PostPaymentResponse> RefundTransactionAsync(string transactionId, RefundPaymentRequest request, CancellationToken cancellationToken = default)
     {
-        return await _api.SendAsync<RefundPaymentRequest, PostPaymentResponse>(
-            HttpMethod.Post, ElavonApiRoutes.TransactionRefund(transactionId), request, null, cancellationToken)
-            .ConfigureAwait(false);
+        var response = await _api.SendAsync<CreateTransactionRequestDto, PaymentResponse>(
+            HttpMethod.Post,
+            ElavonApiRoutes.Transactions,
+            new CreateTransactionRequestDto
+            {
+                TransactionType = "Refund",
+                VendorTxCode = request.VendorTxCode,
+                Amount = request.Amount,
+                Description = request.Description,
+                ReferenceTransactionId = transactionId
+            },
+            null,
+            cancellationToken).ConfigureAwait(false);
+
+        return new PostPaymentResponse
+        {
+            TransactionId = response.TransactionId,
+            Status = response.Status
+        };
     }
 
     /// <summary>
@@ -51,8 +82,20 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<PostPaymentResponse> VoidTransactionAsync(string transactionId, CancellationToken cancellationToken = default)
     {
-        return await _api.SendAsync<PostPaymentResponse>(
-            HttpMethod.Post, ElavonApiRoutes.TransactionVoid(transactionId), null, cancellationToken)
-            .ConfigureAwait(false);
+        _ = await _api.SendAsync<InstructionRequest, InstructionResponse>(
+            HttpMethod.Post,
+            ElavonApiRoutes.TransactionInstructions(transactionId),
+            new InstructionRequest
+            {
+                InstructionType = InstructionType.Void
+            },
+            null,
+            cancellationToken).ConfigureAwait(false);
+
+        return new PostPaymentResponse
+        {
+            TransactionId = transactionId,
+            Status = "Ok"
+        };
     }
 }

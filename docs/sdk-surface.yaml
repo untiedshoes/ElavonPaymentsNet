@@ -98,8 +98,10 @@ operations:
   capturePayment:
     group: PostPayment
     method: POST
-    path: /transactions/{transactionId}/capture
+    path: /transactions/{transactionId}/instructions
     host: api
+    notes: >
+      Capture is executed as a Release instruction against the transaction.
 
     dto:
       request: CapturePaymentRequestDto
@@ -112,8 +114,11 @@ operations:
   refundPayment:
     group: PostPayment
     method: POST
-    path: /transactions/{transactionId}/refund
+    path: /transactions
     host: api
+    notes: >
+      Refund is executed as a Refund transaction create with referenceTransactionId set
+      to the original transaction.
 
     dto:
       request: RefundPaymentRequestDto
@@ -126,8 +131,10 @@ operations:
   voidPayment:
     group: PostPayment
     method: POST
-    path: /transactions/{transactionId}/void
+    path: /transactions/{transactionId}/instructions
     host: api
+    notes: >
+      Void is executed as a Void instruction against the transaction.
 
     dto:
       request: VoidPaymentRequestDto
@@ -245,7 +252,7 @@ operations:
   createApplePaySession:
     group: Wallets
     method: POST
-    path: /applepay/session
+    path: /applepay/sessions
     host: merchantSession
 
     dto:
@@ -273,7 +280,9 @@ validationProfiles:
   refund:
     rules:
       - amount > 0
-      - relatedTransactionId required
+      - vendorTxCode required
+      - description required
+      - referenceTransactionId required
 
   capture:
     rules:

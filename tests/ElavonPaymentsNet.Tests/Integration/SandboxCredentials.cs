@@ -12,7 +12,6 @@ internal static class SandboxCredentials
 {
     // ----------------------------------------------------------------
     // Basic sandbox — no 3DS extra checks applied.
-    // VendorName: "sandbox"
     // ----------------------------------------------------------------
 
     internal static ElavonPaymentsClientOptions Basic => new()
@@ -26,7 +25,6 @@ internal static class SandboxCredentials
 
     // ----------------------------------------------------------------
     // Extra Checks sandbox — 3DS extra checks enabled.
-    // VendorName: "sandboxEC"
     // ----------------------------------------------------------------
 
     internal static ElavonPaymentsClientOptions ExtraChecks => new()

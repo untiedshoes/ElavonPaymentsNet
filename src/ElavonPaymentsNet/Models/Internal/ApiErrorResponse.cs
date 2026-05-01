@@ -13,6 +13,10 @@ internal sealed class ApiErrorResponse
 internal sealed class ApiErrorDetail
 {
     public string? Property { get; init; }
+    public string? Description { get; init; }
+    public int? Code { get; init; }
+    /// <summary>Legacy field — present in some older Elavon error shapes.</summary>
     public string? ClientMessage { get; init; }
+    /// <summary>Legacy field — present in some older Elavon error shapes.</summary>
     public string? Message { get; init; }
 }

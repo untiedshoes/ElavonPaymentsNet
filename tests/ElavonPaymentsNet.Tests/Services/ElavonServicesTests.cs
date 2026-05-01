@@ -108,18 +108,25 @@ public sealed class ElavonServicesTests
     public async Task PostPayments_Capture_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;
+        string? capturedBody = null;
         var service = CreatePostPaymentService(async request =>
         {
             captured = request;
-            return Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-c\",\"status\":\"Ok\"}");
+            capturedBody = request.Content is null
+                ? null
+                : await request.Content.ReadAsStringAsync();
+            return Json(HttpStatusCode.OK, "{\"instructionType\":\"Release\",\"date\":\"2026-01-01T00:00:00Z\"}");
         });
 
         var response = await service.CaptureTransactionAsync("tx-123", new CapturePaymentRequest { Amount = 50 });
 
-        Assert.Equal("tx-c", response.TransactionId);
+        Assert.Equal("tx-123", response.TransactionId);
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Equal("/transactions/tx-123/capture", captured.RequestUri!.AbsolutePath);
+        Assert.Equal("/transactions/tx-123/instructions", captured.RequestUri!.AbsolutePath);
+        Assert.NotNull(capturedBody);
+        Assert.Contains("\"instructionType\":\"release\"", capturedBody);
+        Assert.Contains("\"amount\":50", capturedBody);
         Assert.Equal("Basic", captured.Headers.Authorization!.Scheme);
     }
 
@@ -130,18 +137,31 @@ public sealed class ElavonServicesTests
     public async Task PostPayments_Refund_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;
+        string? capturedBody = null;
         var service = CreatePostPaymentService(async request =>
         {
             captured = request;
+            capturedBody = request.Content is null
+                ? null
+                : await request.Content.ReadAsStringAsync();
             return Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-r\",\"status\":\"Ok\"}");
         });
 
-        var response = await service.RefundTransactionAsync("tx-123", new RefundPaymentRequest { Amount = 25, VendorTxCode = "R-1" });
+        var response = await service.RefundTransactionAsync("tx-123", new RefundPaymentRequest
+        {
+            Amount = 25,
+            VendorTxCode = "R-1",
+            Description = "Refund service test"
+        });
 
         Assert.Equal("tx-r", response.TransactionId);
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Equal("/transactions/tx-123/refund", captured.RequestUri!.AbsolutePath);
+        Assert.Equal("/transactions", captured.RequestUri!.AbsolutePath);
+        Assert.NotNull(capturedBody);
+        Assert.Contains("\"transactionType\":\"Refund\"", capturedBody);
+        Assert.Contains("\"description\":\"Refund service test\"", capturedBody);
+        Assert.Contains("\"referenceTransactionId\":\"tx-123\"", capturedBody);
         Assert.Equal("Basic", captured.Headers.Authorization!.Scheme);
     }
 
@@ -152,18 +172,24 @@ public sealed class ElavonServicesTests
     public async Task PostPayments_Void_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;
+        string? capturedBody = null;
         var service = CreatePostPaymentService(async request =>
         {
             captured = request;
-            return Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-v\",\"status\":\"Ok\"}");
+            capturedBody = request.Content is null
+                ? null
+                : await request.Content.ReadAsStringAsync();
+            return Json(HttpStatusCode.OK, "{\"instructionType\":\"Void\",\"date\":\"2026-01-01T00:00:00Z\"}");
         });
 
         var response = await service.VoidTransactionAsync("tx-123");
 
-        Assert.Equal("tx-v", response.TransactionId);
+        Assert.Equal("tx-123", response.TransactionId);
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Equal("/transactions/tx-123/void", captured.RequestUri!.AbsolutePath);
+        Assert.Equal("/transactions/tx-123/instructions", captured.RequestUri!.AbsolutePath);
+        Assert.NotNull(capturedBody);
+        Assert.Contains("\"instructionType\":\"void\"", capturedBody);
         Assert.Equal("Basic", captured.Headers.Authorization!.Scheme);
     }
 
@@ -314,7 +340,7 @@ public sealed class ElavonServicesTests
     }
 
     /// <summary>
-    /// Verifies that Apple Pay session creation posts to /applepay/session using Basic auth.
+    /// Verifies that Apple Pay session creation posts to /applepay/sessions using Basic auth.
     /// </summary>
     [Fact]
     public async Task Wallets_CreateApplePaySession_UsesExpectedRouteAndAuth()
@@ -331,7 +357,7 @@ public sealed class ElavonServicesTests
         Assert.True(response.Session.HasValue);
         Assert.Equal("ms", response.Session.Value.GetProperty("merchantSessionIdentifier").GetString());
         Assert.NotNull(captured);
-        Assert.Equal("/applepay/session", captured!.RequestUri!.AbsolutePath);
+        Assert.Equal("/applepay/sessions", captured!.RequestUri!.AbsolutePath);
         Assert.Equal("Basic", captured.Headers.Authorization!.Scheme);
     }
 

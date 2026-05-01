@@ -141,6 +141,8 @@ internal sealed class ElavonApiClient
             .Select(e => new ElavonValidationError
             {
                 Property = e.Property,
+                Description = e.Description,
+                Code = e.Code,
                 ClientMessage = e.ClientMessage,
                 Message = e.Message
             })
@@ -152,6 +154,7 @@ internal sealed class ElavonApiClient
         {
             HttpStatusCode.Unauthorized    => new ElavonAuthenticationException(body),
             HttpStatusCode.BadRequest      => new ElavonValidationException(body, errorCode, validationErrors),
+            HttpStatusCode.UnprocessableEntity => new ElavonValidationException(body, errorCode, validationErrors),
             HttpStatusCode.PaymentRequired => new ElavonPaymentDeclinedException(body, errorCode),
             HttpStatusCode.TooManyRequests => new ElavonRateLimitException(body, errorCode, ParseRetryAfter(response)),
             _ when (int)statusCode >= 500  => new ElavonServerException(statusCode, body, errorCode),

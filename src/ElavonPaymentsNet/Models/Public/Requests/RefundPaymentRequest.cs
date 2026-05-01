@@ -8,4 +8,7 @@ public sealed class RefundPaymentRequest
 
     /// <summary>A unique vendor-assigned transaction code for this refund.</summary>
     public required string VendorTxCode { get; init; }
+
+    /// <summary>A short description of the refund transaction.</summary>
+    public required string Description { get; init; }
 }

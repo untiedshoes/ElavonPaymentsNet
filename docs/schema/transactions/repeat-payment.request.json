@@ -3,5 +3,6 @@
     "vendorTxCode": "string",
     "amount": 0,
     "currency": "GBP",
-    "relatedTransactionId": "string"
+    "description": "string",
+    "referenceTransactionId": "string"
 }

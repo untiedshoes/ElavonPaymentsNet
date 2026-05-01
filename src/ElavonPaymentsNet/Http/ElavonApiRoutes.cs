@@ -23,25 +23,10 @@ internal static class ElavonApiRoutes
     internal static string MerchantSessionKey(string merchantSessionKey) => $"/merchant-session-keys/{PathSegment(merchantSessionKey, nameof(merchantSessionKey))}";
 
     /// <summary>Route for Apple Pay merchant session creation.</summary>
-    internal const string ApplePaySession = "/applepay/session";
+    internal const string ApplePaySession = "/applepay/sessions";
 
     /// <summary>Base route for card identifier operations.</summary>
     internal const string CardIdentifiers = "/card-identifiers";
-
-    /// <summary>Builds the capture route for a specific transaction.</summary>
-    /// <param name="transactionId">The Elavon transaction identifier.</param>
-    /// <returns>The relative API route for capture.</returns>
-    internal static string TransactionCapture(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/capture";
-
-    /// <summary>Builds the refund route for a specific transaction.</summary>
-    /// <param name="transactionId">The Elavon transaction identifier.</param>
-    /// <returns>The relative API route for refund.</returns>
-    internal static string TransactionRefund(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/refund";
-
-    /// <summary>Builds the void route for a specific transaction.</summary>
-    /// <param name="transactionId">The Elavon transaction identifier.</param>
-    /// <returns>The relative API route for void.</returns>
-    internal static string TransactionVoid(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/void";
 
     /// <summary>Builds the 3D Secure initialise route for a specific transaction.</summary>
     /// <param name="transactionId">The Elavon transaction identifier.</param>

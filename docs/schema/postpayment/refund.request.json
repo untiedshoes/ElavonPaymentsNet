@@ -1,4 +1,5 @@
 {
     "amount": 0,
-    "vendorTxCode": "string"
+    "vendorTxCode": "string",
+    "description": "string"
 }

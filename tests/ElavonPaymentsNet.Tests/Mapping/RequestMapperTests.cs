@@ -112,7 +112,7 @@ public class RequestMapperTests
         var dto = RequestMapper.ToDto(request);
 
         Assert.Equal("Repeat", dto.TransactionType);
-        Assert.Equal("original-tx-id", dto.RelatedTransactionId);
+        Assert.Equal("original-tx-id", dto.ReferenceTransactionId);
     }
 
     /// <summary>

@@ -17,6 +17,11 @@ internal static class ElavonApiRoutes
     /// <summary>Route for validating merchant session keys.</summary>
     internal const string MerchantSessionKeyValidation = "/merchant-session-keys/validation";
 
+    /// <summary>Builds the route for retrieving a specific merchant session key.</summary>
+    /// <param name="merchantSessionKey">The merchant session key to validate or inspect.</param>
+    /// <returns>The relative API route for the merchant session key.</returns>
+    internal static string MerchantSessionKey(string merchantSessionKey) => $"/merchant-session-keys/{PathSegment(merchantSessionKey, nameof(merchantSessionKey))}";
+
     /// <summary>Route for Apple Pay merchant session creation.</summary>
     internal const string ApplePaySession = "/applepay/session";
 

@@ -292,7 +292,7 @@ public sealed class ElavonServicesTests
     }
 
     /// <summary>
-    /// Verifies that merchant session validation posts to /merchant-session-keys/validation using Basic auth.
+    /// Verifies that merchant session validation gets /merchant-session-keys/{key} using Basic auth.
     /// </summary>
     [Fact]
     public async Task Wallets_ValidateMerchantSessionKey_UsesExpectedRouteAndAuth()
@@ -301,14 +301,15 @@ public sealed class ElavonServicesTests
         var service = CreateWalletsService(async request =>
         {
             captured = request;
-            return Json(HttpStatusCode.OK, "{\"valid\":true}");
+            return Json(HttpStatusCode.OK, "{\"merchantSessionKey\":\"msk_1\",\"expiry\":\"2025-01-01T00:00:00Z\"}");
         });
 
         var response = await service.ValidateMerchantSessionKeyAsync(new MerchantSessionValidationRequest { MerchantSessionKey = "msk_1" });
 
         Assert.True(response.Valid);
         Assert.NotNull(captured);
-        Assert.Equal("/merchant-session-keys/validation", captured!.RequestUri!.AbsolutePath);
+        Assert.Equal(HttpMethod.Get, captured!.Method);
+        Assert.Equal("/merchant-session-keys/msk_1", captured.RequestUri!.AbsolutePath);
         Assert.Equal("Basic", captured.Headers.Authorization!.Scheme);
     }
 

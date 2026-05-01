@@ -33,8 +33,8 @@ internal sealed class ElavonWalletsService : IElavonWalletsService
     /// </summary>
     public async Task<MerchantSessionValidationResponse> ValidateMerchantSessionKeyAsync(MerchantSessionValidationRequest request, CancellationToken cancellationToken = default)
     {
-        return await _api.SendAsync<MerchantSessionValidationRequest, MerchantSessionValidationResponse>(
-            HttpMethod.Post, ElavonApiRoutes.MerchantSessionKeyValidation, request, null, cancellationToken)
+        return await _api.SendAsync<MerchantSessionValidationResponse>(
+            HttpMethod.Get, ElavonApiRoutes.MerchantSessionKey(request.MerchantSessionKey), null, cancellationToken)
             .ConfigureAwait(false);
     }
 

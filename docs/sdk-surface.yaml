@@ -227,9 +227,12 @@ operations:
 
   validateMerchantSession:
     group: Wallets
-    method: POST
-    path: /merchant-session-keys/validation
+    method: GET
+    path: /merchant-session-keys/{merchantSessionKey}
     host: merchantSession
+    notes: >
+      The merchant session key is passed as a path parameter.
+      A successful response returns the same payload shape as createMerchantSession.
 
     dto:
       request: MerchantSessionValidationRequestDto

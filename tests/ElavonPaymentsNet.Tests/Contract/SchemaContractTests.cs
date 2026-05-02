@@ -49,7 +49,6 @@ public sealed class SchemaContractTests
             { "postpayment/refund.response.json",                   typeof(PostPaymentResponse) },
             { "postpayment/void.response.json",                     typeof(PostPaymentResponse) },
             { "threeds/complete.response.json",                     typeof(Complete3DsResponse) },
-            { "threeds/initialise.response.json",                   typeof(Initialise3DsResponse) },
             { "tokens/create-token.response.json",                  typeof(CreateTokenResponse) },
             { "tokens/pay-with-token.response.json",                typeof(PaymentResponse) },
             { "wallets/merchant-session.response.json",             typeof(MerchantSessionResponse) },
@@ -161,13 +160,8 @@ public sealed class SchemaContractTests
             },
             {
                 "threeds/complete",
-                new Complete3DsRequest { Cres = "sample-cres" },
-                new[] { "cres" }
-            },
-            {
-                "threeds/initialise",
-                new Initialise3DsRequest { NotificationUrl = "https://example.com/3ds-callback" },
-                new[] { "notificationUrl" }
+                new Complete3DsRequest { CRes = "sample-cres" },
+                new[] { "cRes" }
             },
             {
                 "tokens/create-token",

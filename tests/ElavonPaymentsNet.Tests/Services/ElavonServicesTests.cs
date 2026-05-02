@@ -194,29 +194,7 @@ public sealed class ElavonServicesTests
     }
 
     /// <summary>
-    /// Verifies that 3DS initialise posts to /transactions/{id}/3d-secure using Basic auth.
-    /// </summary>
-    [Fact]
-    public async Task ThreeDs_Initialise_UsesExpectedRouteAndAuth()
-    {
-        HttpRequestMessage? captured = null;
-        var service = CreateThreeDsService(async request =>
-        {
-            captured = request;
-            return Json(HttpStatusCode.OK, "{\"status\":\"Ok\",\"acsUrl\":\"https://acs\",\"cReq\":\"abc\"}");
-        });
-
-        var response = await service.Initialise3DsAsync("tx-3ds", new Initialise3DsRequest { NotificationUrl = "https://merchant/callback" });
-
-        Assert.Equal("Ok", response.Status);
-        Assert.NotNull(captured);
-        Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Equal("/transactions/tx-3ds/3d-secure", captured.RequestUri!.AbsolutePath);
-        Assert.Equal("Basic", captured.Headers.Authorization!.Scheme);
-    }
-
-    /// <summary>
-    /// Verifies that 3DS complete posts to /transactions/{id}/3d-secure/complete using Basic auth.
+    /// Verifies that 3DS challenge completion posts to /transactions/{id}/3d-secure-challenge using Basic auth.
     /// </summary>
     [Fact]
     public async Task ThreeDs_Complete_UsesExpectedRouteAndAuth()
@@ -228,12 +206,12 @@ public sealed class ElavonServicesTests
             return Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-3ds\",\"status\":\"Ok\"}");
         });
 
-        var response = await service.Complete3DsAsync("tx-3ds", new Complete3DsRequest { Cres = "cres-value" });
+        var response = await service.Complete3DsAsync("tx-3ds", new Complete3DsRequest { CRes = "cres-value" });
 
         Assert.Equal("tx-3ds", response.TransactionId);
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Equal("/transactions/tx-3ds/3d-secure/complete", captured.RequestUri!.AbsolutePath);
+        Assert.Equal("/transactions/tx-3ds/3d-secure-challenge", captured.RequestUri!.AbsolutePath);
         Assert.Equal("Basic", captured.Headers.Authorization!.Scheme);
     }
 

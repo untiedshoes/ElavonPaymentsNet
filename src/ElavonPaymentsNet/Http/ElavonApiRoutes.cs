@@ -28,15 +28,13 @@ internal static class ElavonApiRoutes
     /// <summary>Base route for card identifier operations.</summary>
     internal const string CardIdentifiers = "/card-identifiers";
 
-    /// <summary>Builds the 3D Secure initialise route for a specific transaction.</summary>
+    /// <summary>
+    /// Builds the 3D Secure v2 challenge completion route for a specific transaction.
+    /// After the customer completes the ACS challenge, POST the cRes to this endpoint.
+    /// </summary>
     /// <param name="transactionId">The Elavon transaction identifier.</param>
-    /// <returns>The relative API route for 3D Secure initialisation.</returns>
-    internal static string Transaction3Ds(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/3d-secure";
-
-    /// <summary>Builds the 3D Secure completion route for a specific transaction.</summary>
-    /// <param name="transactionId">The Elavon transaction identifier.</param>
-    /// <returns>The relative API route for 3D Secure completion.</returns>
-    internal static string Transaction3DsComplete(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/3d-secure/complete";
+    /// <returns>The relative API route for submitting the 3DS cRes.</returns>
+    internal static string Transaction3DsChallenge(string transactionId) => $"/transactions/{PathSegment(transactionId, nameof(transactionId))}/3d-secure-challenge";
 
     /// <summary>Builds the instructions route for a specific transaction.</summary>
     /// <param name="transactionId">The Elavon transaction identifier.</param>

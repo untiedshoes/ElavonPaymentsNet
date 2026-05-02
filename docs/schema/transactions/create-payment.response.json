@@ -3,6 +3,8 @@
     "status": "Ok",
     "statusCode": 0,
     "statusDetail": "string",
+    "acsUrl": "https://acs.example.com/3ds",
+    "cReq": "eyJhY3NUcmFuc0lEIjoiMTIzIn0",
     "3DSecure": {
         "status": "NotRequired"
     }

@@ -6,7 +6,7 @@ using ElavonPaymentsNet.Models.Public.Responses;
 namespace ElavonPaymentsNet.Services;
 
 /// <summary>
-/// Provides 3D Secure (3DS) challenge flow operations.
+/// Provides 3D Secure v2 challenge flow operations.
 /// Access via <c>client.ThreeDs</c>.
 /// </summary>
 internal sealed class ElavonThreeDsService : IElavonThreeDsService
@@ -19,29 +19,17 @@ internal sealed class ElavonThreeDsService : IElavonThreeDsService
     }
 
     /// <summary>
-    /// Initialises a 3D Secure challenge for a transaction that returned a
-    /// "3DAuth" or "ChallengeRequired" status.
-    /// </summary>
-    /// <param name="transactionId">The Elavon transaction ID requiring 3DS.</param>
-    /// <param name="request">The 3DS initialise request containing the notification URL.</param>
-    /// <param name="cancellationToken">A token to cancel the operation.</param>
-    public async Task<Initialise3DsResponse> Initialise3DsAsync(string transactionId, Initialise3DsRequest request, CancellationToken cancellationToken = default)
-    {
-        return await _api.SendAsync<Initialise3DsRequest, Initialise3DsResponse>(
-            HttpMethod.Post, ElavonApiRoutes.Transaction3Ds(transactionId), request, null, cancellationToken)
-            .ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// Completes a 3D Secure challenge flow after receiving the CRes from the card issuer.
+    /// Completes a 3D Secure v2 challenge by submitting the cRes received from the card issuer's ACS.
+    /// The <c>acsUrl</c> and <c>cReq</c> needed to initiate the challenge are returned directly on
+    /// the original <see cref="PaymentResponse"/> when <c>Status</c> is "3DAuth".
     /// </summary>
     /// <param name="transactionId">The Elavon transaction ID.</param>
-    /// <param name="request">The completion request containing the CRes value.</param>
+    /// <param name="request">The completion request containing the cRes value.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<Complete3DsResponse> Complete3DsAsync(string transactionId, Complete3DsRequest request, CancellationToken cancellationToken = default)
     {
         return await _api.SendAsync<Complete3DsRequest, Complete3DsResponse>(
-            HttpMethod.Post, ElavonApiRoutes.Transaction3DsComplete(transactionId), request, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.Transaction3DsChallenge(transactionId), request, null, cancellationToken)
             .ConfigureAwait(false);
     }
 }

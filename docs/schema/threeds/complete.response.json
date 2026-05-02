@@ -1,4 +1,16 @@
 {
-    "transactionId": "string",
-    "status": "Ok"
+    "transactionId": "DB79BA2D-05DA-5B85-D188-1293D16BBAC7",
+    "acsTransId": "43b04fd1-692c-4b76-ac20-a75527ad0a25",
+    "dsTransId": "7980e36f-907b-4530-84fd-ccc1f40bf9ae",
+    "transactionType": "Payment",
+    "status": "Ok",
+    "statusCode": "0000",
+    "statusDetail": "Transaction authorised",
+    "bankResponseCode": "00",
+    "bankAuthorisationCode": "999777",
+    "retrievalReference": "9493946",
+    "3DSecure": {
+        "status": "Authenticated"
+    },
+    "currency": "GBP"
 }

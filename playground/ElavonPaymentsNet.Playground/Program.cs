@@ -3,6 +3,7 @@ using ElavonPaymentsNet.Exceptions;
 using ElavonPaymentsNet.Http;
 using ElavonPaymentsNet.Models.Public;
 using ElavonPaymentsNet.Models.Public.Requests;
+using ElavonPaymentsNet.Models.Public.Responses;
 
 // Sandbox credentials — publicly available from the Opayo PI REST API documentation.
 // Override with environment variables to use a different profile (e.g. sandboxEC).
@@ -208,7 +209,7 @@ static async Task ExecuteSingleAsync(
 
         if (result.Status == "3DAuth" && !string.IsNullOrWhiteSpace(result.TransactionId))
         {
-            await Handle3DsChallengeAsync(client, result.TransactionId);
+            await Handle3DsChallengeAsync(client, result.TransactionId, result.AcsUrl, result.CReq);
         }
 
     }
@@ -225,32 +226,34 @@ static async Task ExecuteSingleAsync(
     }
 }
 
-static async Task Handle3DsChallengeAsync(ElavonPaymentsClient client, string transactionId)
+static async Task Handle3DsChallengeAsync(ElavonPaymentsClient client, string transactionId, string? acsUrl, string? cReq)
 {
-    Console.WriteLine("\n--- 3D Secure Challenge Required ---");
-
-    // Step 4a: Initialise the challenge to get the ACS URL and cReq.
-    // The notification URL receives the cRes POST from the ACS; a placeholder is
-    // sufficient for sandbox testing since we paste the cRes manually.
-    var initResponse = await client.ThreeDs
-        .Initialise3DsAsync(transactionId, new Initialise3DsRequest
-        {
-            NotificationUrl = "https://localhost/3ds-notify"
-        })
-        .ConfigureAwait(false);
-
-    Console.WriteLine($"Step 4/4: 3DS initialised. Status: {initResponse.Status}");
+    Console.WriteLine("\n--- 3D Secure v2 Challenge Required ---");
     Console.WriteLine();
-    Console.WriteLine("ACS URL (open this in a browser):");
-    Console.WriteLine(initResponse.AcsUrl);
+    Console.WriteLine("ACS URL (redirect your customer here):");
+    if (string.IsNullOrWhiteSpace(acsUrl) || string.IsNullOrWhiteSpace(cReq))
+    {
+        Console.WriteLine("ACS URL or cReq was not returned. Cannot continue 3DS challenge flow.");
+        return;
+    }
+
+    var curlCommand = $"curl -X POST --data-urlencode \"creq={cReq}\" \"{acsUrl}\"";
+    Console.WriteLine(acsUrl);
     Console.WriteLine();
-    Console.WriteLine("cReq (POST this to the ACS URL as the 'creq' field):");
-    Console.WriteLine(initResponse.CReq);
+    Console.WriteLine("cReq (POST as the 'creq' parameter to the ACS URL):");
+    Console.WriteLine(cReq);
+    Console.WriteLine();
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine("Important: opening the ACS URL directly in a browser will fail with 405 (Method Not Allowed).");
+    Console.WriteLine("The simulator requires an HTTP POST with form field 'creq'.");
+    Console.ResetColor();
+    Console.WriteLine();
+    Console.WriteLine("Quick test with curl (copy/paste):");
+    Console.WriteLine(curlCommand);
     Console.WriteLine();
     Console.ForegroundColor = ConsoleColor.Cyan;
     Console.WriteLine("In the sandbox ACS page, enter the password to simulate success.");
     Console.WriteLine("PI REST API sandbox password: challenge");
-    Console.WriteLine("(Older hosted-form sandbox uses: password)");
     Console.ResetColor();
     Console.WriteLine();
     Console.Write("Paste the cRes value here and press Enter: ");
@@ -262,12 +265,33 @@ static async Task Handle3DsChallengeAsync(ElavonPaymentsClient client, string tr
         return;
     }
 
-    var completeResponse = await client.ThreeDs
-        .Complete3DsAsync(transactionId, new Complete3DsRequest { Cres = cRes })
-        .ConfigureAwait(false);
+    Complete3DsResponse completeResponse;
+    try
+    {
+        completeResponse = await client.ThreeDs
+            .Complete3DsAsync(transactionId, new Complete3DsRequest { CRes = cRes })
+            .ConfigureAwait(false);
+    }
+    catch (ElavonApiException ex) when (!string.IsNullOrWhiteSpace(ex.RawResponse)
+        && ex.RawResponse.Contains("\"code\":1029", StringComparison.OrdinalIgnoreCase))
+    {
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("3DS completion failed: ACS returned an Error message instead of a successful cRes.");
+        Console.WriteLine("Likely cause: the cReq was already consumed (single-use) for this transaction.");
+        Console.WriteLine("Start a new transaction and complete the challenge once with the fresh cReq.");
+        Console.ResetColor();
+        Console.WriteLine($"RawResponse: {ex.RawResponse}");
+        return;
+    }
 
     Console.WriteLine();
     Console.WriteLine("3DS completion result:");
     Console.WriteLine($"Status:        {completeResponse.Status}");
+    Console.WriteLine($"StatusDetail:  {completeResponse.StatusDetail}");
     Console.WriteLine($"TransactionId: {completeResponse.TransactionId}");
+    Console.WriteLine($"AcsTransId:    {completeResponse.AcsTransId}");
+    Console.WriteLine($"DsTransId:     {completeResponse.DsTransId}");
+    if (completeResponse.ThreeDSecure is not null)
+        Console.WriteLine($"3DSecure:      {completeResponse.ThreeDSecure.Status}");
 }

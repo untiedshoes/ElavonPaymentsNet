@@ -147,28 +147,28 @@ operations:
 ---
 
   # ============================================
-  # 3D SECURE
+  # 3D SECURE (EMV 3DS v2)
   # ============================================
-
-  initialise3DS:
-    group: ThreeDS
-    method: POST
-    path: /transactions/{transactionId}/3d-secure
-    host: api
-
-    dto:
-      request: Initialise3DsRequestDto
-      response: Initialise3DsResponseDto
-
-    schema:
-      request: docs/schema/threeds/initialise.request.json
-      response: docs/schema/threeds/initialise.response.json
+  #
+  # There is NO separate initialise endpoint.
+  #
+  # The 3DS v2 flow is:
+  #   1. POST /transactions — if 3DS challenge is required the response carries
+  #      status "3DAuth" plus acsUrl and cReq inline (same PaymentResponse).
+  #   2. Merchant redirects customer to acsUrl with creq parameter.
+  #      Card issuer ACS authenticates the customer and POSTs cres to the
+  #      merchant's notificationUrl (supplied in strongCustomerAuthentication).
+  #   3. Merchant POSTs { "cRes": "<base64>" } to /transactions/{id}/3d-secure-challenge.
+  #      Response is the completed transaction object.
 
   complete3DS:
     group: ThreeDS
     method: POST
-    path: /transactions/{transactionId}/3d-secure/complete
+    path: /transactions/{transactionId}/3d-secure-challenge
     host: api
+    notes: >
+      Submits the cRes received from the card issuer's ACS to complete 3DS v2
+      authentication and finalise the transaction authorisation.
 
     dto:
       request: Complete3DsRequestDto
@@ -294,6 +294,10 @@ validationProfiles:
       - card details OR token required
 
   threeDS:
+    notes: >
+      acsUrl and cReq are returned inline on the PaymentResponse when status is
+      "3DAuth". The merchant must redirect the customer to acsUrl and then submit
+      the returned cRes to the complete3DS operation.
     rules:
       - transactionId required
-      - acsUrl required for challenge flows
+      - cRes required (base64 string from card issuer ACS)

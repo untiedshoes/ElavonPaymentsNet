@@ -23,4 +23,15 @@ public sealed class PaymentResponse
     /// <summary>3D Secure result, if applicable.</summary>
     [JsonPropertyName("3DSecure")]
     public ThreeDSecureInfo? ThreeDSecure { get; init; }
+
+    /// <summary>
+    /// URL of the card issuer's Access Control Server (ACS). Present when <see cref="Status"/> is
+    /// "3DAuth" and the customer must complete a 3DS challenge.
+    /// </summary>
+    public string? AcsUrl { get; init; }
+
+    /// <summary>
+    /// The encoded challenge request to POST to the ACS. Present alongside <see cref="AcsUrl"/>.
+    /// </summary>
+    public string? CReq { get; init; }
 }

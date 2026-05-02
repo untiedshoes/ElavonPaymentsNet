@@ -10,6 +10,11 @@
 
 The design is intentionally Stripe-style: a single client entry point with named service groups, typed request and response models, and no infrastructure concerns leaking into the calling code.
 
+## Additional Guides
+
+- [SDK_CONSUMER_GUIDE.md](SDK_CONSUMER_GUIDE.md) - full consumer integration and usage guide with end-to-end examples
+- [AI_TOOLING_PLAYGROUND.md](AI_TOOLING_PLAYGROUND.md) - operational runbook for AI tooling driving the interactive playground
+
 ---
 
 ## What this project demonstrates

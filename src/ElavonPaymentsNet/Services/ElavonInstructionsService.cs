@@ -2,6 +2,7 @@ using ElavonPaymentsNet.Http;
 using ElavonPaymentsNet.Interfaces;
 using ElavonPaymentsNet.Models.Public.Requests;
 using ElavonPaymentsNet.Models.Public.Responses;
+using ElavonPaymentsNet.Validation;
 
 namespace ElavonPaymentsNet.Services;
 
@@ -26,6 +27,9 @@ internal sealed class ElavonInstructionsService : IElavonInstructionsService
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<InstructionResponse> CreateInstructionAsync(string transactionId, InstructionRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+        Guard.NotNullOrWhiteSpace(transactionId, nameof(transactionId));
+
         return await _api.SendAsync<InstructionRequest, InstructionResponse>(
             HttpMethod.Post, ElavonApiRoutes.TransactionInstructions(transactionId), request, null, cancellationToken)
             .ConfigureAwait(false);

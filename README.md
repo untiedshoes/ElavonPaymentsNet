@@ -10,11 +10,6 @@
 
 The design is intentionally Stripe-style: a single client entry point with named service groups, typed request and response models, and no infrastructure concerns leaking into the calling code.
 
-## Additional Guides
-
-- [SDK_CONSUMER_GUIDE.md](SDK_CONSUMER_GUIDE.md) - full consumer integration and usage guide with end-to-end examples
-- [AI_TOOLING_PLAYGROUND.md](AI_TOOLING_PLAYGROUND.md) - operational runbook for AI tooling driving the interactive playground
-
 ---
 
 ## What this project demonstrates
@@ -45,6 +40,34 @@ The design is intentionally Stripe-style: a single client entry point with named
 - Automatic retries are GET-only; POST operations are never retried to avoid duplicate financial side effects
 - Direct instantiation supported for console or scripting use cases
 - Target framework: `net10.0`
+
+## Additional Guides
+
+- [SDK_CONSUMER_GUIDE.md](SDK_CONSUMER_GUIDE.md) - full consumer integration and usage guide with end-to-end examples
+- [AI_TOOLING_PLAYGROUND.md](AI_TOOLING_PLAYGROUND.md) - operational runbook for AI tooling driving the interactive playground
+
+## SDK Surface Contract (Source of Truth)
+
+The file [docs/sdk-surface.yaml](docs/sdk-surface.yaml) is the canonical SDK surface contract (sometimes referred to as `sdk-surface.yml`).
+
+It is used to define, in one place:
+
+- Operation groups, HTTP methods, and routes
+- Request/response DTO intent per operation
+- Contract fixtures in [docs/schema](docs/schema)
+- Validation profile intent and flow notes (for example, 3DS challenge-only completion)
+
+Why we keep it:
+
+- Prevents drift between service implementations, schema fixtures, tests, and documentation
+- Makes endpoint-level behavior explicit for review and tooling
+- Provides a stable, human-readable contract for future automation and codegen-style checks
+
+How it is used in this repository:
+
+- As the documentation and review baseline when adding or changing SDK operations
+- As a contract map for schema contract tests and fixture updates
+- As an implementation alignment checklist for `Services`, `Models`, and test coverage
 
 ---
 
@@ -78,6 +101,15 @@ The design is intentionally Stripe-style: a single client entry point with named
 STANDARD PAYMENT FLOW (Basic auth throughout)
 ---------------------------------------------------------------------------
 
+TransactionType overview for `POST /transactions`:
+
+- `Payment`: auth + capture in one step.
+- `Deferred`: hold now, release/capture later.
+- `Authenticate`: cardholder verification only, no funds reserved.
+- `Repeat`: reuse previously captured customer/card details.
+- `Refund`: return funds against a prior transaction reference.
+- `Authorise`: authorisation transaction for later capture.
+
  Client                   SDK                       Opayo API
    |                       |                             |
    | CreateTransaction     |                             |
@@ -102,25 +134,19 @@ STANDARD PAYMENT FLOW (Basic auth throughout)
    | CreateTransactionAsync|                             |
    |---------------------->|  POST /transactions         |
    |                       |---------------------------->|
-    |                       |  202 { status: "3DAuth" }  |
+        |                       |  202 { status: "3DAuth",   |
+        |                       |        acsUrl, cReq }      |
    |                       |<----------------------------|
    | PaymentResponse       |                             |
-   | (.Status="3DAuth")    |                             |
-   |<----------------------|                             |
-   |                       |                             |
-   | Initialise3DsAsync    |  POST /transactions/{id}   |
-   |---------------------->|       /3d-secure            |
-   |                       |---------------------------->|
-    |                       |  200 { status, acsUrl, cReq }|
-   |                       |<----------------------------|
-   | Initialise3DsResponse |                             |
+     | (.Status="3DAuth",    |                             |
+     |  .AcsUrl, .CReq)      |                             |
    |<----------------------|                             |
    |                       |                             |
     |  [redirect cardholder to acsUrl with cReq]         |
     |  [ACS authenticates, posts cRes to your callback]  |
     |                       |                             |
    | Complete3DsAsync(cRes)|  POST /transactions/{id}   |
-   |---------------------->|       /3d-secure/complete   |
+     |---------------------->|       /3d-secure-challenge  |
    |                       |---------------------------->|
    |                       |  200 { status: "Ok" }      |
    |                       |<----------------------------|
@@ -389,10 +415,27 @@ All methods are `async` and accept a `CancellationToken`. Each service group has
 
 | Method | Description |
 |---|---|
-| `CreateTransactionAsync(request)` | Create a transaction -- `TransactionType` determines behaviour: `Payment`, `Authorise`, `Deferred`, or `Repeat` |
+| `CreateTransactionAsync(request)` | Create a transaction -- `TransactionType` determines behaviour: `Payment`, `Deferred`, `Authenticate`, `Repeat`, `Refund`, or `Authorise` |
 | `RetrieveTransactionAsync(transactionId)` | Retrieve a previously created transaction by its Elavon transaction ID |
 
-Returns `PaymentResponse` -- `TransactionId`, `Status`, `StatusCode`, `StatusDetail`, `ThreeDSecure`.
+Returns `PaymentResponse`.
+
+Key response fields include:
+
+- Transaction result: `TransactionId`, `TransactionType`, `Status`, `StatusCode`, `StatusDetail`
+- 3DS challenge handoff: `AcsUrl`, `CReq`, `AcsTransId`, `DsTransId`, `ThreeDSecure`
+- Additional metadata (when returned): `AdditionalDeclineDetail`, `RetrievalReference`, `SettlementReferenceText`, `BankResponseCode`, `BankAuthorisationCode`, `AvsCvcCheck`, `PaymentMethod`, `Amount`, `Currency`, `FiRecipient`
+
+Supported `TransactionType` semantics:
+
+- `Payment`: most common purchase flow; effectively authorisation + capture in one step.
+- `Deferred`: place a shadow/hold and capture later using `Release` (`client.PostPayments.CaptureTransactionAsync`).
+- `Authenticate`: verify cardholder details without reserving funds; follow with an authorise/payment flow to take funds.
+- `Repeat`: process another payment using customer/card details from a previous transaction.
+- `Refund`: credit funds back to the customer for a previous transaction (partial/full up to original amount).
+- `Authorise`: create an authorisation intended for subsequent capture/release.
+
+`Refund` is typically performed through `client.PostPayments.RefundTransactionAsync`, which wraps this transaction pattern and sets reference fields consistently.
 
 ---
 
@@ -424,11 +467,13 @@ Returns `InstructionResponse` -- `InstructionType`, `Date`.
 
 | Method | Description |
 |---|---|
-| `Initialise3DsAsync(transactionId, request)` | Begin a 3DS challenge for a transaction in `3DAuth` / `ChallengeRequired` status |
-| `Complete3DsAsync(transactionId, request)` | Complete the challenge after receiving the CRes from the issuer ACS |
+| `Complete3DsAsync(transactionId, request)` | Complete the 3DS v2 challenge after receiving the `cRes` from the issuer ACS callback |
 
-`Initialise3DsAsync` -> `Initialise3DsResponse` -- `Status`, `AcsUrl`, `CReq`.
-`Complete3DsAsync` -> `Complete3DsResponse` -- `TransactionId`, `Status`.
+3DS flow note:
+
+- There is no separate initialise endpoint in this SDK
+- `CreateTransactionAsync` returns `Status = "3DAuth"` plus `AcsUrl` and `CReq` on `PaymentResponse`
+- `Complete3DsAsync` posts `cRes` to `/transactions/{transactionId}/3d-secure-challenge` and returns `Complete3DsResponse`
 
 ---
 
@@ -509,6 +554,8 @@ src/
     |       +-- Dto/ApiDtos.cs               # Wire-format DTOs (internal)
     +-- Mapping/
     |   +-- RequestMapper.cs                 # Injects transactionType string into DTOs (internal)
+    +-- Validation/
+    |   +-- Guard.cs                         # Shared argument validation helpers for service-layer invariants
     +-- Exceptions/
     |   +-- ElavonApiException.cs            # Base exception (HttpStatusCode, RawResponse, ErrorCode)
     |   +-- ElavonAuthenticationException.cs # 401
@@ -537,9 +584,14 @@ tests/
     |   +-- RequestMapperTests.cs
     +-- Services/
         +-- ElavonServicesTests.cs
+
+docs/
++-- sdk-surface.yaml                         # Source-of-truth SDK surface contract (operations, routes, schemas)
 ```
 
 The internal `ElavonApiClient` is the only class that touches `HttpClient`. Auth, logging, and retry are each handled by a dedicated `DelegatingHandler` in the pipeline — `ElavonApiClient` sees only the final response. Services are thin orchestrators: map request → call `ElavonApiClient` → return typed response. No logic leaks between layers.
+
+`Guard` centralizes service argument invariants (for example, null request checks and path-identifier checks) so failures occur before route construction and are consistent across service groups.
 
 ---
 
@@ -606,6 +658,19 @@ dotnet test
 
 A standalone user-style playground is available outside the SDK source in `playground/ElavonPaymentsNet.Playground`.
 It references the SDK project and exercises a real purchase call through `ElavonPaymentsClient`.
+
+For AI-assisted and automation-driven operation, use [AI_TOOLING_PLAYGROUND.md](AI_TOOLING_PLAYGROUND.md) as the authoritative runbook. It documents:
+
+- Deterministic prompt input sequences
+- Correct ACS simulator POST usage (`creq` over POST)
+- Reliable `cRes` extraction workflow
+- Known failure signatures and recovery steps
+- Expected success criteria for completed 3DS runs
+
+Recommended usage split:
+
+- Human exploratory runs: this README section
+- AI/automation runs and repeatable 3DS workflows: [AI_TOOLING_PLAYGROUND.md](AI_TOOLING_PLAYGROUND.md)
 
 ### Configure environment variables
 

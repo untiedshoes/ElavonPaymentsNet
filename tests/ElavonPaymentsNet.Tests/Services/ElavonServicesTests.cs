@@ -18,7 +18,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that transaction creation posts to /transactions using Basic auth.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Transactions CreateTransaction UsesExpectedRouteAndAuth")]
     public async Task Transactions_CreateTransaction_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;
@@ -51,7 +51,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that SDK routes preserve the /api/v1 base path when BaseAddress has no trailing slash.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Transactions CreateTransaction PreservesApiBasePath")]
     public async Task Transactions_CreateTransaction_PreservesApiBasePath()
     {
         HttpRequestMessage? captured = null;
@@ -82,7 +82,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that transaction retrieval sends GET /transactions/{id} using Basic auth.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Transactions RetrieveTransaction UsesExpectedRouteAndVerb")]
     public async Task Transactions_RetrieveTransaction_UsesExpectedRouteAndVerb()
     {
         HttpRequestMessage? captured = null;
@@ -104,7 +104,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that capture posts to /transactions/{id}/capture using Basic auth.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "PostPayments Capture UsesExpectedRouteAndAuth")]
     public async Task PostPayments_Capture_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;
@@ -133,7 +133,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that refund posts to /transactions/{id}/refund using Basic auth.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "PostPayments Refund UsesExpectedRouteAndAuth")]
     public async Task PostPayments_Refund_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;
@@ -168,7 +168,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that void posts to /transactions/{id}/void using Basic auth.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "PostPayments Void UsesExpectedRouteAndAuth")]
     public async Task PostPayments_Void_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;
@@ -196,7 +196,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that 3DS challenge completion posts to /transactions/{id}/3d-secure-challenge using Basic auth.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "ThreeDs Complete UsesExpectedRouteAndAuth")]
     public async Task ThreeDs_Complete_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;
@@ -218,7 +218,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that token creation posts to /token using Basic auth.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Tokens CreateToken UsesExpectedRouteAndAuth")]
     public async Task Tokens_CreateToken_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;
@@ -243,7 +243,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that pay-with-token posts to /transactions and maps token into the payload.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Tokens PayWithToken UsesExpectedRouteAndPayload")]
     public async Task Tokens_PayWithToken_UsesExpectedRouteAndPayload()
     {
         HttpRequestMessage? captured = null;
@@ -277,7 +277,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that merchant session key creation posts to /merchant-session-keys using Basic auth.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Wallets CreateMerchantSessionKey UsesExpectedRouteAndAuth")]
     public async Task Wallets_CreateMerchantSessionKey_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;
@@ -298,7 +298,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that merchant session validation gets /merchant-session-keys/{key} using Basic auth.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Wallets ValidateMerchantSessionKey UsesExpectedRouteAndAuth")]
     public async Task Wallets_ValidateMerchantSessionKey_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;
@@ -320,7 +320,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that Apple Pay session creation posts to /applepay/sessions using Basic auth.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Wallets CreateApplePaySession UsesExpectedRouteAndAuth")]
     public async Task Wallets_CreateApplePaySession_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;
@@ -342,7 +342,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that card identifier creation uses Bearer auth and posts to /card-identifiers.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CardIdentifiers Create UsesBearerAuth")]
     public async Task CardIdentifiers_Create_UsesBearerAuth()
     {
         HttpRequestMessage? captured = null;
@@ -367,7 +367,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that linking security code uses Basic auth and the expected card-identifier route.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CardIdentifiers LinkSecurityCode UsesBasicAuth")]
     public async Task CardIdentifiers_LinkSecurityCode_UsesBasicAuth()
     {
         HttpRequestMessage? captured = null;
@@ -388,7 +388,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that blank transaction identifiers are rejected before sending a capture request.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "PostPayments Capture BlankTransactionId ThrowsArgumentException")]
     public async Task PostPayments_Capture_BlankTransactionId_ThrowsArgumentException()
     {
         var service = CreatePostPaymentService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-c\",\"status\":\"Ok\"}")));
@@ -400,9 +400,237 @@ public sealed class ElavonServicesTests
     }
 
     /// <summary>
+    /// Verifies that null transaction identifiers are rejected before sending a capture request.
+    /// </summary>
+    [Fact(DisplayName = "PostPayments Capture NullTransactionId ThrowsArgumentException")]
+    public async Task PostPayments_Capture_NullTransactionId_ThrowsArgumentException()
+    {
+        var service = CreatePostPaymentService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-c\",\"status\":\"Ok\"}")));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.CaptureTransactionAsync(null!, new CapturePaymentRequest { Amount = 50 }));
+
+        Assert.Equal("transactionId", ex.ParamName);
+    }
+
+    /// <summary>
+    /// Verifies that null transaction identifiers are rejected before sending a refund request.
+    /// </summary>
+    [Fact(DisplayName = "PostPayments Refund NullTransactionId ThrowsArgumentException")]
+    public async Task PostPayments_Refund_NullTransactionId_ThrowsArgumentException()
+    {
+        var service = CreatePostPaymentService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-r\",\"status\":\"Ok\"}")));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.RefundTransactionAsync(null!, new RefundPaymentRequest { Amount = 25, VendorTxCode = "R-1", Description = "Refund null transactionId test" }));
+
+        Assert.Equal("transactionId", ex.ParamName);
+    }
+
+    /// <summary>
+    /// Verifies that null transaction identifiers are rejected before sending a void request.
+    /// </summary>
+    [Fact(DisplayName = "PostPayments Void NullTransactionId ThrowsArgumentException")]
+    public async Task PostPayments_Void_NullTransactionId_ThrowsArgumentException()
+    {
+        var service = CreatePostPaymentService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{}")));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.VoidTransactionAsync(null!));
+
+        Assert.Equal("transactionId", ex.ParamName);
+    }
+
+    /// <summary>
+    /// Verifies that null transaction identifiers are rejected for transaction retrieval.
+    /// </summary>
+    [Fact(DisplayName = "Transactions RetrieveTransaction NullTransactionId ThrowsArgumentException")]
+    public async Task Transactions_RetrieveTransaction_NullTransactionId_ThrowsArgumentException()
+    {
+        var service = CreateTransactionService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-2\",\"status\":\"Ok\"}")));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.RetrieveTransactionAsync(null!));
+
+        Assert.Equal("transactionId", ex.ParamName);
+    }
+
+    /// <summary>
+    /// Verifies that null transaction identifiers are rejected for 3DS completion.
+    /// </summary>
+    [Fact(DisplayName = "ThreeDs Complete NullTransactionId ThrowsArgumentException")]
+    public async Task ThreeDs_Complete_NullTransactionId_ThrowsArgumentException()
+    {
+        var service = CreateThreeDsService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-3ds\",\"status\":\"Ok\"}")));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.Complete3DsAsync(null!, new Complete3DsRequest { CRes = "cres-value" }));
+
+        Assert.Equal("transactionId", ex.ParamName);
+    }
+
+    /// <summary>
+    /// Verifies that null transaction identifiers are rejected for instruction creation.
+    /// </summary>
+    [Fact(DisplayName = "Instructions Create NullTransactionId ThrowsArgumentException")]
+    public async Task Instructions_Create_NullTransactionId_ThrowsArgumentException()
+    {
+        var service = CreateInstructionsService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{\"instructionType\":\"Void\",\"date\":\"2026-01-01T00:00:00Z\"}")));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.CreateInstructionAsync(null!, new InstructionRequest { InstructionType = InstructionType.Void }));
+
+        Assert.Equal("transactionId", ex.ParamName);
+    }
+
+    /// <summary>
+    /// Verifies that null requests are rejected for transaction creation.
+    /// </summary>
+    [Fact(DisplayName = "Transactions CreateTransaction NullRequest ThrowsArgumentNullException")]
+    public async Task Transactions_CreateTransaction_NullRequest_ThrowsArgumentNullException()
+    {
+        var service = CreateTransactionService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-1\",\"status\":\"Ok\"}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.CreateTransactionAsync(null!));
+    }
+
+    /// <summary>
+    /// Verifies that null requests are rejected for capture operations.
+    /// </summary>
+    [Fact(DisplayName = "PostPayments Capture NullRequest ThrowsArgumentNullException")]
+    public async Task PostPayments_Capture_NullRequest_ThrowsArgumentNullException()
+    {
+        var service = CreatePostPaymentService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.CaptureTransactionAsync("tx-123", null!));
+    }
+
+    /// <summary>
+    /// Verifies that null requests are rejected for refund operations.
+    /// </summary>
+    [Fact(DisplayName = "PostPayments Refund NullRequest ThrowsArgumentNullException")]
+    public async Task PostPayments_Refund_NullRequest_ThrowsArgumentNullException()
+    {
+        var service = CreatePostPaymentService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.RefundTransactionAsync("tx-123", null!));
+    }
+
+    /// <summary>
+    /// Verifies that null requests are rejected for 3DS completion.
+    /// </summary>
+    [Fact(DisplayName = "ThreeDs Complete NullRequest ThrowsArgumentNullException")]
+    public async Task ThreeDs_Complete_NullRequest_ThrowsArgumentNullException()
+    {
+        var service = CreateThreeDsService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.Complete3DsAsync("tx-123", null!));
+    }
+
+    /// <summary>
+    /// Verifies that null requests are rejected for token creation.
+    /// </summary>
+    [Fact(DisplayName = "Tokens CreateToken NullRequest ThrowsArgumentNullException")]
+    public async Task Tokens_CreateToken_NullRequest_ThrowsArgumentNullException()
+    {
+        var service = CreateTokensService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.CreateTokenAsync(null!));
+    }
+
+    /// <summary>
+    /// Verifies that null requests are rejected for pay-with-token operations.
+    /// </summary>
+    [Fact(DisplayName = "Tokens PayWithToken NullRequest ThrowsArgumentNullException")]
+    public async Task Tokens_PayWithToken_NullRequest_ThrowsArgumentNullException()
+    {
+        var service = CreateTokensService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.PayWithTokenAsync(null!));
+    }
+
+    /// <summary>
+    /// Verifies that null requests are rejected for merchant-session key creation.
+    /// </summary>
+    [Fact(DisplayName = "Wallets CreateMerchantSessionKey NullRequest ThrowsArgumentNullException")]
+    public async Task Wallets_CreateMerchantSessionKey_NullRequest_ThrowsArgumentNullException()
+    {
+        var service = CreateWalletsService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.CreateMerchantSessionKeyAsync(null!));
+    }
+
+    /// <summary>
+    /// Verifies that null requests are rejected for merchant-session key validation.
+    /// </summary>
+    [Fact(DisplayName = "Wallets ValidateMerchantSessionKey NullRequest ThrowsArgumentNullException")]
+    public async Task Wallets_ValidateMerchantSessionKey_NullRequest_ThrowsArgumentNullException()
+    {
+        var service = CreateWalletsService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.ValidateMerchantSessionKeyAsync(null!));
+    }
+
+    /// <summary>
+    /// Verifies that null requests are rejected for Apple Pay session creation.
+    /// </summary>
+    [Fact(DisplayName = "Wallets CreateApplePaySession NullRequest ThrowsArgumentNullException")]
+    public async Task Wallets_CreateApplePaySession_NullRequest_ThrowsArgumentNullException()
+    {
+        var service = CreateWalletsService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.CreateApplePaySessionAsync(null!));
+    }
+
+    /// <summary>
+    /// Verifies that null requests are rejected for instruction creation.
+    /// </summary>
+    [Fact(DisplayName = "Instructions Create NullRequest ThrowsArgumentNullException")]
+    public async Task Instructions_Create_NullRequest_ThrowsArgumentNullException()
+    {
+        var service = CreateInstructionsService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.CreateInstructionAsync("tx-123", null!));
+    }
+
+    /// <summary>
+    /// Verifies that null requests are rejected for card identifier creation.
+    /// </summary>
+    [Fact(DisplayName = "CardIdentifiers Create NullRequest ThrowsArgumentNullException")]
+    public async Task CardIdentifiers_Create_NullRequest_ThrowsArgumentNullException()
+    {
+        var service = CreateCardIdentifiersService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.CreateCardIdentifierAsync("msk_123", null!));
+    }
+
+    /// <summary>
+    /// Verifies that null requests are rejected for security-code linking.
+    /// </summary>
+    [Fact(DisplayName = "CardIdentifiers LinkSecurityCode NullRequest ThrowsArgumentNullException")]
+    public async Task CardIdentifiers_LinkSecurityCode_NullRequest_ThrowsArgumentNullException()
+    {
+        var service = CreateCardIdentifiersService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.LinkCardIdentifierAsync("cid_123", null!));
+    }
+
+    /// <summary>
     /// Verifies that transaction identifiers are URI-escaped before building instruction routes.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Instructions Create EscapesTransactionIdInRoute")]
     public async Task Instructions_Create_EscapesTransactionIdInRoute()
     {
         HttpRequestMessage? captured = null;
@@ -421,7 +649,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that blank merchant session keys are rejected before creating card identifiers.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CardIdentifiers Create BlankMerchantSessionKey ThrowsArgumentException")]
     public async Task CardIdentifiers_Create_BlankMerchantSessionKey_ThrowsArgumentException()
     {
         var service = CreateCardIdentifiersService(_ => Task.FromResult(Json(HttpStatusCode.OK, "{\"cardIdentifier\":\"cid_1\"}")));
@@ -438,7 +666,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that card identifiers are URI-escaped before building the security-code route.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CardIdentifiers LinkSecurityCode EscapesCardIdentifierInRoute")]
     public async Task CardIdentifiers_LinkSecurityCode_EscapesCardIdentifierInRoute()
     {
         HttpRequestMessage? captured = null;
@@ -457,7 +685,7 @@ public sealed class ElavonServicesTests
     /// <summary>
     /// Verifies that instruction creation posts to /transactions/{id}/instructions using Basic auth.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Instructions Create UsesExpectedRouteAndAuth")]
     public async Task Instructions_Create_UsesExpectedRouteAndAuth()
     {
         HttpRequestMessage? captured = null;

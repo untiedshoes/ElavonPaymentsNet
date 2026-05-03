@@ -1,6 +1,6 @@
 # AI Tooling Guide: Playground Operations
 
-This document is for AI agents and automation tooling that operate the playground project:
+This document is for AI agents and automation tooling if you wish for them to operate the playground:
 
 - Project: `playground/ElavonPaymentsNet.Playground`
 - Entry point: `Program.cs`

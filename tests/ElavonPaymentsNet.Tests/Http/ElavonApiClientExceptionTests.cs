@@ -53,7 +53,7 @@ public sealed class ElavonApiClientExceptionTests
     /// <summary>
     /// Verifies that a 401 response throws <see cref="ElavonAuthenticationException"/>.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Returns401 ThrowsElavonAuthenticationException")]
     public async Task Returns401_ThrowsElavonAuthenticationException()
     {
         var service = CreateService(_ => Task.FromResult(StatusResponse(HttpStatusCode.Unauthorized)));
@@ -71,7 +71,7 @@ public sealed class ElavonApiClientExceptionTests
     /// <summary>
     /// Verifies that a 400 response throws <see cref="ElavonValidationException"/>.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Returns400 ThrowsElavonValidationException")]
     public async Task Returns400_ThrowsElavonValidationException()
     {
         var service = CreateService(_ => Task.FromResult(
@@ -91,7 +91,7 @@ public sealed class ElavonApiClientExceptionTests
     /// <summary>
     /// Verifies that a 402 response throws <see cref="ElavonPaymentDeclinedException"/>.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Returns402 ThrowsElavonPaymentDeclinedException")]
     public async Task Returns402_ThrowsElavonPaymentDeclinedException()
     {
         var service = CreateService(_ => Task.FromResult(
@@ -111,7 +111,7 @@ public sealed class ElavonApiClientExceptionTests
     /// <summary>
     /// Verifies that a 429 response throws <see cref="ElavonRateLimitException"/>.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Returns429 ThrowsElavonRateLimitException")]
     public async Task Returns429_ThrowsElavonRateLimitException()
     {
         var service = CreateService(_ => Task.FromResult(
@@ -127,7 +127,7 @@ public sealed class ElavonApiClientExceptionTests
     /// Verifies that a 429 response with a Retry-After delta-seconds header
     /// exposes the parsed <see cref="ElavonRateLimitException.RetryAfter"/> value.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Returns429WithRetryAfterHeader ExposesRetryAfterTimeSpan")]
     public async Task Returns429WithRetryAfterHeader_ExposesRetryAfterTimeSpan()
     {
         var service = CreateService(_ =>
@@ -151,7 +151,7 @@ public sealed class ElavonApiClientExceptionTests
     /// <summary>
     /// Verifies that a 500 response throws <see cref="ElavonServerException"/>.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Returns500 ThrowsElavonServerException")]
     public async Task Returns500_ThrowsElavonServerException()
     {
         var service = CreateService(_ => Task.FromResult(
@@ -166,7 +166,7 @@ public sealed class ElavonApiClientExceptionTests
     /// <summary>
     /// Verifies that a 503 response also throws <see cref="ElavonServerException"/>.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Returns503 ThrowsElavonServerException")]
     public async Task Returns503_ThrowsElavonServerException()
     {
         var service = CreateService(_ => Task.FromResult(
@@ -190,7 +190,7 @@ public sealed class ElavonApiClientExceptionTests
     /// Verifies that a 200 OK response with an empty body throws <see cref="ElavonApiException"/>
     /// with <c>ErrorCode == "EmptyResponse"</c>, because the JSON deserialiser returns null.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Returns200WithEmptyBody ThrowsElavonApiExceptionEmptyResponse")]
     public async Task Returns200WithEmptyBody_ThrowsElavonApiExceptionEmptyResponse()
     {
         var service = CreateService(_ => Task.FromResult(StatusResponse(HttpStatusCode.OK, string.Empty)));
@@ -203,10 +203,26 @@ public sealed class ElavonApiClientExceptionTests
     }
 
     /// <summary>
+    /// Verifies that a 200 OK response with a literal JSON null payload also throws
+    /// <see cref="ElavonApiException"/> with <c>ErrorCode == "EmptyResponse"</c>.
+    /// </summary>
+    [Fact(DisplayName = "Returns200WithJsonNullBody ThrowsElavonApiExceptionEmptyResponse")]
+    public async Task Returns200WithJsonNullBody_ThrowsElavonApiExceptionEmptyResponse()
+    {
+        var service = CreateService(_ => Task.FromResult(StatusResponse(HttpStatusCode.OK, "null")));
+
+        var ex = await Assert.ThrowsAsync<ElavonApiException>(
+            () => service.CreateTransactionAsync(MinimalRequest()));
+
+        Assert.Equal(200, ex.HttpStatusCode);
+        Assert.Equal("EmptyResponse", ex.ErrorCode);
+    }
+
+    /// <summary>
     /// Verifies that a 200 OK response with invalid JSON throws <see cref="ElavonApiException"/>
     /// with <c>ErrorCode == "DeserializationError"</c>.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Returns200WithMalformedJson ThrowsElavonApiExceptionDeserializationError")]
     public async Task Returns200WithMalformedJson_ThrowsElavonApiExceptionDeserializationError()
     {
         var service = CreateService(_ => Task.FromResult(StatusResponse(HttpStatusCode.OK, "not-json")));

@@ -43,8 +43,9 @@ public class CreateTransactionRequest
     public Apply3DSecureOption? Apply3DSecure { get; init; }
 
     /// <summary>
-    /// The transaction ID of the original payment to repeat.
-    /// Required when <see cref="TransactionType"/> is <see cref="TransactionType.Repeat"/>.
+    /// The transaction ID of the original payment to reference.
+    /// Required when <see cref="TransactionType"/> is <see cref="TransactionType.Repeat"/>
+    /// or <see cref="TransactionType.Refund"/>.
     /// </summary>
     public string? RelatedTransactionId { get; init; }
 

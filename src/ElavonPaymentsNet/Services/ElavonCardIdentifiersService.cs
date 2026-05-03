@@ -2,6 +2,7 @@ using ElavonPaymentsNet.Http;
 using ElavonPaymentsNet.Interfaces;
 using ElavonPaymentsNet.Models.Public.Requests;
 using ElavonPaymentsNet.Models.Public.Responses;
+using ElavonPaymentsNet.Validation;
 
 namespace ElavonPaymentsNet.Services;
 
@@ -27,8 +28,8 @@ internal sealed class ElavonCardIdentifiersService : IElavonCardIdentifiersServi
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task<CreateCardIdentifierResponse> CreateCardIdentifierAsync(string merchantSessionKey,CreateCardIdentifierRequest request,CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(merchantSessionKey))
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(merchantSessionKey));
+        ArgumentNullException.ThrowIfNull(request);
+        Guard.NotNullOrWhiteSpace(merchantSessionKey, nameof(merchantSessionKey));
 
         return await _api.SendAsync<CreateCardIdentifierRequest, CreateCardIdentifierResponse>(
             HttpMethod.Post, ElavonApiRoutes.CardIdentifiers, request, merchantSessionKey, cancellationToken)
@@ -44,6 +45,9 @@ internal sealed class ElavonCardIdentifiersService : IElavonCardIdentifiersServi
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     public async Task LinkCardIdentifierAsync(string cardIdentifier,LinkCardIdentifierRequest request,CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+        Guard.NotNullOrWhiteSpace(cardIdentifier, nameof(cardIdentifier));
+
         await _api.SendVoidAsync<LinkCardIdentifierRequest>(
             HttpMethod.Post, ElavonApiRoutes.CardIdentifierSecurityCode(cardIdentifier), request, null, cancellationToken)
             .ConfigureAwait(false);

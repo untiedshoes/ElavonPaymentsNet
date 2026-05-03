@@ -44,7 +44,7 @@ public sealed class ElavonResilienceHandlerRetryTests
     /// <summary>
     /// Verifies that transient network failures are retried for GET requests.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Get HttpRequestException IsRetried")]
     public async Task Get_HttpRequestException_IsRetried()
     {
         // Arrange: throw twice, succeed on third.
@@ -70,7 +70,7 @@ public sealed class ElavonResilienceHandlerRetryTests
     /// <summary>
     /// Verifies that timeout-style cancellations are retried for GET requests.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Get TaskCanceledException IsRetried")]
     public async Task Get_TaskCanceledException_IsRetried()
     {
         // Arrange: simulate timeout-like cancellations twice, then succeed.
@@ -98,7 +98,7 @@ public sealed class ElavonResilienceHandlerRetryTests
     /// <summary>
     /// Verifies that the handler stops retrying after the configured maximum attempts.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Get AlwaysFails ThrowsAfterMaxRetries")]
     public async Task Get_AlwaysFails_ThrowsAfterMaxRetries()
     {
         // Arrange: always throw.

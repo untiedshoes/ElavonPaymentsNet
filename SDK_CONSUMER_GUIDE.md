@@ -217,7 +217,7 @@ var deferred = await client.Transactions.CreateTransactionAsync(new CreateTransa
 
 ### 4.4 Repeat
 
-Use this for subsequent charges based on a previous successful transaction reference, without collecting card details again.
+Use this for subsequent charges based on a previous successful transaction reference, without collecting card details again (e.g. subscriptions, instalment payments, re-orders).
 
 ```csharp
 var repeat = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
@@ -231,7 +231,72 @@ var repeat = await client.Transactions.CreateTransactionAsync(new CreateTransact
 });
 ```
 
-### 4.5 Retrieve a Transaction
+### 4.5 Authenticate
+
+Use this when you want to authenticate the cardholder through 3DS without placing any charge. This is useful for verifying a card before saving it, or for SCA compliance checks prior to a deferred payment.
+
+```csharp
+var authenticate = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
+{
+    TransactionType = TransactionType.Authenticate,
+    VendorTxCode = $"AUTH-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    Amount = 0,
+    Currency = "GBP",
+    Description = "Card verification",
+    PaymentMethod = new PaymentMethod
+    {
+        Card = new CardDetails
+        {
+            CardNumber = "4929000000006",
+            ExpiryDate = "1229",
+            SecurityCode = "123",
+            CardholderName = "Sandbox Tester"
+        }
+    },
+    BillingAddress = new BillingAddress
+    {
+        Address1 = "88",
+        City = "London",
+        PostalCode = "412",
+        Country = "GB"
+    },
+    StrongCustomerAuthentication = new StrongCustomerAuthentication
+    {
+        NotificationURL = "https://merchant.example.com/3ds-notify",
+        BrowserIP = "203.0.113.10",
+        BrowserAcceptHeader = "text/html,*/*",
+        BrowserJavascriptEnabled = true,
+        BrowserJavaEnabled = false,
+        BrowserLanguage = "en-GB",
+        BrowserColorDepth = "24",
+        BrowserScreenHeight = "1080",
+        BrowserScreenWidth = "1920",
+        BrowserTZ = "0",
+        BrowserUserAgent = "Mozilla/5.0",
+        ChallengeWindowSize = "FullScreen",
+        TransType = "GoodsAndServicePurchase",
+        ThreeDSRequestorChallengeInd = "03"
+    }
+});
+```
+
+### 4.6 Refund (via transaction)
+
+Use this when creating a standalone refund transaction linked to a previous transaction. This is distinct from `PostPayments.RefundTransactionAsync`, which creates a post-payment refund instruction. Use the transaction-based refund when you need a new transaction record for the refund.
+
+```csharp
+var refund = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
+{
+    TransactionType = TransactionType.Refund,
+    VendorTxCode = $"RFND-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    Amount = 1000,
+    Currency = "GBP",
+    Description = "Customer refund",
+    RelatedTransactionId = "<original-successful-transaction-id>"
+});
+```
+
+### 4.7 Retrieve a Transaction
 
 Use this to reconcile transaction outcomes, refresh UI state, or diagnose post-payment statuses after asynchronous steps.
 
@@ -239,16 +304,6 @@ Use this to reconcile transaction outcomes, refresh UI state, or diagnose post-p
 var tx = await client.Transactions.RetrieveTransactionAsync("<transaction-id>");
 Console.WriteLine($"Status={tx.Status} Code={tx.StatusCode}");
 ```
-
-### Note on Authenticate Transaction Type
-
-The upstream API supports an Authenticate type, but the current public `TransactionType` enum in this SDK includes:
-- Payment
-- Authorise
-- Deferred
-- Repeat
-
-If Authenticate is required in your project, add it deliberately as a surfaced SDK feature with tests, schema updates, and docs updates.
 
 ## 5. 3D Secure v2 Flow
 
@@ -336,32 +391,49 @@ var instruction = await client.Instructions.CreateInstructionAsync(
 ```
 
 Supported instruction types:
-- `Void`
-- `Abort`
-- `Release`
-- `Cancel`
+- `Void` — Cancel an authorised or deferred transaction before settlement. Use this if the order is cancelled before goods ship.
+- `Abort` — Abort a deferred transaction that has not yet been released. Use when a deferred payment is no longer needed.
+- `Release` — Capture/release a previously deferred or authorised amount. Use this to trigger settlement after fulfillment. An `Amount` can be specified to partially release.
+- `Cancel` — Cancel a previously released instruction. Rarely used; refer to Elavon support for applicability.
 
 ## 8. Merchant Session Key and Card Identifiers
 
+The card flow in Opayo uses two short-lived tokens that work together to keep raw card data off your server:
+
+- **Merchant Session Key (MSK)** — A temporary key valid for 20 minutes. It opens a secure storage area on the Opayo side where a single set of card details can be held. Your frontend JavaScript (or your server during testing) uses this key to tokenise card details directly with Opayo, so the PAN never touches your application.
+- **Card Identifier** — A temporary token (valid for ~400 seconds) that identifies a single card within the MSK's storage area. Once a card identifier exists, you pass the MSK + card identifier pair to `CreateTransactionAsync` instead of raw card details.
+
+This two-token design is what makes the Opayo integration safe for non-PCI-compliant back-ends: only the tokens travel through your system, not the card number.
+
 ### Create merchant session key
+
+Request a new MSK before rendering your payment form. Pass `VendorName` as your Opayo vendor name (or `"sandbox"` for testing).
 
 ```csharp
 var msk = await client.Wallets.CreateMerchantSessionKeyAsync(new MerchantSessionRequest
 {
     VendorName = "sandbox"
 });
+
+// msk.MerchantSessionKey is the token to pass to your frontend or to CreateCardIdentifierAsync
 ```
 
 ### Validate merchant session key
+
+Before using an MSK that may have been sitting in session state for a while, you can check it is still valid. This avoids a confusing failure later at payment time.
 
 ```csharp
 var check = await client.Wallets.ValidateMerchantSessionKeyAsync(new MerchantSessionValidationRequest
 {
     MerchantSessionKey = msk.MerchantSessionKey!
 });
+
+// If the key has expired, request a fresh one and re-render the payment form.
 ```
 
 ### Create card identifier
+
+Normally this step is performed on the client side via Opayo's JavaScript library (so the PAN never reaches your server). During testing or from a server-side integration, you can create the card identifier directly.
 
 ```csharp
 var cardIdentifier = await client.CardIdentifiers.CreateCardIdentifierAsync(
@@ -376,9 +448,14 @@ var cardIdentifier = await client.CardIdentifiers.CreateCardIdentifierAsync(
             CardholderName = "Sandbox Tester"
         }
     });
+
+// cardIdentifier.CardIdentifier is the token to use in the payment request.
+// It is valid for approximately 400 seconds.
 ```
 
 ### Optional: Link CVV after identifier creation
+
+If you are reusing a saved card and want the customer to confirm their security code for additional safety, link the CVV to the existing card identifier (preferably from the client side).
 
 ```csharp
 await client.CardIdentifiers.LinkCardIdentifierAsync(
@@ -387,6 +464,8 @@ await client.CardIdentifiers.LinkCardIdentifierAsync(
 ```
 
 ### Pay using card identifier
+
+Pass the MSK and card identifier in `PaymentMethod.Card` instead of raw card details. Opayo resolves the stored card from the token pair at the point of charge.
 
 ```csharp
 var paymentByIdentifier = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
@@ -444,13 +523,23 @@ var tokenPayment = await client.Tokens.PayWithTokenAsync(new PayWithTokenRequest
 
 ## 10. Apple Pay Session
 
+Before processing an Apple Pay payment, your backend must validate the merchant session with Apple. The Apple Pay JS API on the frontend will fire an `onvalidatemerchant` event containing a `validationURL`. Your backend must call this endpoint (via Opayo) and return the session object to the browser within 30 seconds.
+
 ```csharp
+// Called from your backend when frontend fires onvalidatemerchant
 var applePaySession = await client.Wallets.CreateApplePaySessionAsync(new ApplePaySessionRequest
 {
     ValidationUrl = "https://apple-pay-gateway.apple.com/paymentservices/startSession",
     DomainName = "merchant.example.com"
 });
+
+// Return applePaySession.MerchantSession to your frontend
+// The frontend passes it to appleSession.completeMerchantValidation(merchantSession)
 ```
+
+Once the merchant session is validated, the customer authorises the payment on their device. The Apple Pay JS API returns a payment token, which your frontend sends to your backend. You then submit it as a `Payment` transaction with `PaymentMethod.ApplePayPaymentToken`.
+
+> Note: Your domain must be registered with Opayo and Apple, and you must serve the `apple-developer-merchantid-domain-association` file at `/.well-known/` on that domain.
 
 ## 11. Error Handling
 
@@ -874,7 +963,7 @@ public async Task<IActionResult> Receive([FromForm(Name = "cres")] string? cres,
     Cause: Wrong field naming between ACS callback and Opayo completion payload.
     Fix: Read callback field `cres` (lowercase) and pass it to SDK as `Complete3DsRequest.CRes` (capital R in property, serialized to `cRes`).
 
-## 17. Where to Go Next
+## 15. Where to Go Next
 
 - See README.md for quick start and architectural overview.
 - See RETRYING_AND_RELIABILITY.md for timeout/retry behavior details.

@@ -4,6 +4,17 @@ using ElavonPaymentsNet.Http;
 using ElavonPaymentsNet.Models.Public;
 using ElavonPaymentsNet.Models.Public.Requests;
 using ElavonPaymentsNet.Models.Public.Responses;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+var playgroundJsonOptions = new JsonSerializerOptions
+{
+    WriteIndented = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    PropertyNameCaseInsensitive = true,
+    Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+};
 
 // Sandbox credentials — publicly available from the Opayo PI REST API documentation.
 // Override with environment variables to use a different profile (e.g. sandboxEC).
@@ -74,7 +85,8 @@ await ExecuteSingleAsync(
     testSecurityCode,
     testCardholderName,
     magicCardholderName,
-    apply3DSecure);
+    apply3DSecure,
+    playgroundJsonOptions);
 
 static string PromptWithDefault(string label, string defaultValue)
 {
@@ -161,7 +173,8 @@ static async Task ExecuteSingleAsync(
     string securityCode,
     string cardholderName,
     string magicCardholderName,
-    Apply3DSecureOption? apply3DSecure)
+    Apply3DSecureOption? apply3DSecure,
+    JsonSerializerOptions jsonOptions)
 {
     try
     {
@@ -206,10 +219,11 @@ static async Task ExecuteSingleAsync(
         Console.WriteLine($"StatusCode:    {result.StatusCode}");
         Console.WriteLine($"StatusDetail:  {result.StatusDetail}");
         Console.WriteLine($"TransactionId: {result.TransactionId}");
+        PrintFullResponse("Full transaction response JSON", result, jsonOptions);
 
         if (result.Status == "3DAuth" && !string.IsNullOrWhiteSpace(result.TransactionId))
         {
-            await Handle3DsChallengeAsync(client, result.TransactionId, result.AcsUrl, result.CReq);
+            await Handle3DsChallengeAsync(client, result.TransactionId, result.AcsUrl, result.CReq, jsonOptions);
         }
 
     }
@@ -226,7 +240,12 @@ static async Task ExecuteSingleAsync(
     }
 }
 
-static async Task Handle3DsChallengeAsync(ElavonPaymentsClient client, string transactionId, string? acsUrl, string? cReq)
+static async Task Handle3DsChallengeAsync(
+    ElavonPaymentsClient client,
+    string transactionId,
+    string? acsUrl,
+    string? cReq,
+    JsonSerializerOptions jsonOptions)
 {
     Console.WriteLine("\n--- 3D Secure v2 Challenge Required ---");
     Console.WriteLine();
@@ -294,4 +313,12 @@ static async Task Handle3DsChallengeAsync(ElavonPaymentsClient client, string tr
     Console.WriteLine($"DsTransId:     {completeResponse.DsTransId}");
     if (completeResponse.ThreeDSecure is not null)
         Console.WriteLine($"3DSecure:      {completeResponse.ThreeDSecure.Status}");
+    PrintFullResponse("Full 3DS completion response JSON", completeResponse, jsonOptions);
+}
+
+static void PrintFullResponse<T>(string title, T response, JsonSerializerOptions jsonOptions)
+{
+    Console.WriteLine();
+    Console.WriteLine(title + ":");
+    Console.WriteLine(JsonSerializer.Serialize(response, jsonOptions));
 }

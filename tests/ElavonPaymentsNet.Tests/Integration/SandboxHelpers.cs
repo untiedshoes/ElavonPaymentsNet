@@ -19,9 +19,7 @@ internal static class SandboxHelpers
     // ----------------------------------------------------------------
 
     /// <summary>Creates a merchant session key. Returns <see langword="null"/> on failure.</summary>
-    internal static async Task<MerchantSessionResponse?> GetMerchantSessionKeyAsync(
-        ElavonPaymentsClientOptions? options = null,
-        string? vendorName = null)
+    internal static async Task<MerchantSessionResponse?> GetMerchantSessionKeyAsync(ElavonPaymentsClientOptions? options = null, string? vendorName = null)
     {
         try
         {
@@ -70,10 +68,7 @@ internal static class SandboxHelpers
             string merchantSessionKey, ElavonPaymentsClientOptions? options = null)
             => GetAsync(merchantSessionKey, "TECHDIFFICULTIES", options);
 
-        private static async Task<CreateCardIdentifierResponse?> GetAsync(
-            string merchantSessionKey,
-            string magicName,
-            ElavonPaymentsClientOptions? options)
+        private static async Task<CreateCardIdentifierResponse?> GetAsync(string merchantSessionKey, string magicName, ElavonPaymentsClientOptions? options)
         {
             try
             {
@@ -106,10 +101,7 @@ internal static class SandboxHelpers
     /// Creates a successful Payment transaction and returns its <c>TransactionId</c>,
     /// or <see langword="null"/> if any step fails.
     /// </summary>
-    internal static async Task<string?> GetSuccessfulTransactionIdAsync(
-        ElavonPaymentsClientOptions? options = null,
-        string? vendorName = null,
-        string tag = "HELPER")
+    internal static async Task<string?> GetSuccessfulTransactionIdAsync(ElavonPaymentsClientOptions? options = null, string? vendorName = null, string tag = "HELPER")
     {
         try
         {
@@ -179,9 +171,7 @@ internal static class SandboxHelpers
     /// Creates a Deferred transaction and returns its <c>TransactionId</c>,
     /// or <see langword="null"/> if any step fails.
     /// </summary>
-    internal static async Task<string?> GetDeferredTransactionIdAsync(
-        ElavonPaymentsClientOptions? options = null,
-        string? vendorName = null)
+    internal static async Task<string?> GetDeferredTransactionIdAsync(ElavonPaymentsClientOptions? options = null, string? vendorName = null)
     {
         try
         {

@@ -15,7 +15,7 @@ public sealed class ElavonResilienceHandlerTests
     /// <summary>
     /// Verifies that an already-cancelled caller token fails immediately without retries.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Get UserCancelledToken IsNotRetried")]
     public async Task Get_UserCancelledToken_IsNotRetried()
     {
         // Arrange: if the caller has already cancelled, request should fail immediately
@@ -103,7 +103,7 @@ public sealed class ElavonResilienceHandlerTests
     /// <summary>
     /// Verifies that POST network exceptions are propagated without retries.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Post HttpRequestException IsNeverRetried")]
     public async Task Post_HttpRequestException_IsNeverRetried()
     {
         // Arrange

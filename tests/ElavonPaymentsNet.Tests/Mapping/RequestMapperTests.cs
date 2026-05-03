@@ -11,7 +11,7 @@ public class RequestMapperTests
     /// <summary>
     /// Verifies that a payment transaction request maps all core fields and card details.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateTransactionRequest Payment MapsTransactionType")]
     public void CreateTransactionRequest_Payment_MapsTransactionType()
     {
         var request = new CreateTransactionRequest
@@ -50,7 +50,7 @@ public class RequestMapperTests
     /// <summary>
     /// Verifies that an authorise transaction maps to the expected transaction type.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateTransactionRequest Authorise MapsTransactionType")]
     public void CreateTransactionRequest_Authorise_MapsTransactionType()
     {
         var request = new CreateTransactionRequest
@@ -74,7 +74,7 @@ public class RequestMapperTests
     /// <summary>
     /// Verifies that a deferred transaction maps to the expected transaction type.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateTransactionRequest Deferred MapsTransactionType")]
     public void CreateTransactionRequest_Deferred_MapsTransactionType()
     {
         var request = new CreateTransactionRequest
@@ -95,9 +95,32 @@ public class RequestMapperTests
     }
 
     /// <summary>
+    /// Verifies that an authenticate transaction maps to the expected transaction type.
+    /// </summary>
+    [Fact(DisplayName = "CreateTransactionRequest Authenticate MapsTransactionType")]
+    public void CreateTransactionRequest_Authenticate_MapsTransactionType()
+    {
+        var request = new CreateTransactionRequest
+        {
+            TransactionType = TransactionType.Authenticate,
+            VendorTxCode = "TX-003A",
+            Amount = 0,
+            Currency = "GBP",
+            PaymentMethod = new PaymentMethod
+            {
+                Card = new CardDetails { CardNumber = "4929000000006", ExpiryDate = "1225", SecurityCode = "123" }
+            }
+        };
+
+        var dto = RequestMapper.ToDto(request);
+
+        Assert.Equal("Authenticate", dto.TransactionType);
+    }
+
+    /// <summary>
     /// Verifies that a repeat transaction maps the related transaction identifier.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateTransactionRequest Repeat MapsTransactionType")]
     public void CreateTransactionRequest_Repeat_MapsTransactionType()
     {
         var request = new CreateTransactionRequest
@@ -116,9 +139,30 @@ public class RequestMapperTests
     }
 
     /// <summary>
+    /// Verifies that a refund transaction maps to the expected transaction type and reference.
+    /// </summary>
+    [Fact(DisplayName = "CreateTransactionRequest Refund MapsTransactionType")]
+    public void CreateTransactionRequest_Refund_MapsTransactionType()
+    {
+        var request = new CreateTransactionRequest
+        {
+            TransactionType = TransactionType.Refund,
+            VendorTxCode = "TX-004R",
+            Amount = 250,
+            Currency = "GBP",
+            RelatedTransactionId = "original-tx-id"
+        };
+
+        var dto = RequestMapper.ToDto(request);
+
+        Assert.Equal("Refund", dto.TransactionType);
+        Assert.Equal("original-tx-id", dto.ReferenceTransactionId);
+    }
+
+    /// <summary>
     /// Verifies that billing address fields are mapped correctly to the DTO.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateTransactionRequest WithBillingAddress MapsAllAddressFields")]
     public void CreateTransactionRequest_WithBillingAddress_MapsAllAddressFields()
     {
         var request = new CreateTransactionRequest
@@ -153,7 +197,7 @@ public class RequestMapperTests
     /// <summary>
     /// Verifies that pay-with-token requests map the token into payment method and omit card details.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "PayWithTokenRequest MapsTokenIntoPaymentMethod")]
     public void PayWithTokenRequest_MapsTokenIntoPaymentMethod()
     {
         var request = new PayWithTokenRequest
@@ -174,7 +218,7 @@ public class RequestMapperTests
     /// <summary>
     /// Verifies that customer name fields are mapped to the DTO.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateTransactionRequest WithCustomerName MapsBothNameFields")]
     public void CreateTransactionRequest_WithCustomerName_MapsBothNameFields()
     {
         var request = new CreateTransactionRequest
@@ -220,7 +264,7 @@ public class RequestMapperTests
     /// <summary>
     /// Verifies that Apply3DSecure maps to null when not set, so it is omitted from the wire payload.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateTransactionRequest WithoutApply3DSecure MapsToNull")]
     public void CreateTransactionRequest_WithoutApply3DSecure_MapsToNull()
     {
         var request = new CreateTransactionRequest
@@ -239,7 +283,7 @@ public class RequestMapperTests
     /// <summary>
     /// Verifies that strongCustomerAuthentication is preserved on payment transactions.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateTransactionRequest WithStrongCustomerAuthentication MapsObject")]
     public void CreateTransactionRequest_WithStrongCustomerAuthentication_MapsObject()
     {
         var request = new CreateTransactionRequest

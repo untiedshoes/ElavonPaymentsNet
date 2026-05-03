@@ -22,7 +22,7 @@ public sealed class ElavonIntegrationTests
     /// <summary>
     /// Verifies that a merchant session key can be created using the sandbox Basic profile.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateMerchantSessionKeyAsync ReturnsSessionKeyAndExpiry")]
     public async Task CreateMerchantSessionKeyAsync_ReturnsSessionKeyAndExpiry()
     {
         var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
@@ -38,7 +38,7 @@ public sealed class ElavonIntegrationTests
     /// <summary>
     /// Verifies that a freshly created merchant session key validates successfully.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "ValidateMerchantSessionKeyAsync FreshKey ReturnsValid")]
     public async Task ValidateMerchantSessionKeyAsync_FreshKey_ReturnsValid()
     {
         var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
@@ -62,7 +62,7 @@ public sealed class ElavonIntegrationTests
     /// <summary>
     /// Verifies that a card identifier can be created from a fresh merchant session key.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateCardIdentifierAsync ReturnsIdentifierExpiryAndCardType")]
     public async Task CreateCardIdentifierAsync_ReturnsIdentifierExpiryAndCardType()
     {
         var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
@@ -98,7 +98,7 @@ public sealed class ElavonIntegrationTests
     /// <summary>
     /// Verifies the full MSK + card-identifier + payment flow returns Ok.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateTransactionAsync CardIdentifierFlow ReturnsOk")]
     public async Task CreateTransactionAsync_CardIdentifierFlow_ReturnsOk()
     {
         var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
@@ -159,7 +159,7 @@ public sealed class ElavonIntegrationTests
     /// Verifies that the known sandbox decline card (4929602110085639) returns
     /// NotAuthed / 2000 / "Declined by the bank" when 3DS is disabled.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateTransactionAsync CardIdentifierFlow DeclineCard ReturnsBankDecline")]
     public async Task CreateTransactionAsync_CardIdentifierFlow_DeclineCard_ReturnsBankDecline()
     {
         var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
@@ -225,7 +225,7 @@ public sealed class ElavonIntegrationTests
     /// <summary>
     /// Verifies that a deferred transaction can be created with TransactionType.Deferred.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateTransactionAsync Deferred ReturnsOk")]
     public async Task CreateTransactionAsync_Deferred_ReturnsOk()
     {
         var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
@@ -283,7 +283,7 @@ public sealed class ElavonIntegrationTests
     /// Uses SandboxHelpers for the prerequisite payment — that path is covered by
     /// CreateTransactionAsync_CardIdentifierFlow_ReturnsOk.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateTransactionAsync Repeat ReturnsOk")]
     public async Task CreateTransactionAsync_Repeat_ReturnsOk()
     {
         var originalId = await SandboxHelpers.GetSuccessfulTransactionIdAsync(tag: "ORIG");
@@ -314,7 +314,7 @@ public sealed class ElavonIntegrationTests
     /// Verifies that RetrieveTransactionAsync can read a known safe transaction from the sandbox.
     /// Requires the <c>ELAVON_SAFE_TRANSACTION_ID</c> environment variable.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "RetrieveTransactionAsync WithConfiguredSafeId ReturnsResponse")]
     public async Task RetrieveTransactionAsync_WithConfiguredSafeId_ReturnsResponse()
     {
         var transactionId = Environment.GetEnvironmentVariable("ELAVON_SAFE_TRANSACTION_ID");
@@ -335,7 +335,7 @@ public sealed class ElavonIntegrationTests
     // ----------------------------------------------------------------
 
     /// <summary>Verifies that a transaction can be voided via PostPayments.</summary>
-    [Fact]
+    [Fact(DisplayName = "VoidTransactionAsync AfterPayment ReturnsSuccess")]
     public async Task VoidTransactionAsync_AfterPayment_ReturnsSuccess()
     {
         var txId = await SandboxHelpers.GetSuccessfulTransactionIdAsync(tag: "VOID");
@@ -349,7 +349,7 @@ public sealed class ElavonIntegrationTests
     }
 
     /// <summary>Verifies that a transaction can be refunded via PostPayments.</summary>
-    [Fact]
+    [Fact(DisplayName = "RefundTransactionAsync AfterPayment ReturnsSuccess")]
     public async Task RefundTransactionAsync_AfterPayment_ReturnsSuccess()
     {
         var txId = await SandboxHelpers.GetSuccessfulTransactionIdAsync(tag: "REFUND");
@@ -368,7 +368,7 @@ public sealed class ElavonIntegrationTests
     }
 
     /// <summary>Verifies that a deferred transaction can be captured via PostPayments.</summary>
-    [Fact]
+    [Fact(DisplayName = "CaptureTransactionAsync AfterDeferred ReturnsSuccess")]
     public async Task CaptureTransactionAsync_AfterDeferred_ReturnsSuccess()
     {
         var txId = await SandboxHelpers.GetDeferredTransactionIdAsync();
@@ -389,7 +389,7 @@ public sealed class ElavonIntegrationTests
     // ----------------------------------------------------------------
 
     /// <summary>Verifies that a Void instruction can be posted to a completed payment.</summary>
-    [Fact]
+    [Fact(DisplayName = "CreateInstructionAsync Void ReturnsVoidInstruction")]
     public async Task CreateInstructionAsync_Void_ReturnsVoidInstruction()
     {
         var txId = await SandboxHelpers.GetSuccessfulTransactionIdAsync(tag: "INSTRVOID");
@@ -406,7 +406,7 @@ public sealed class ElavonIntegrationTests
     }
 
     /// <summary>Verifies that an Abort instruction can be posted to a deferred transaction.</summary>
-    [Fact]
+    [Fact(DisplayName = "CreateInstructionAsync Abort OnDeferred ReturnsAbortInstruction")]
     public async Task CreateInstructionAsync_Abort_OnDeferred_ReturnsAbortInstruction()
     {
         var txId = await SandboxHelpers.GetDeferredTransactionIdAsync();
@@ -423,7 +423,7 @@ public sealed class ElavonIntegrationTests
     }
 
     /// <summary>Verifies that a Release instruction can be posted to a deferred transaction.</summary>
-    [Fact]
+    [Fact(DisplayName = "CreateInstructionAsync Release OnDeferred ReturnsReleaseInstruction")]
     public async Task CreateInstructionAsync_Release_OnDeferred_ReturnsReleaseInstruction()
     {
         var txId = await SandboxHelpers.GetDeferredTransactionIdAsync();
@@ -447,7 +447,7 @@ public sealed class ElavonIntegrationTests
     /// <summary>
     /// Verifies that invalid credentials are rejected by the real API with an authentication exception.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "CreateMerchantSessionKeyAsync WithInvalidCredentials ThrowsAuthenticationException")]
     public async Task CreateMerchantSessionKeyAsync_WithInvalidCredentials_ThrowsAuthenticationException()
     {
         var client = new ElavonPaymentsClient(new ElavonPaymentsClientOptions

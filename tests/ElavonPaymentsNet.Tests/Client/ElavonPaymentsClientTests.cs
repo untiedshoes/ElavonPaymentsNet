@@ -12,7 +12,7 @@ public class ElavonPaymentsClientTests
     /// <summary>
     /// Verifies that constructing the client with valid options exposes every service group.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Constructor WithValidOptions ExposesAllServices")]
     public void Constructor_WithValidOptions_ExposesAllServices()
     {
         var client = new ElavonPaymentsClient(new ElavonPaymentsClientOptions
@@ -33,7 +33,7 @@ public class ElavonPaymentsClientTests
     /// <summary>
     /// Verifies that the logger-factory overload also exposes every service group.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Constructor WithLoggerFactory ExposesAllServices")]
     public void Constructor_WithLoggerFactory_ExposesAllServices()
     {
         var client = new ElavonPaymentsClient(new ElavonPaymentsClientOptions
@@ -54,7 +54,7 @@ public class ElavonPaymentsClientTests
     /// <summary>
     /// Verifies that a null options instance is rejected immediately.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Constructor WithNullOptions ThrowsArgumentNullException")]
     public void Constructor_WithNullOptions_ThrowsArgumentNullException()
     {
         Assert.Throws<ArgumentNullException>(() => new ElavonPaymentsClient((ElavonPaymentsClientOptions)null!));
@@ -63,7 +63,7 @@ public class ElavonPaymentsClientTests
     /// <summary>
     /// Verifies that a null logger factory is rejected immediately.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Constructor WithNullLoggerFactory ThrowsArgumentNullException")]
     public void Constructor_WithNullLoggerFactory_ThrowsArgumentNullException()
     {
         var options = new ElavonPaymentsClientOptions
@@ -78,7 +78,7 @@ public class ElavonPaymentsClientTests
     /// <summary>
     /// Verifies that a null HTTP client is rejected immediately.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Constructor WithNullHttpClient ThrowsArgumentNullException")]
     public void Constructor_WithNullHttpClient_ThrowsArgumentNullException()
     {
         var options = new ElavonPaymentsClientOptions
@@ -125,7 +125,7 @@ public class ElavonPaymentsClientTests
             /// <summary>
             /// Verifies that the default environment resolves to the sandbox base URL.
             /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Options DefaultEnvironment IsSandbox")]
     public void Options_DefaultEnvironment_IsSandbox()
     {
         var options = new ElavonPaymentsClientOptions
@@ -141,7 +141,7 @@ public class ElavonPaymentsClientTests
     /// <summary>
     /// Verifies that the live environment resolves to the live base URL.
     /// </summary>
-    [Fact]
+    [Fact(DisplayName = "Options LiveEnvironment UsesLiveBaseUrl")]
     public void Options_LiveEnvironment_UsesLiveBaseUrl()
     {
         var options = new ElavonPaymentsClientOptions

@@ -23,6 +23,8 @@ internal sealed class ElavonWalletsService : IElavonWalletsService
     /// </summary>
     public async Task<MerchantSessionResponse> CreateMerchantSessionKeyAsync(MerchantSessionRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         return await _api.SendAsync<MerchantSessionRequest, MerchantSessionResponse>(
             HttpMethod.Post, ElavonApiRoutes.MerchantSessionKeys, request, null, cancellationToken)
             .ConfigureAwait(false);
@@ -33,6 +35,8 @@ internal sealed class ElavonWalletsService : IElavonWalletsService
     /// </summary>
     public async Task<MerchantSessionValidationResponse> ValidateMerchantSessionKeyAsync(MerchantSessionValidationRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         return await _api.SendAsync<MerchantSessionValidationResponse>(
             HttpMethod.Get, ElavonApiRoutes.MerchantSessionKey(request.MerchantSessionKey), null, cancellationToken)
             .ConfigureAwait(false);
@@ -44,6 +48,8 @@ internal sealed class ElavonWalletsService : IElavonWalletsService
     /// </summary>
     public async Task<ApplePaySessionResponse> CreateApplePaySessionAsync(ApplePaySessionRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         return await _api.SendAsync<ApplePaySessionRequest, ApplePaySessionResponse>(
             HttpMethod.Post, ElavonApiRoutes.ApplePaySession, request, null, cancellationToken)
             .ConfigureAwait(false);

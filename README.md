@@ -790,27 +790,18 @@ Use a custom server URL only if you explicitly need non-default routing (for exa
 
 ## Roadmap
 
-- Integration tests against the Opayo sandbox
 - Expanded 3DS metadata beyond baseline browser fields (risk indicators, prior auth, exemptions)
-- NuGet package publication
 
 ### Playground Coverage to Add
-
-#### Phase 1 (Core Post-Payment Flows)
 
 - Scenario presets: terminal menu for common sandbox test-card outcomes
 - Capture flow: authorise/deferred payment then `CaptureTransactionAsync`
 - Refund flow: create payment then `RefundTransactionAsync` (full and partial)
 - Void flow: create payment then `VoidTransactionAsync` before settlement
-
-#### Phase 2 (Advanced Flows)
-
-- 3DS playground script hardening: complete challenge payload alignment and callback ergonomics
-- Token flow playground: `CreateTokenAsync` then `PayWithTokenAsync`
+- Token flow: `CreateTokenAsync` then `PayWithTokenAsync`
 
 ### Testing Gaps to Close
 
-- **Integration breadth**: expand sandbox-backed scenarios (additional happy paths and controlled failure paths) using environment-variable gating and explicit skip behavior when credentials are absent
 - **Smoke tests**: a minimal fast CI suite covering SDK bootstrapping and one safe end-to-end API flow (e.g. `GET /merchant-session-keys` validation call)
 
 ---

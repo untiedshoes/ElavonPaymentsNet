@@ -58,6 +58,7 @@ builder.Services.AddElavonPayments(options =>
 
 - `Transactions`
   - `CreateTransactionAsync`
+    - `Payment`, `Deferred`, `Authenticate`, `Repeat`, `Authorise`, `Refund`
   - `RetrieveTransactionAsync`
 - `PostPayments`
   - `CaptureTransactionAsync`
@@ -65,6 +66,7 @@ builder.Services.AddElavonPayments(options =>
   - `VoidTransactionAsync`
 - `Instructions`
   - `CreateInstructionAsync`
+    - `Void`, `Abort`, `Release`, `Cancel`
 - `ThreeDs`
   - `Complete3DsAsync`
 - `Wallets`

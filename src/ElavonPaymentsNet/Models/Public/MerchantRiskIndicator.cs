@@ -32,9 +32,14 @@ public sealed class MerchantRiskIndicator
     public string? ReorderItemsInd { get; init; }
 
     /// <summary>
+    /// Shipping indicator code (for example, billing-address match vs alternate address).
+    /// </summary>
+    public string? ShipIndicator { get; init; }
+
+    /// <summary>
     /// Gift card amount in minor units when the order includes gift cards.
     /// </summary>
-    public int? GiftCardAmount { get; init; }
+    public string? GiftCardAmount { get; init; }
 
     /// <summary>
     /// Gift card currency (ISO 4217), for example GBP.
@@ -44,5 +49,5 @@ public sealed class MerchantRiskIndicator
     /// <summary>
     /// Number of gift cards purchased in this order.
     /// </summary>
-    public int? GiftCardCount { get; init; }
+    public string? GiftCardCount { get; init; }
 }

@@ -276,20 +276,53 @@ var result = await client.Transactions.CreateTransactionAsync(new CreateTransact
         ChallengeWindowSize         = "FullScreen",
         TransType                   = "GoodsAndServicePurchase",
         ThreeDSRequestorChallengeInd= "03",
+        AcctID                      = "string",
+        Website                     = "https://mydomain.com",
 
         // Optional advanced metadata for issuer risk scoring / exemptions
-        ThreeDSRequestorExemptionIndicator = "lowValue",
+        ThreeDSExemptionIndicator = "TransactionRiskAnalysis",
+        ThreeDSRequestorAuthenticationInfo = new ThreeDSRequestorAuthenticationInfo
+        {
+            ThreeDSReqAuthData = "string",
+            ThreeDSReqAuthMethod = "LoginWithThreeDSRequestorCredentials",
+            ThreeDSReqAuthTimestamp = "201810011445"
+        },
+        AcctInfo = new AccountInfo
+        {
+            ChAccAgeInd = "MoreThanSixtyDays",
+            ChAccChange = "20180925",
+            ChAccChangeInd = "MoreThanSixtyDays",
+            ChAccDate = "20180925",
+            ChAccPwChange = "20180926",
+            ChAccPwChangeInd = "MoreThanSixtyDays",
+            NbPurchaseAccount = "5",
+            ProvisionAttemptsDay = "0",
+            TxnActivityDay = "1",
+            TxnActivityYear = "24",
+            PaymentAccAge = "20180228",
+            PaymentAccInd = "MoreThanSixtyDays",
+            ShipAddressUsage = "20180220",
+            ShipAddressUsageInd = "MoreThanSixtyDays",
+            ShipNameIndicator = "FullMatch",
+            SuspiciousAccActivity = "NotSuspicious"
+        },
         MerchantRiskIndicator = new MerchantRiskIndicator
         {
-            DeliveryEmailAddress = "shopper@example.com",
-            DeliveryTimeframe = "01",
-            ReorderItemsInd = "01"
+            DeliveryEmailAddress = "customer@domain.com",
+            DeliveryTimeframe = "OvernightShipping",
+            GiftCardAmount = "123",
+            GiftCardCount = "2",
+            PreOrderDate = "20200220",
+            PreOrderPurchaseInd = "MerchandiseAvailable",
+            ReorderItemsInd = "Reordered",
+            ShipIndicator = "CardholderBillingAddress"
         },
         ThreeDSRequestorPriorAuthenticationInfo = new ThreeDSRequestorPriorAuthenticationInfo
         {
-            ThreeDSReqPriorAuthMethod = "02",
-            ThreeDSReqPriorAuthTimestamp = "202605041030",
-            ThreeDSReqPriorRef = "AUTH-REF-123"
+            ThreeDSReqPriorAuthData = "data",
+            ThreeDSReqPriorAuthMethod = "FrictionlessAuthentication",
+            ThreeDSReqPriorAuthTimestamp = "201901011645",
+            ThreeDSReqPriorRef = "2cd842f5-da5d-40b7-8ae6-6ce61cc7b580"
         }
     }
 });

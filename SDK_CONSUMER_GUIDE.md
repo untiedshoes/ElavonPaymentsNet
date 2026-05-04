@@ -316,9 +316,12 @@ There is no separate "initialise 3DS" endpoint in this SDK anymore.
 Call `CreateTransactionAsync` with complete `StrongCustomerAuthentication` data.
 
 For advanced issuer risk scoring and SCA handling, you can also send:
-- `MerchantRiskIndicator` (delivery/reorder/gift-card risk context)
+- `MerchantRiskIndicator` (delivery/reorder/gift-card/shipping risk context)
+- `ThreeDSRequestorAuthenticationInfo` (requestor-side auth data/method/timestamp)
 - `ThreeDSRequestorPriorAuthenticationInfo` (prior auth method/timestamp/reference)
-- `ThreeDSRequestorExemptionIndicator` (requested exemption code)
+- `AcctInfo` (account age/change/activity metadata)
+- `ThreeDSExemptionIndicator` (requested exemption code)
+- `Website` (merchant website URL)
 
 Example:
 
@@ -339,18 +342,51 @@ StrongCustomerAuthentication = new StrongCustomerAuthentication
     ChallengeWindowSize = "FullScreen",
     TransType = "GoodsAndServicePurchase",
     ThreeDSRequestorChallengeInd = "03",
-    ThreeDSRequestorExemptionIndicator = "lowValue",
+    AcctID = "string",
+    Website = "https://mydomain.com",
+    ThreeDSExemptionIndicator = "TransactionRiskAnalysis",
+    ThreeDSRequestorAuthenticationInfo = new ThreeDSRequestorAuthenticationInfo
+    {
+        ThreeDSReqAuthData = "string",
+        ThreeDSReqAuthMethod = "LoginWithThreeDSRequestorCredentials",
+        ThreeDSReqAuthTimestamp = "201810011445"
+    },
+    AcctInfo = new AccountInfo
+    {
+        ChAccAgeInd = "MoreThanSixtyDays",
+        ChAccChange = "20180925",
+        ChAccChangeInd = "MoreThanSixtyDays",
+        ChAccDate = "20180925",
+        ChAccPwChange = "20180926",
+        ChAccPwChangeInd = "MoreThanSixtyDays",
+        NbPurchaseAccount = "5",
+        ProvisionAttemptsDay = "0",
+        TxnActivityDay = "1",
+        TxnActivityYear = "24",
+        PaymentAccAge = "20180228",
+        PaymentAccInd = "MoreThanSixtyDays",
+        ShipAddressUsage = "20180220",
+        ShipAddressUsageInd = "MoreThanSixtyDays",
+        ShipNameIndicator = "FullMatch",
+        SuspiciousAccActivity = "NotSuspicious"
+    },
     MerchantRiskIndicator = new MerchantRiskIndicator
     {
-        DeliveryEmailAddress = "shopper@example.com",
-        DeliveryTimeframe = "01",
-        ReorderItemsInd = "01"
+        DeliveryEmailAddress = "customer@domain.com",
+        DeliveryTimeframe = "OvernightShipping",
+        GiftCardAmount = "123",
+        GiftCardCount = "2",
+        PreOrderDate = "20200220",
+        PreOrderPurchaseInd = "MerchandiseAvailable",
+        ReorderItemsInd = "Reordered",
+        ShipIndicator = "CardholderBillingAddress"
     },
     ThreeDSRequestorPriorAuthenticationInfo = new ThreeDSRequestorPriorAuthenticationInfo
     {
-        ThreeDSReqPriorAuthMethod = "02",
-        ThreeDSReqPriorAuthTimestamp = "202605041030",
-        ThreeDSReqPriorRef = "AUTH-REF-123"
+        ThreeDSReqPriorAuthData = "data",
+        ThreeDSReqPriorAuthMethod = "FrictionlessAuthentication",
+        ThreeDSReqPriorAuthTimestamp = "201901011645",
+        ThreeDSReqPriorRef = "2cd842f5-da5d-40b7-8ae6-6ce61cc7b580"
     }
 };
 ```

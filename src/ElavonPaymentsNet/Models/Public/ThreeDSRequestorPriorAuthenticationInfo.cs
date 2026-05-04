@@ -6,6 +6,11 @@ namespace ElavonPaymentsNet.Models.Public;
 public sealed class ThreeDSRequestorPriorAuthenticationInfo
 {
     /// <summary>
+    /// Prior authentication data value provided by the 3DS requestor.
+    /// </summary>
+    public string? ThreeDSReqPriorAuthData { get; init; }
+
+    /// <summary>
     /// Prior authentication method indicator code.
     /// </summary>
     public string? ThreeDSReqPriorAuthMethod { get; init; }

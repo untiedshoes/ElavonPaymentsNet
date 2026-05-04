@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace ElavonPaymentsNet.Models.Public;
 
 /// <summary>
@@ -8,6 +10,8 @@ namespace ElavonPaymentsNet.Models.Public;
 /// </summary>
 public sealed class StrongCustomerAuthentication
 {
+    private readonly string? _threeDSExemptionIndicator;
+
     /// <summary>
     /// Fully qualified URL that receives the challenge result callback from the ACS.
     /// </summary>
@@ -72,6 +76,21 @@ public sealed class StrongCustomerAuthentication
     public string? ThreeDSRequestorChallengeInd { get; init; }
 
     /// <summary>
+    /// Account identifier available to the merchant for this cardholder.
+    /// </summary>
+    public string? AcctID { get; init; }
+
+    /// <summary>
+    /// Details about how the cardholder was authenticated by the 3DS requestor.
+    /// </summary>
+    public ThreeDSRequestorAuthenticationInfo? ThreeDSRequestorAuthenticationInfo { get; init; }
+
+    /// <summary>
+    /// Cardholder account lifecycle and activity information used by issuer risk engines.
+    /// </summary>
+    public AccountInfo? AcctInfo { get; init; }
+
+    /// <summary>
     /// Merchant risk signals sent to the issuer to support frictionless authentication decisions.
     /// Populate this for higher acceptance on low-risk transactions and better issuer scoring.
     /// </summary>
@@ -84,8 +103,28 @@ public sealed class StrongCustomerAuthentication
     public ThreeDSRequestorPriorAuthenticationInfo? ThreeDSRequestorPriorAuthenticationInfo { get; init; }
 
     /// <summary>
-    /// Indicates which SCA exemption the 3DS requestor is attempting to apply, if any.
+    /// Indicates which SCA exemption is being requested, if any.
     /// Values are acquirer/gateway specific; use the exact code expected by your Elavon configuration.
     /// </summary>
-    public string? ThreeDSRequestorExemptionIndicator { get; init; }
+    [JsonPropertyName("threeDSExemptionIndicator")]
+    public string? ThreeDSExemptionIndicator
+    {
+        get => _threeDSExemptionIndicator;
+        init => _threeDSExemptionIndicator = value;
+    }
+
+    /// <summary>
+    /// Backward-compatible alias for <see cref="ThreeDSExemptionIndicator"/>.
+    /// </summary>
+    [JsonIgnore]
+    public string? ThreeDSRequestorExemptionIndicator
+    {
+        get => _threeDSExemptionIndicator;
+        init => _threeDSExemptionIndicator = value;
+    }
+
+    /// <summary>
+    /// Merchant website URL associated with the checkout flow.
+    /// </summary>
+    public string? Website { get; init; }
 }

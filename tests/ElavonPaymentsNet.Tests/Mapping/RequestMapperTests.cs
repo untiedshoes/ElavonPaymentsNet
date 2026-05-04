@@ -325,18 +325,38 @@ public class RequestMapperTests
             StrongCustomerAuthentication = new StrongCustomerAuthentication
             {
                 BrowserIP = "203.0.113.10",
-                ThreeDSRequestorExemptionIndicator = "lowValue",
+                AcctID = "acct-123",
+                Website = "https://mydomain.com",
+                ThreeDSExemptionIndicator = "TransactionRiskAnalysis",
+                ThreeDSRequestorAuthenticationInfo = new ThreeDSRequestorAuthenticationInfo
+                {
+                    ThreeDSReqAuthData = "string",
+                    ThreeDSReqAuthMethod = "LoginWithThreeDSRequestorCredentials",
+                    ThreeDSReqAuthTimestamp = "201810011445"
+                },
+                AcctInfo = new AccountInfo
+                {
+                    ChAccAgeInd = "MoreThanSixtyDays",
+                    ChAccDate = "20180925",
+                    SuspiciousAccActivity = "NotSuspicious"
+                },
                 MerchantRiskIndicator = new MerchantRiskIndicator
                 {
                     DeliveryEmailAddress = "shopper@example.com",
-                    DeliveryTimeframe = "01",
-                    ReorderItemsInd = "01"
+                    DeliveryTimeframe = "OvernightShipping",
+                    GiftCardAmount = "123",
+                    GiftCardCount = "2",
+                    PreOrderDate = "20200220",
+                    PreOrderPurchaseInd = "MerchandiseAvailable",
+                    ReorderItemsInd = "Reordered",
+                    ShipIndicator = "CardholderBillingAddress"
                 },
                 ThreeDSRequestorPriorAuthenticationInfo = new ThreeDSRequestorPriorAuthenticationInfo
                 {
-                    ThreeDSReqPriorAuthMethod = "02",
-                    ThreeDSReqPriorAuthTimestamp = "202605041030",
-                    ThreeDSReqPriorRef = "AUTH-REF-123"
+                    ThreeDSReqPriorAuthData = "data",
+                    ThreeDSReqPriorAuthMethod = "FrictionlessAuthentication",
+                    ThreeDSReqPriorAuthTimestamp = "201901011645",
+                    ThreeDSReqPriorRef = "2cd842f5-da5d-40b7-8ae6-6ce61cc7b580"
                 }
             }
         };
@@ -344,16 +364,35 @@ public class RequestMapperTests
         var dto = RequestMapper.ToDto(request);
 
         Assert.NotNull(dto.StrongCustomerAuthentication);
-        Assert.Equal("lowValue", dto.StrongCustomerAuthentication!.ThreeDSRequestorExemptionIndicator);
+        Assert.Equal("acct-123", dto.StrongCustomerAuthentication!.AcctID);
+        Assert.Equal("https://mydomain.com", dto.StrongCustomerAuthentication.Website);
+        Assert.Equal("TransactionRiskAnalysis", dto.StrongCustomerAuthentication.ThreeDSExemptionIndicator);
+        Assert.Equal("TransactionRiskAnalysis", dto.StrongCustomerAuthentication.ThreeDSRequestorExemptionIndicator);
+
+        Assert.NotNull(dto.StrongCustomerAuthentication.ThreeDSRequestorAuthenticationInfo);
+        Assert.Equal("string", dto.StrongCustomerAuthentication.ThreeDSRequestorAuthenticationInfo!.ThreeDSReqAuthData);
+        Assert.Equal("LoginWithThreeDSRequestorCredentials", dto.StrongCustomerAuthentication.ThreeDSRequestorAuthenticationInfo.ThreeDSReqAuthMethod);
+        Assert.Equal("201810011445", dto.StrongCustomerAuthentication.ThreeDSRequestorAuthenticationInfo.ThreeDSReqAuthTimestamp);
+
+        Assert.NotNull(dto.StrongCustomerAuthentication.AcctInfo);
+        Assert.Equal("MoreThanSixtyDays", dto.StrongCustomerAuthentication.AcctInfo!.ChAccAgeInd);
+        Assert.Equal("20180925", dto.StrongCustomerAuthentication.AcctInfo.ChAccDate);
+        Assert.Equal("NotSuspicious", dto.StrongCustomerAuthentication.AcctInfo.SuspiciousAccActivity);
 
         Assert.NotNull(dto.StrongCustomerAuthentication.MerchantRiskIndicator);
         Assert.Equal("shopper@example.com", dto.StrongCustomerAuthentication.MerchantRiskIndicator!.DeliveryEmailAddress);
-        Assert.Equal("01", dto.StrongCustomerAuthentication.MerchantRiskIndicator.DeliveryTimeframe);
-        Assert.Equal("01", dto.StrongCustomerAuthentication.MerchantRiskIndicator.ReorderItemsInd);
+        Assert.Equal("OvernightShipping", dto.StrongCustomerAuthentication.MerchantRiskIndicator.DeliveryTimeframe);
+        Assert.Equal("123", dto.StrongCustomerAuthentication.MerchantRiskIndicator.GiftCardAmount);
+        Assert.Equal("2", dto.StrongCustomerAuthentication.MerchantRiskIndicator.GiftCardCount);
+        Assert.Equal("20200220", dto.StrongCustomerAuthentication.MerchantRiskIndicator.PreOrderDate);
+        Assert.Equal("MerchandiseAvailable", dto.StrongCustomerAuthentication.MerchantRiskIndicator.PreOrderPurchaseInd);
+        Assert.Equal("Reordered", dto.StrongCustomerAuthentication.MerchantRiskIndicator.ReorderItemsInd);
+        Assert.Equal("CardholderBillingAddress", dto.StrongCustomerAuthentication.MerchantRiskIndicator.ShipIndicator);
 
         Assert.NotNull(dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo);
-        Assert.Equal("02", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo!.ThreeDSReqPriorAuthMethod);
-        Assert.Equal("202605041030", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo.ThreeDSReqPriorAuthTimestamp);
-        Assert.Equal("AUTH-REF-123", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo.ThreeDSReqPriorRef);
+        Assert.Equal("data", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo!.ThreeDSReqPriorAuthData);
+        Assert.Equal("FrictionlessAuthentication", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo.ThreeDSReqPriorAuthMethod);
+        Assert.Equal("201901011645", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo.ThreeDSReqPriorAuthTimestamp);
+        Assert.Equal("2cd842f5-da5d-40b7-8ae6-6ce61cc7b580", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo.ThreeDSReqPriorRef);
     }
 }

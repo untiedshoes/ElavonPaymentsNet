@@ -892,11 +892,7 @@ Use a custom server URL only if you explicitly need non-default routing (for exa
 
 ### Playground Coverage to Add
 
-- Scenario presets: terminal menu for common sandbox test-card outcomes
-- Capture flow: authorise/deferred payment then `CaptureTransactionAsync`
-- Refund flow: create payment then `RefundTransactionAsync` (full and partial)
-- Void flow: create payment then `VoidTransactionAsync` before settlement
-- Token flow: `CreateTokenAsync` then `PayWithTokenAsync`
+- (none currently tracked — all 6 scenario flows implemented)
 
 ### Testing Gaps to Close
 

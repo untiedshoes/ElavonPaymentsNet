@@ -74,7 +74,8 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
         return new PostPaymentResponse
         {
             TransactionId = response.TransactionId,
-            Status = response.Status
+            Status = response.Status,
+            StatusDetail = response.StatusDetail
         };
     }
 

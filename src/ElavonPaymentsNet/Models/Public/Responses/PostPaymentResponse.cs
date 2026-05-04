@@ -12,6 +12,9 @@ public sealed class PostPaymentResponse
     /// <summary>The operation status, e.g. "Ok".</summary>
     public string? Status { get; init; }
 
+    /// <summary>Human-readable detail accompanying the status.</summary>
+    public string? StatusDetail { get; init; }
+
     /// <summary>
     /// Strongly typed view of <see cref="Status"/>.
     /// Unknown or newly introduced API statuses map to <see cref="TransactionStatusKind.Unknown"/>.

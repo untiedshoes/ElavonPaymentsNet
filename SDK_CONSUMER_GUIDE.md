@@ -547,12 +547,20 @@ Once the merchant session is validated, the customer authorises the payment on t
 
 There are two layers to handle:
 
-- **HTTP/API failures** -> SDK exceptions (`ElavonApiException` and derived types)
-- **Business transaction outcomes on successful HTTP calls** -> `StatusKind` on response models
+- **HTTP/API failures** — SDK exceptions (`ElavonApiException` and derived types)
+- **Business transaction outcomes on successful HTTP calls** — `StatusKind` on response models
 
 ### 11.1 Handle API/transport failures with typed exceptions
 
-Use specific SDK exceptions where possible:
+The SDK maps every non-success HTTP response to a typed exception that inherits from `ElavonApiException`.
+You should catch the most specific type first and fall back to `ElavonApiException` as a catch-all.
+
+Every exception exposes:
+- `HttpStatusCode` — the HTTP status returned by the gateway
+- `ErrorCode` — the Elavon application-level error code string (e.g. `"4035"`), if the gateway returned one
+- `RawResponse` — the full raw JSON body for logging/diagnostics
+
+Use `ElavonErrorCode` constants instead of magic strings when branching on `ErrorCode`.
 
 ```csharp
 using ElavonPaymentsNet.Exceptions;
@@ -561,27 +569,52 @@ try
 {
     var result = await client.Transactions.CreateTransactionAsync(request);
 }
+catch (ElavonValidationException ex) when (ex.ErrorCode == ElavonErrorCode.DuplicateVendorTxCode)
+{
+    // Regenerate a unique VendorTxCode and retry.
+}
+catch (ElavonValidationException ex) when (ex.ErrorCode == ElavonErrorCode.RefundExceedsOriginal)
+{
+    // Amount entered exceeds the original captured amount.
+}
+catch (ElavonValidationException ex) when (ex.ErrorCode == ElavonErrorCode.TokenNotFound)
+{
+    // Card identifier/token is invalid or has been removed. Collect fresh card details.
+}
 catch (ElavonValidationException ex)
 {
+    // Other 400/422 validation failure — inspect field-level errors.
     foreach (var error in ex.ValidationErrors ?? [])
-    {
         Console.WriteLine($"{error.Property}: {error.Description} ({error.Code})");
-    }
+
+    // Or check ex.ErrorCode against ElavonErrorCode constants for a specific cause.
+    Console.WriteLine($"Validation error code: {ex.ErrorCode}");
 }
 catch (ElavonAuthenticationException ex)
 {
+    // Invalid or expired API credentials. Check your vendor name and integration key.
     Console.WriteLine($"Auth failed ({ex.HttpStatusCode}): {ex.RawResponse}");
 }
 catch (ElavonRateLimitException ex)
 {
-    Console.WriteLine($"Rate limited ({ex.HttpStatusCode})");
+    // Too many requests. Back off before retrying.
+    if (ex.RetryAfter.HasValue)
+        await Task.Delay(ex.RetryAfter.Value, cancellationToken);
 }
 catch (ElavonPaymentDeclinedException ex)
 {
-    Console.WriteLine($"Declined: {ex.RawResponse}");
+    // Card was declined by the gateway or issuer (HTTP 402).
+    Console.WriteLine($"Declined: {ex.ErrorCode} — {ex.RawResponse}");
+}
+catch (ElavonServerException ex)
+{
+    // 5xx gateway fault. The transaction state is unknown for POST calls.
+    // Reconcile via retrieve-transaction before retrying.
+    Console.WriteLine($"Gateway error ({ex.HttpStatusCode}): {ex.ErrorCode}");
 }
 catch (ElavonApiException ex)
 {
+    // Catch-all for any other mapped or unmapped error.
     Console.WriteLine($"API error ({ex.HttpStatusCode}) code={ex.ErrorCode}\n{ex.RawResponse}");
 }
 ```
@@ -706,6 +739,38 @@ catch (ElavonApiException ex)
     Console.WriteLine($"{ex.HttpStatusCode}: {ex.ErrorCode}");
 }
 ```
+
+## 12. Operational Guidance
+### 11.4 Known error codes (`ElavonErrorCode`)
+
+The Elavon API embeds an application-level error code in error responses alongside the HTTP status.
+The SDK exposes all known codes as named constants on `ElavonErrorCode` in the `ElavonPaymentsNet.Exceptions` namespace.
+Use these in exception filters (see §11.1) or for logging/alerting.
+
+| Constant | Code | Typical exception | When it occurs | Action |
+|---|---|---|---|---|
+| `SystemError` | 2003 | `ElavonServerException` | Acquirer misconfiguration or transient comms failure with a third party | Retry with backoff; contact Elavon support if persistent |
+| `InternalServerError` | 2015 | `ElavonServerException` | Unexpected internal platform error | Check MyOpayo for transaction status before retrying |
+| `ScaRequired` | 2022 | `ElavonPaymentDeclinedException` | Bank declined because SCA is required but `clientIP` or SCA object missing | Include a complete `strongCustomerAuthentication` object |
+| `PaymentSystemNotSupported` | 3069 | `ElavonValidationException` | Card type not enabled on your account (e.g. Amex, Diners) | Enable the card type in MyOpayo or update your UI to show accepted types |
+| `BillingStateTooLong` | 3130 | `ElavonValidationException` | `BillingState` exceeds 2 characters | Use ANSI 2-character state codes |
+| `ThreeDsRejectedByIssuer` | 3336 | `ElavonValidationException` | Cardholder entered wrong 3DS credentials | Ask cardholder to retry or use a different card |
+| `DuplicateVendorTxCode` | 4001 | `ElavonValidationException` | `VendorTxCode` reused from a previous transaction | Generate a fresh unique code on every attempt |
+| `AmountOutOfRange` | 4009 | `ElavonValidationException` | Amount exceeds currency maximum or is zero on a non-Authenticate transaction | Validate amount before submission |
+| `ClientIpRestricted` | 4019 | `ElavonValidationException` | Shopper IP is blocked in MyOpayo | Review IP block list in MyOpayo Settings |
+| `ThreeDsRulesRequireAuth` | 4026 | `ElavonValidationException` | Account rules require 3DS but SCA object not supplied | Always send `strongCustomerAuthentication` |
+| `ThreeDsCannotAuthoriseCard` | 4027 | `ElavonValidationException` | 3DS failed with no override rules configured | Customer should retry with a different card |
+| `RefundExceedsOriginal` | 4035 | `ElavonValidationException` | Refund amount exceeds the original captured value | Cap refund at original amount; use retrieve-transaction to confirm |
+| `CardRangeBlocked` | 4043 | `ElavonValidationException` | Card range blocked by account rule base | Review Restrictions in MyOpayo Settings |
+| `AuthoriseExceedsMaximum` | 4044 | `ElavonValidationException` | Authorise uplift exceeds 115% of original | Reduce the authorise amount |
+| `TokenNotFound` | 4057 | `ElavonValidationException` | Token/card identifier does not exist or was removed | Re-collect card details and create a new token |
+| `InvalidPostcodeCharacters` | 5055 | `ElavonValidationException` | Postcode contains unsupported characters | Accept only letters, digits, hyphens, and spaces |
+| `UnexpectedCRes` | 5086 | `ElavonValidationException` | ACS–Elavon comms failure during 3DS completion | Re-attempt the full transaction with a new `VendorTxCode` |
+| `ApplePayInvalidBase64` | 6111 | `ElavonValidationException` | Apple Pay payload is not valid Base64 | Base64-encode the raw JSON token before submission |
+| `ApplePayInvalidPayloadFormat` | 6112 | `ElavonValidationException` | Decoded Apple Pay payload is not valid JSON or was double-encoded | Encode only the raw JSON, not a pre-encoded string |
+| `ApplePayTavvRequired` | 6116 | `ElavonValidationException` | TAVV missing; `supportsEMV` present in `merchantCapabilities` | Remove `supportsEMV` from your Apple Pay JS config |
+| `ApplePayTokenNotSupplied` | 6149 | `ElavonValidationException` | Payload not wrapped in a `token` JSON key | Wrap the entire Apple Pay payload in `{ "token": ... }` before Base64-encoding |
+| `ApplePayDomainNotRegistered` | 6118 | `ElavonValidationException` | Domain not registered in MyOpayo | Upload the domain verification file and ensure exact domain match |
 
 ## 12. Operational Guidance
 

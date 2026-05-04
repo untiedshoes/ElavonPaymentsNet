@@ -43,8 +43,9 @@ The design is intentionally Stripe-style: a single client entry point with named
 
 ## Additional Guides
 
-- [SDK_CONSUMER_GUIDE.md](SDK_CONSUMER_GUIDE.md) - full consumer integration and usage guide with end-to-end examples
-- [AI_TOOLING_PLAYGROUND.md](AI_TOOLING_PLAYGROUND.md) - operational runbook for AI tooling driving the interactive playground
+- [SDK_CONSUMER_GUIDE.md](SDK_CONSUMER_GUIDE.md) — full consumer integration and usage guide with end-to-end examples
+- [PAYMENT_METHODS.md](PAYMENT_METHODS.md) — detailed guide for every supported payment method: card flows, Apple Pay, Google Pay, PayPal, iDEAL, Alipay, WeChat Pay, EPS, and Trustly
+- [AI_TOOLING_PLAYGROUND.md](AI_TOOLING_PLAYGROUND.md) — operational runbook for AI tooling driving the interactive playground
 
 ## SDK Surface Contract (Source of Truth)
 

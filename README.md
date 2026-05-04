@@ -635,6 +635,7 @@ src/
     |   +-- Public/
     |   |   +-- Requests/                    # All public request models
     |   |   +-- Responses/                   # All public response models
+    |   |   +-- PaymentMethods/              # Card + APM request blocks (flat public namespace)
     |   |   +-- Apply3DSecureOption.cs
     |   |   +-- StrongCustomerAuthentication.cs
     |   |   +-- TransactionType.cs

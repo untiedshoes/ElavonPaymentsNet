@@ -740,7 +740,6 @@ catch (ElavonApiException ex)
 }
 ```
 
-## 12. Operational Guidance
 ### 11.4 Known error codes (`ElavonErrorCode`)
 
 The Elavon API embeds an application-level error code in error responses alongside the HTTP status.

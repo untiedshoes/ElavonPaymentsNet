@@ -21,6 +21,9 @@ public class CreateTransactionRequest
     /// <summary>A short description of the transaction. Recommended for <see cref="TransactionType.Payment"/>.</summary>
     public string? Description { get; init; }
 
+    /// <summary>Settlement reference text shown in downstream acquirer reporting where supported.</summary>
+    public string? SettlementReferenceText { get; init; }
+
     /// <summary>Payment method containing card details or a token. Not required for <see cref="TransactionType.Repeat"/>.</summary>
     public PaymentMethod? PaymentMethod { get; init; }
 
@@ -29,6 +32,15 @@ public class CreateTransactionRequest
 
     /// <summary>Customer's email address.</summary>
     public string? CustomerEmail { get; init; }
+
+    /// <summary>Customer phone number.</summary>
+    public string? CustomerPhone { get; init; }
+
+    /// <summary>Customer mobile phone number.</summary>
+    public string? CustomerMobilePhone { get; init; }
+
+    /// <summary>Customer work phone number.</summary>
+    public string? CustomerWorkPhone { get; init; }
 
     /// <summary>Customer first name.</summary>
     public string? CustomerFirstName { get; init; }
@@ -41,6 +53,21 @@ public class CreateTransactionRequest
     /// Set to <see cref="Apply3DSecureOption.Disable"/> to bypass 3DS for this transaction.
     /// </summary>
     public Apply3DSecureOption? Apply3DSecure { get; init; }
+
+    /// <summary>Controls AVS/CVC checks for this transaction (gateway-specific values).</summary>
+    public string? ApplyAvsCvcCheck { get; init; }
+
+    /// <summary>Entry method indicator (for example, <c>Ecommerce</c>).</summary>
+    public string? EntryMethod { get; init; }
+
+    /// <summary>Gift Aid flag (typically UK charity flows).</summary>
+    public bool? GiftAid { get; init; }
+
+    /// <summary>Shipping recipient and address details.</summary>
+    public ShippingDetails? ShippingDetails { get; init; }
+
+    /// <summary>Integrator or referrer identifier.</summary>
+    public string? ReferrerId { get; init; }
 
     /// <summary>
     /// The transaction ID of the original payment to reference.
@@ -55,4 +82,13 @@ public class CreateTransactionRequest
     /// triggered, to allow the issuer to perform a frictionless or challenge flow.
     /// </summary>
     public StrongCustomerAuthentication? StrongCustomerAuthentication { get; init; }
+
+    /// <summary>Credential-on-file metadata for CIT/MIT/recurring scenarios.</summary>
+    public CredentialType? CredentialType { get; init; }
+
+    /// <summary>Financial institution recipient details for applicable MCC/payment programs.</summary>
+    public FiRecipientRequest? FiRecipient { get; init; }
+
+    /// <summary>Account-funding details for sender/recipient where required by scheme rules.</summary>
+    public AccountFundingRequest? AccountFunding { get; init; }
 }

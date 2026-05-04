@@ -30,4 +30,14 @@ public sealed class CardDetails
     /// Card identifier created via the card-identifiers API for drop-in/HPP style flows.
     /// </summary>
     public string? CardIdentifier { get; init; }
+
+    /// <summary>
+    /// Indicates whether the card token should be reusable for subsequent transactions.
+    /// </summary>
+    public bool? Reusable { get; init; }
+
+    /// <summary>
+    /// Indicates whether card details should be saved by the gateway.
+    /// </summary>
+    public bool? Save { get; init; }
 }

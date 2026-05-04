@@ -16,14 +16,26 @@ internal sealed class CreateTransactionRequestDto
     public required int Amount { get; init; }
     public string? Currency { get; init; }
     public string? Description { get; init; }
+    public string? SettlementReferenceText { get; init; }
     public PaymentMethod? PaymentMethod { get; init; }
     public BillingAddress? BillingAddress { get; init; }
     public string? CustomerEmail { get; init; }
+    public string? CustomerPhone { get; init; }
+    public string? CustomerMobilePhone { get; init; }
+    public string? CustomerWorkPhone { get; init; }
     public string? CustomerFirstName { get; init; }
     public string? CustomerLastName { get; init; }
+    public string? EntryMethod { get; init; }
+    public bool? GiftAid { get; init; }
     public string? Apply3DSecure { get; init; }
+    public string? ApplyAvsCvcCheck { get; init; }
+    public ShippingDetails? ShippingDetails { get; init; }
+    public string? ReferrerId { get; init; }
     public string? ReferenceTransactionId { get; init; }
     public StrongCustomerAuthentication? StrongCustomerAuthentication { get; init; }
+    public CredentialType? CredentialType { get; init; }
+    public FiRecipientRequest? FiRecipient { get; init; }
+    public AccountFundingRequest? AccountFunding { get; init; }
 }
 
 // ---------------------------------------------------------------------------

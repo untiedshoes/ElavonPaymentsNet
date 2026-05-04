@@ -307,6 +307,36 @@ var tx = await client.Transactions.RetrieveTransactionAsync("<transaction-id>");
 Console.WriteLine($"Status={tx.Status} Code={tx.StatusCode}");
 ```
 
+### 4.8 Expanded Payment Request Fields
+
+The SDK supports additional payment payload fields for richer checkout, wallet, and scheme-compliance scenarios.
+
+Top-level request fields on `CreateTransactionRequest` now include:
+- `SettlementReferenceText`
+- `EntryMethod`
+- `GiftAid`
+- `ApplyAvsCvcCheck`
+- `CustomerPhone`, `CustomerMobilePhone`, `CustomerWorkPhone`
+- `ShippingDetails`
+- `ReferrerId`
+- `CredentialType`
+- `FiRecipient`
+- `AccountFunding`
+
+`PaymentMethod` now supports additional method blocks:
+- `PayPal`
+- `ApplePay`
+- `GooglePay`
+- `Ideal`
+- `Alipay`
+- `WechatPay`
+- `Eps`
+- `Trustly`
+
+`CardDetails` also supports `Reusable` and `Save` for card-identifier flows.
+
+Use these fields only where your Elavon account/profile and payment method require them.
+
 ## 5. 3D Secure v2 Flow
 
 There is no separate "initialise 3DS" endpoint in this SDK anymore.

@@ -14,6 +14,9 @@ public sealed class BillingAddress
     /// <summary>Postal or ZIP code.</summary>
     public string? PostalCode { get; init; }
 
+    /// <summary>State or county code when required by region/card scheme.</summary>
+    public string? State { get; init; }
+
     /// <summary>ISO 3166-1 alpha-2 country code, e.g. "GB".</summary>
     public required string Country { get; init; }
 }

@@ -395,4 +395,162 @@ public class RequestMapperTests
         Assert.Equal("201901011645", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo.ThreeDSReqPriorAuthTimestamp);
         Assert.Equal("2cd842f5-da5d-40b7-8ae6-6ce61cc7b580", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo.ThreeDSReqPriorRef);
     }
+
+    /// <summary>
+    /// Verifies that expanded payment payload fields are mapped to the DTO.
+    /// </summary>
+    [Fact(DisplayName = "CreateTransactionRequest WithExpandedPaymentFields MapsObject")]
+    public void CreateTransactionRequest_WithExpandedPaymentFields_MapsObject()
+    {
+        var request = new CreateTransactionRequest
+        {
+            TransactionType = TransactionType.Payment,
+            VendorTxCode = "Demo.Transaction-99",
+            Amount = 567,
+            Currency = "GBP",
+            Description = "Demo Transaction",
+            SettlementReferenceText = "123456GRTY234",
+            EntryMethod = "Ecommerce",
+            GiftAid = false,
+            Apply3DSecure = Apply3DSecureOption.UseMSPSetting,
+            ApplyAvsCvcCheck = "UseMSPSetting",
+            CustomerEmail = "sam.jones@example.com",
+            CustomerPhone = "+443069990210",
+            CustomerMobilePhone = "+447234567891",
+            CustomerWorkPhone = "+441234567891",
+            ReferrerId = "f9979593-a390-4069-b126-7914783fc",
+            BillingAddress = new BillingAddress
+            {
+                Address1 = "407 St. John Street",
+                City = "London",
+                PostalCode = "EC1V 4AB",
+                Country = "GB",
+                State = "st"
+            },
+            ShippingDetails = new ShippingDetails
+            {
+                RecipientFirstName = "Sam",
+                RecipientLastName = "Jones",
+                ShippingAddress1 = "407 St. John Street",
+                ShippingCity = "London",
+                ShippingPostalCode = "EC1V 4AB",
+                ShippingCountry = "GB",
+                ShippingState = "st"
+            },
+            PaymentMethod = new PaymentMethod
+            {
+                Card = new CardDetails
+                {
+                    MerchantSessionKey = "90BDF208-3C19-40AC-858B-3F4054DCD1C0",
+                    CardIdentifier = "7F3CCA38-0BDA-453B-BF62-9CBD5891F77E",
+                    Reusable = false,
+                    Save = false
+                },
+                PayPal = new PayPalPaymentMethod
+                {
+                    MerchantSessionKey = "90BDF208-3C19-40AC-858B-3F4054DCD1C0",
+                    CallbackUrl = "https://www.example.com"
+                },
+                ApplePay = new ApplePayPaymentMethod
+                {
+                    PaymentData = "AAAAAAABBBBBCCCCCC",
+                    ClientIpAddress = "10.20.30.40",
+                    MerchantSessionKey = "90BDF208-3C19-40AC-858B-3F4054DCD1C0",
+                    SessionValidationToken = "SFGVHSBEVGAV/VDAYRR+345S",
+                    ApplicationData = "FOeVKLA...PFE4wrw==",
+                    DisplayName = "Visa 1234",
+                    PaymentMethodType = "Debit"
+                },
+                GooglePay = new GooglePayPaymentMethod
+                {
+                    Payload = "AAAAAAABBBBBCCCCCC",
+                    ClientIpAddress = "10.20.30.40",
+                    MerchantSessionKey = "90BDF208-3C19-40AC-858B-3F4054DCD1C0"
+                }
+            },
+            CredentialType = new CredentialType
+            {
+                CofUsage = "First",
+                InitiatedType = "CIT",
+                MitType = "Unscheduled",
+                RecurringExpiry = "20200301",
+                RecurringFrequency = "28",
+                PurchaseInstalData = "6"
+            },
+            FiRecipient = new FiRecipientRequest
+            {
+                AccountNumber = "1234567890",
+                Surname = "Surname",
+                Postcode = "EC1V 8AB",
+                DateOfBirth = "19900101"
+            },
+            AccountFunding = new AccountFundingRequest
+            {
+                Sender = new AccountFundingParty
+                {
+                    FirstName = "string",
+                    LastName = "string",
+                    City = "12345",
+                    State = "st",
+                    Country = "st"
+                },
+                Recipient = new AccountFundingParty
+                {
+                    FirstName = "string",
+                    LastName = "string",
+                    City = "12345",
+                    State = "st",
+                    Country = "string",
+                    AccountNumber = "string",
+                    TransactionReference = "string"
+                },
+                PaymentProgramIndicator = "string"
+            }
+        };
+
+        var dto = RequestMapper.ToDto(request);
+
+        Assert.Equal("123456GRTY234", dto.SettlementReferenceText);
+        Assert.Equal("Ecommerce", dto.EntryMethod);
+        Assert.False(dto.GiftAid);
+        Assert.Equal("UseMSPSetting", dto.Apply3DSecure);
+        Assert.Equal("UseMSPSetting", dto.ApplyAvsCvcCheck);
+        Assert.Equal("sam.jones@example.com", dto.CustomerEmail);
+        Assert.Equal("+443069990210", dto.CustomerPhone);
+        Assert.Equal("+447234567891", dto.CustomerMobilePhone);
+        Assert.Equal("+441234567891", dto.CustomerWorkPhone);
+        Assert.Equal("f9979593-a390-4069-b126-7914783fc", dto.ReferrerId);
+
+        Assert.NotNull(dto.BillingAddress);
+        Assert.Equal("st", dto.BillingAddress!.State);
+
+        Assert.NotNull(dto.ShippingDetails);
+        Assert.Equal("Sam", dto.ShippingDetails!.RecipientFirstName);
+        Assert.Equal("st", dto.ShippingDetails.ShippingState);
+
+        Assert.NotNull(dto.PaymentMethod);
+        Assert.NotNull(dto.PaymentMethod!.Card);
+        Assert.False(dto.PaymentMethod.Card!.Reusable);
+        Assert.False(dto.PaymentMethod.Card.Save);
+        Assert.NotNull(dto.PaymentMethod.PayPal);
+        Assert.Equal("https://www.example.com", dto.PaymentMethod.PayPal!.CallbackUrl);
+        Assert.NotNull(dto.PaymentMethod.ApplePay);
+        Assert.Equal("Debit", dto.PaymentMethod.ApplePay!.PaymentMethodType);
+        Assert.NotNull(dto.PaymentMethod.GooglePay);
+        Assert.Equal("10.20.30.40", dto.PaymentMethod.GooglePay!.ClientIpAddress);
+
+        Assert.NotNull(dto.CredentialType);
+        Assert.Equal("First", dto.CredentialType!.CofUsage);
+        Assert.Equal("Unscheduled", dto.CredentialType.MitType);
+
+        Assert.NotNull(dto.FiRecipient);
+        Assert.Equal("1234567890", dto.FiRecipient!.AccountNumber);
+
+        Assert.NotNull(dto.AccountFunding);
+        Assert.Equal("string", dto.AccountFunding!.PaymentProgramIndicator);
+        Assert.NotNull(dto.AccountFunding.Sender);
+        Assert.Equal("st", dto.AccountFunding.Sender!.State);
+        Assert.NotNull(dto.AccountFunding.Recipient);
+        Assert.Equal("string", dto.AccountFunding.Recipient!.AccountNumber);
+    }
 }

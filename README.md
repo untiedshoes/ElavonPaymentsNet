@@ -880,8 +880,6 @@ Use a custom server URL only if you explicitly need non-default routing (for exa
 
 ## Roadmap
 
-- Expanded 3DS metadata beyond baseline browser fields (risk indicators, prior auth, exemptions)
-
 ### Playground Coverage to Add
 
 - Scenario presets: terminal menu for common sandbox test-card outcomes

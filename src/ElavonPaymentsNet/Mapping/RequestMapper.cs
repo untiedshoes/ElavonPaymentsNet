@@ -22,14 +22,26 @@ internal static class RequestMapper
             Amount = r.Amount,
             Currency = r.Currency,
             Description = r.Description,
+            SettlementReferenceText = isRepeat ? null : r.SettlementReferenceText,
             PaymentMethod = isRepeat ? null : r.PaymentMethod,
             BillingAddress = isRepeat ? null : r.BillingAddress,
             CustomerEmail = isRepeat ? null : r.CustomerEmail,
+            CustomerPhone = isRepeat ? null : r.CustomerPhone,
+            CustomerMobilePhone = isRepeat ? null : r.CustomerMobilePhone,
+            CustomerWorkPhone = isRepeat ? null : r.CustomerWorkPhone,
             CustomerFirstName = isRepeat ? null : r.CustomerFirstName,
             CustomerLastName = isRepeat ? null : r.CustomerLastName,
+            EntryMethod = isRepeat ? null : r.EntryMethod,
+            GiftAid = isRepeat ? null : r.GiftAid,
             Apply3DSecure = isRepeat ? null : r.Apply3DSecure?.ToString(),
+            ApplyAvsCvcCheck = isRepeat ? null : r.ApplyAvsCvcCheck,
+            ShippingDetails = isRepeat ? null : r.ShippingDetails,
+            ReferrerId = isRepeat ? null : r.ReferrerId,
             ReferenceTransactionId = r.RelatedTransactionId,
-            StrongCustomerAuthentication = isRepeat ? null : r.StrongCustomerAuthentication
+            StrongCustomerAuthentication = isRepeat ? null : r.StrongCustomerAuthentication,
+            CredentialType = isRepeat ? null : r.CredentialType,
+            FiRecipient = isRepeat ? null : r.FiRecipient,
+            AccountFunding = isRepeat ? null : r.AccountFunding
         };
     }
 

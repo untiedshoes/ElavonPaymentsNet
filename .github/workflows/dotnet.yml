@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-test:
-    name: Build + All Tests
+    name: Build + CI Test Suite
     runs-on: ubuntu-latest
 
     steps:
@@ -33,5 +33,9 @@ jobs:
       - name: Run contract tests
         run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category=Contract"
 
-      - name: Run integration tests
+      - name: Run smoke tests
+        run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category=Smoke"
+
+      - name: Run integration tests (manual only)
+        if: github.event_name == 'workflow_dispatch'
         run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category=Integration"

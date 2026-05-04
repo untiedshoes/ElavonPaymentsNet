@@ -760,10 +760,25 @@ var response = await client.Transactions.CreateTransactionAsync(new CreateTransa
     }
 });
 
-if (response.Status == "3DAuth")
+switch (response.StatusKind)
 {
-    // Redirect to response.AcsUrl with creq=response.CReq,
-    // then call Complete3DsAsync with cRes from ACS callback.
+    case TransactionStatusKind.Ok:
+        // Payment accepted — fulfil the order.
+        break;
+
+    case TransactionStatusKind.ThreeDAuth:
+        // Redirect to response.AcsUrl with creq=response.CReq,
+        // then call Complete3DsAsync with cRes from ACS callback.
+        break;
+
+    case TransactionStatusKind.NotAuthed:
+    case TransactionStatusKind.Rejected:
+        // Card declined — ask the customer to retry with a different card.
+        break;
+
+    default:
+        // Error, Malformed, Invalid, or unknown — log and surface a generic failure.
+        break;
 }
 ```
 

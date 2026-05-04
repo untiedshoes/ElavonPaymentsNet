@@ -189,10 +189,15 @@ var tokenPayment = await client.Tokens.PayWithTokenAsync(new PayWithTokenRequest
 
 Apple Pay is handled in two stages: merchant session validation (server-to-server), followed by a standard payment submission with the encrypted wallet payload.
 
+> **Note:** Apple Pay functionality is not currently available to all acquirers. Contact Opayo support to confirm it is enabled for your account.
+
+For the full setup walkthrough — including domain registration, downloading the domain verification file, configuring your Opayo account, and the complete frontend integration — see the official guide: [Apple Pay (Opayo managed certificate)](https://developer.elavon.com/products/en-uk/opayo/v1/apple-pay-opayo-managed-certificate).
+
 ### Prerequisites
 
 - Domain registered with Opayo and Apple
-- `apple-developer-merchantid-domain-association` file served at `/.well-known/` on that domain
+- `apple-developer-merchantid-domain-association` file served at `/.well-known/` on that domain (the file is available to download from the Opayo developer portal)
+- Apple Pay enabled for your acquirer/vendor account
 
 ### Stage 1 — Validate the merchant session
 

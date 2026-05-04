@@ -191,7 +191,14 @@ Apple Pay is handled in two stages: merchant session validation (server-to-serve
 
 > **Note:** Apple Pay functionality is not currently available to all acquirers. Contact Opayo support to confirm it is enabled for your account.
 
-For the full setup walkthrough — including domain registration, downloading the domain verification file, configuring your Opayo account, and the complete frontend integration — see the official guide: [Apple Pay (Opayo managed certificate)](https://developer.elavon.com/products/en-uk/opayo/v1/apple-pay-opayo-managed-certificate).
+Opayo supports two certificate modes. Choose based on whether you have an Apple Developer account:
+
+| Mode | When to use | Official guide |
+|------|-------------|----------------|
+| **Opayo managed** | Easiest setup — no Apple Developer account needed. Opayo manages the payment processing certificate on your behalf. | [Apple Pay (Opayo managed certificate)](https://developer.elavon.com/products/en-uk/opayo/v1/apple-pay-opayo-managed-certificate) |
+| **Merchant managed** | Use if you already have an Apple Developer account and want full control over your merchant identity and certificate. | [Apple Pay (Merchant managed certificate)](https://developer.elavon.com/products/en-uk/opayo/v1/apple-pay-merchant-managed-certificate) |
+
+Both guides cover domain registration, Opayo account setup, the frontend integration, and the payment call.
 
 ### Prerequisites
 

@@ -356,6 +356,8 @@ All API errors are mapped to typed exceptions -- the raw `HttpResponseMessage` n
 
 All exceptions expose `HttpStatusCode` (as `int`), `RawResponse` (original API body), and optionally `ErrorCode`. All are catchable as `ElavonApiException`.
 
+For a full production pattern (typed exceptions + `StatusKind`) and a complete `ElavonErrorCode` reference table, see [SDK Consumer Guide §11 Error Handling](SDK_CONSUMER_GUIDE.md#11-error-handling).
+
 ```csharp
 try
 {

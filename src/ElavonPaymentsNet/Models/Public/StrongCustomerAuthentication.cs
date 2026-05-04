@@ -114,6 +114,16 @@ public sealed class StrongCustomerAuthentication
     }
 
     /// <summary>
+    /// Typed alias for <see cref="ThreeDSExemptionIndicator"/>.
+    /// </summary>
+    [JsonIgnore]
+    public ThreeDSExemptionIndicatorType? ThreeDSExemptionIndicatorType
+    {
+        get => ThreeDsIndicatorMapper.Parse<ThreeDSExemptionIndicatorType>(_threeDSExemptionIndicator);
+        init => _threeDSExemptionIndicator = ThreeDsIndicatorMapper.ToApi(value);
+    }
+
+    /// <summary>
     /// Backward-compatible alias for <see cref="ThreeDSExemptionIndicator"/>.
     /// </summary>
     [JsonIgnore]

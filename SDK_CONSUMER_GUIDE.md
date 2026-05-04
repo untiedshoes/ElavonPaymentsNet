@@ -374,7 +374,7 @@ StrongCustomerAuthentication = new StrongCustomerAuthentication
     ThreeDSRequestorChallengeInd = "03",
     AcctID = "string",
     Website = "https://mydomain.com",
-    ThreeDSExemptionIndicator = "TransactionRiskAnalysis",
+    ThreeDSExemptionIndicatorType = ThreeDSExemptionIndicatorType.TransactionRiskAnalysis,
     ThreeDSRequestorAuthenticationInfo = new ThreeDSRequestorAuthenticationInfo
     {
         ThreeDSReqAuthData = "string",
@@ -403,13 +403,13 @@ StrongCustomerAuthentication = new StrongCustomerAuthentication
     MerchantRiskIndicator = new MerchantRiskIndicator
     {
         DeliveryEmailAddress = "customer@domain.com",
-        DeliveryTimeframe = "OvernightShipping",
+        DeliveryTimeframeIndicator = DeliveryTimeframeIndicator.OvernightShipping,
         GiftCardAmount = "123",
         GiftCardCount = "2",
         PreOrderDate = "20200220",
-        PreOrderPurchaseInd = "MerchandiseAvailable",
-        ReorderItemsInd = "Reordered",
-        ShipIndicator = "CardholderBillingAddress"
+        PreOrderPurchaseIndicator = PreOrderPurchaseIndicator.MerchandiseAvailable,
+        ReorderItemsIndicator = ReorderItemsIndicator.Reordered,
+        ShipIndicatorType = ShipIndicatorType.CardholderBillingAddress
     },
     ThreeDSRequestorPriorAuthenticationInfo = new ThreeDSRequestorPriorAuthenticationInfo
     {

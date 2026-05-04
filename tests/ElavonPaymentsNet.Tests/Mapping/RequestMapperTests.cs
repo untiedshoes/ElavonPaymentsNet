@@ -327,7 +327,7 @@ public class RequestMapperTests
                 BrowserIP = "203.0.113.10",
                 AcctID = "acct-123",
                 Website = "https://mydomain.com",
-                ThreeDSExemptionIndicator = "TransactionRiskAnalysis",
+                ThreeDSExemptionIndicatorType = ThreeDSExemptionIndicatorType.TransactionRiskAnalysis,
                 ThreeDSRequestorAuthenticationInfo = new ThreeDSRequestorAuthenticationInfo
                 {
                     ThreeDSReqAuthData = "string",
@@ -343,13 +343,13 @@ public class RequestMapperTests
                 MerchantRiskIndicator = new MerchantRiskIndicator
                 {
                     DeliveryEmailAddress = "shopper@example.com",
-                    DeliveryTimeframe = "OvernightShipping",
+                    DeliveryTimeframeIndicator = DeliveryTimeframeIndicator.OvernightShipping,
                     GiftCardAmount = "123",
                     GiftCardCount = "2",
                     PreOrderDate = "20200220",
-                    PreOrderPurchaseInd = "MerchandiseAvailable",
-                    ReorderItemsInd = "Reordered",
-                    ShipIndicator = "CardholderBillingAddress"
+                    PreOrderPurchaseIndicator = PreOrderPurchaseIndicator.MerchandiseAvailable,
+                    ReorderItemsIndicator = ReorderItemsIndicator.Reordered,
+                    ShipIndicatorType = ShipIndicatorType.CardholderBillingAddress
                 },
                 ThreeDSRequestorPriorAuthenticationInfo = new ThreeDSRequestorPriorAuthenticationInfo
                 {
@@ -367,6 +367,7 @@ public class RequestMapperTests
         Assert.Equal("acct-123", dto.StrongCustomerAuthentication!.AcctID);
         Assert.Equal("https://mydomain.com", dto.StrongCustomerAuthentication.Website);
         Assert.Equal("TransactionRiskAnalysis", dto.StrongCustomerAuthentication.ThreeDSExemptionIndicator);
+        Assert.Equal(ThreeDSExemptionIndicatorType.TransactionRiskAnalysis, dto.StrongCustomerAuthentication.ThreeDSExemptionIndicatorType);
         Assert.Equal("TransactionRiskAnalysis", dto.StrongCustomerAuthentication.ThreeDSRequestorExemptionIndicator);
 
         Assert.NotNull(dto.StrongCustomerAuthentication.ThreeDSRequestorAuthenticationInfo);
@@ -382,12 +383,16 @@ public class RequestMapperTests
         Assert.NotNull(dto.StrongCustomerAuthentication.MerchantRiskIndicator);
         Assert.Equal("shopper@example.com", dto.StrongCustomerAuthentication.MerchantRiskIndicator!.DeliveryEmailAddress);
         Assert.Equal("OvernightShipping", dto.StrongCustomerAuthentication.MerchantRiskIndicator.DeliveryTimeframe);
+        Assert.Equal(DeliveryTimeframeIndicator.OvernightShipping, dto.StrongCustomerAuthentication.MerchantRiskIndicator.DeliveryTimeframeIndicator);
         Assert.Equal("123", dto.StrongCustomerAuthentication.MerchantRiskIndicator.GiftCardAmount);
         Assert.Equal("2", dto.StrongCustomerAuthentication.MerchantRiskIndicator.GiftCardCount);
         Assert.Equal("20200220", dto.StrongCustomerAuthentication.MerchantRiskIndicator.PreOrderDate);
         Assert.Equal("MerchandiseAvailable", dto.StrongCustomerAuthentication.MerchantRiskIndicator.PreOrderPurchaseInd);
+        Assert.Equal(PreOrderPurchaseIndicator.MerchandiseAvailable, dto.StrongCustomerAuthentication.MerchantRiskIndicator.PreOrderPurchaseIndicator);
         Assert.Equal("Reordered", dto.StrongCustomerAuthentication.MerchantRiskIndicator.ReorderItemsInd);
+        Assert.Equal(ReorderItemsIndicator.Reordered, dto.StrongCustomerAuthentication.MerchantRiskIndicator.ReorderItemsIndicator);
         Assert.Equal("CardholderBillingAddress", dto.StrongCustomerAuthentication.MerchantRiskIndicator.ShipIndicator);
+        Assert.Equal(ShipIndicatorType.CardholderBillingAddress, dto.StrongCustomerAuthentication.MerchantRiskIndicator.ShipIndicatorType);
 
         Assert.NotNull(dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo);
         Assert.Equal("data", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo!.ThreeDSReqPriorAuthData);

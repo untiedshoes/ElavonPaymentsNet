@@ -51,6 +51,11 @@ internal static class ElavonApiRoutes
     /// <returns>The relative API route for linking a security code.</returns>
     internal static string CardIdentifierSecurityCode(string cardIdentifier) => $"/card-identifiers/{PathSegment(cardIdentifier, nameof(cardIdentifier))}/security-code";
 
+    /// <summary>Builds the route for a specific card identifier.</summary>
+    /// <param name="cardIdentifier">The card identifier token.</param>
+    /// <returns>The relative API route for the card identifier.</returns>
+    internal static string CardIdentifierById(string cardIdentifier) => $"/card-identifiers/{PathSegment(cardIdentifier, nameof(cardIdentifier))}";
+
     private static string PathSegment(string value, string paramName)
     {
         if (string.IsNullOrWhiteSpace(value))

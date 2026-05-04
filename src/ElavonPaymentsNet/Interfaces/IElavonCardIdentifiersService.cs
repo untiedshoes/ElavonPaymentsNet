@@ -23,4 +23,11 @@ public interface IElavonCardIdentifiersService
     /// <param name="request">The security code to link.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     Task LinkCardIdentifierAsync(string cardIdentifier, LinkCardIdentifierRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes an existing card identifier.
+    /// </summary>
+    /// <param name="cardIdentifier">The card identifier token to remove.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    Task RemoveCardIdentifierAsync(string cardIdentifier, CancellationToken cancellationToken = default);
 }

@@ -428,6 +428,42 @@ public sealed class ElavonServicesTests
     }
 
     /// <summary>
+    /// Verifies that deleting a card identifier uses Basic auth and DELETE /card-identifiers/{id}.
+    /// </summary>
+    [Fact(DisplayName = "CardIdentifiers Remove UsesBasicAuth")]
+    public async Task CardIdentifiers_Remove_UsesBasicAuth()
+    {
+        HttpRequestMessage? captured = null;
+        var service = CreateCardIdentifiersService(async request =>
+        {
+            captured = request;
+            return Json(HttpStatusCode.NoContent, string.Empty);
+        });
+
+        await service.RemoveCardIdentifierAsync("cid_1");
+
+        Assert.NotNull(captured);
+        Assert.Equal(HttpMethod.Delete, captured!.Method);
+        Assert.Equal("/card-identifiers/cid_1", captured.RequestUri!.AbsolutePath);
+        Assert.Equal("Basic", captured.Headers.Authorization!.Scheme);
+        Assert.Equal(BasicParam(), captured.Headers.Authorization!.Parameter);
+    }
+
+    /// <summary>
+    /// Verifies that null card identifiers are rejected before sending a remove request.
+    /// </summary>
+    [Fact(DisplayName = "CardIdentifiers Remove NullCardIdentifier ThrowsArgumentException")]
+    public async Task CardIdentifiers_Remove_NullCardIdentifier_ThrowsArgumentException()
+    {
+        var service = CreateCardIdentifiersService(_ => Task.FromResult(Json(HttpStatusCode.NoContent, string.Empty)));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.RemoveCardIdentifierAsync(null!));
+
+        Assert.Equal("cardIdentifier", ex.ParamName);
+    }
+
+    /// <summary>
     /// Verifies that blank transaction identifiers are rejected before sending a capture request.
     /// </summary>
     [Fact(DisplayName = "PostPayments Capture BlankTransactionId ThrowsArgumentException")]

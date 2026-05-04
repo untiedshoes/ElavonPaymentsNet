@@ -52,4 +52,19 @@ internal sealed class ElavonCardIdentifiersService : IElavonCardIdentifiersServi
             HttpMethod.Post, ElavonApiRoutes.CardIdentifierSecurityCode(cardIdentifier), request, null, cancellationToken)
             .ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// Removes an existing card identifier.
+    /// Uses Basic authentication.
+    /// </summary>
+    /// <param name="cardIdentifier">The card identifier token to remove.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    public async Task RemoveCardIdentifierAsync(string cardIdentifier, CancellationToken cancellationToken = default)
+    {
+        Guard.NotNullOrWhiteSpace(cardIdentifier, nameof(cardIdentifier));
+
+        await _api.SendVoidAsync<object>(
+            HttpMethod.Delete, ElavonApiRoutes.CardIdentifierById(cardIdentifier), null, null, cancellationToken)
+            .ConfigureAwait(false);
+    }
 }

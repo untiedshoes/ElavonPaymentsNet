@@ -393,7 +393,11 @@ static StrongCustomerAuthentication BuildSandboxSca() => new()
     BrowserUserAgent          = Environment.GetEnvironmentVariable("ELAVON_BROWSER_USER_AGENT")    ?? "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
     ChallengeWindowSize       = Environment.GetEnvironmentVariable("ELAVON_CHALLENGE_WINDOW_SIZE") ?? "FullScreen",
     TransType                 = Environment.GetEnvironmentVariable("ELAVON_TRANS_TYPE")            ?? "GoodsAndServicePurchase",
-    ThreeDSRequestorChallengeInd = Environment.GetEnvironmentVariable("ELAVON_3DS_REQUESTOR_CHALLENGE_IND") ?? "03"
+    ThreeDSRequestorChallengeInd = Environment.GetEnvironmentVariable("ELAVON_3DS_REQUESTOR_CHALLENGE_IND") ?? "03",
+    ThreeDSExemptionIndicatorType = Enum.TryParse<ThreeDSExemptionIndicatorType>(
+        Environment.GetEnvironmentVariable("ELAVON_3DS_EXEMPTION_INDICATOR"), out var exemptionParsed)
+        ? exemptionParsed
+        : ThreeDSExemptionIndicatorType.LowValue
 };
 
 static async Task Handle3DsChallengeAsync(

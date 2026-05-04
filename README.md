@@ -850,18 +850,19 @@ Smoke tests are tagged `[Trait("Category", "Smoke")]` and provide a minimal CI c
 dotnet test --filter "Category=Smoke"
 ```
 
-Manual integration tests are available and run against the real Elavon/Opayo sandbox environment.
+Integration tests are **manual-only** and run against the real Elavon/Opayo sandbox environment.
+They are intentionally excluded from the default `dotnet test` path and from push/PR CI.
 
 **Sandbox credentials are hardcoded** directly in `SandboxCredentials.cs` — these are the standard Opayo PI REST API documentation credentials, publicly available, and safe to commit. They only work against the non-production sandbox environment, never live. No environment variable setup is required to run integration tests.
 
 ```bash
-# Run all tests including integration tests
+# Run integration tests manually
 dotnet test --filter "Category=Integration"
 ```
 
 The only optional variable is `ELAVON_SAFE_TRANSACTION_ID`, which enables a read-only retrieve test against a known transaction ID in your sandbox account. All other integration tests are self-contained.
 
-Integration tests are tagged `[Trait("Category", "Integration")]` and are run in CI only on manual workflow dispatch.
+Integration tests are tagged `[Trait("Category", "Integration")]` and are run in CI only via **manual workflow dispatch**.
 
 ---
 

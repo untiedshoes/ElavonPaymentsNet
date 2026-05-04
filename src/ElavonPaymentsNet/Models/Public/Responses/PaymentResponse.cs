@@ -1,3 +1,4 @@
+using ElavonPaymentsNet.Models.Public;
 using System.Text.Json.Serialization;
 
 namespace ElavonPaymentsNet.Models.Public.Responses;
@@ -21,6 +22,13 @@ public sealed class PaymentResponse
     /// The transaction status, e.g. "Ok", "NotAuthed", "Rejected", "3DAuth".
     /// </summary>
     public string? Status { get; init; }
+
+    /// <summary>
+    /// Strongly typed view of <see cref="Status"/>.
+    /// Unknown or newly introduced API statuses map to <see cref="TransactionStatusKind.Unknown"/>.
+    /// </summary>
+    [JsonIgnore]
+    public TransactionStatusKind StatusKind => TransactionStatus.ParseKind(Status);
 
     /// <summary>A numeric status code accompanying the status.</summary>
     [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]

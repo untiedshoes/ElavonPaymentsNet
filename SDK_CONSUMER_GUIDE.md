@@ -545,6 +545,13 @@ Once the merchant session is validated, the customer authorises the payment on t
 
 ## 11. Error Handling
 
+There are two layers to handle:
+
+- **HTTP/API failures** -> SDK exceptions (`ElavonApiException` and derived types)
+- **Business transaction outcomes on successful HTTP calls** -> `StatusKind` on response models
+
+### 11.1 Handle API/transport failures with typed exceptions
+
 Use specific SDK exceptions where possible:
 
 ```csharp
@@ -556,7 +563,7 @@ try
 }
 catch (ElavonValidationException ex)
 {
-    foreach (var error in ex.Errors)
+    foreach (var error in ex.ValidationErrors ?? [])
     {
         Console.WriteLine($"{error.Property}: {error.Description} ({error.Code})");
     }
@@ -576,6 +583,127 @@ catch (ElavonPaymentDeclinedException ex)
 catch (ElavonApiException ex)
 {
     Console.WriteLine($"API error ({ex.HttpStatusCode}) code={ex.ErrorCode}\n{ex.RawResponse}");
+}
+```
+
+### 11.2 Handle transaction outcomes with typed status values
+
+On successful API calls, branch on `StatusKind` rather than string literals.
+
+`StatusKind` is available on:
+
+- `PaymentResponse`
+- `Complete3DsResponse`
+- `PostPaymentResponse`
+
+Supported typed status values:
+
+- `TransactionStatusKind.Ok`
+- `TransactionStatusKind.NotAuthed`
+- `TransactionStatusKind.Rejected`
+- `TransactionStatusKind.ThreeDAuth`
+- `TransactionStatusKind.Malformed`
+- `TransactionStatusKind.Invalid`
+- `TransactionStatusKind.Error`
+- `TransactionStatusKind.Registered`
+- `TransactionStatusKind.Pending`
+- `TransactionStatusKind.Unknown` (fallback for newly introduced API statuses)
+
+```csharp
+using ElavonPaymentsNet.Models.Public;
+
+var payment = await client.Transactions.CreateTransactionAsync(request, cancellationToken);
+
+switch (payment.StatusKind)
+{
+    case TransactionStatusKind.Ok:
+        // Transaction successful
+        break;
+
+    case TransactionStatusKind.ThreeDAuth:
+        // 3DS challenge required: redirect using payment.AcsUrl + payment.CReq
+        break;
+
+    case TransactionStatusKind.NotAuthed:
+    case TransactionStatusKind.Rejected:
+        // Declined/rejected business outcome
+        break;
+
+    case TransactionStatusKind.Malformed:
+    case TransactionStatusKind.Invalid:
+    case TransactionStatusKind.Error:
+        // Validation or platform error outcome returned in successful HTTP response
+        break;
+
+    case TransactionStatusKind.Registered:
+    case TransactionStatusKind.Pending:
+        // In-flight lifecycle state; retrieve transaction later
+        break;
+
+    case TransactionStatusKind.Unknown:
+    default:
+        // Forward-compatible fallback; log raw payment.Status and handle conservatively
+        break;
+}
+```
+
+### 11.3 Recommended combined pattern (exceptions + status)
+
+In production flows, you normally combine both layers in one operation:
+
+```csharp
+using ElavonPaymentsNet.Exceptions;
+using ElavonPaymentsNet.Models.Public;
+
+try
+{
+    var payment = await client.Transactions.CreateTransactionAsync(request, cancellationToken);
+
+    switch (payment.StatusKind)
+    {
+        case TransactionStatusKind.Ok:
+            // Success
+            break;
+
+        case TransactionStatusKind.ThreeDAuth:
+            // Redirect to ACS
+            break;
+
+        case TransactionStatusKind.NotAuthed:
+        case TransactionStatusKind.Rejected:
+            // Business decline path
+            break;
+
+        default:
+            // Other status outcomes (Invalid, Error, Pending, Unknown...)
+            break;
+    }
+}
+catch (ElavonPaymentDeclinedException)
+{
+    // HTTP 402 decline path
+}
+catch (ElavonRateLimitException ex)
+{
+    if (ex.RetryAfter.HasValue)
+        await Task.Delay(ex.RetryAfter.Value, cancellationToken);
+}
+catch (ElavonValidationException ex)
+{
+    // Inspect ex.ValidationErrors / ex.ErrorCode
+}
+catch (ElavonAuthenticationException)
+{
+    // Invalid integration credentials
+}
+catch (ElavonServerException)
+{
+    // 5xx unknown state on POST: reconcile before retrying
+}
+catch (ElavonApiException ex)
+{
+    // Catch-all for unmapped statuses/codes
+    Console.WriteLine($"{ex.HttpStatusCode}: {ex.ErrorCode}");
 }
 ```
 

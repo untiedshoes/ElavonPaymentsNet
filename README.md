@@ -389,6 +389,44 @@ catch (ElavonApiException ex)
 }
 ```
 
+### Transaction Status Handling
+
+The SDK keeps the raw API status string for forward compatibility (`Status`) and also exposes a typed view (`StatusKind`) on response models.
+
+- `PaymentResponse.StatusKind`
+- `Complete3DsResponse.StatusKind`
+- `PostPaymentResponse.StatusKind`
+
+Use `StatusKind` for branching logic and keep `Status` for logging/diagnostics.
+
+```csharp
+var payment = await client.Transactions.CreateTransactionAsync(request, cancellationToken);
+
+switch (payment.StatusKind)
+{
+    case TransactionStatusKind.Ok:
+        // Successful transaction
+        break;
+
+    case TransactionStatusKind.ThreeDAuth:
+        // Redirect customer to ACS using payment.AcsUrl + payment.CReq
+        break;
+
+    case TransactionStatusKind.NotAuthed:
+    case TransactionStatusKind.Rejected:
+    case TransactionStatusKind.Invalid:
+    case TransactionStatusKind.Malformed:
+    case TransactionStatusKind.Error:
+        // Business/validation error path
+        break;
+
+    case TransactionStatusKind.Unknown:
+    default:
+        // Future status introduced by API; handle conservatively and log raw payment.Status
+        break;
+}
+```
+
 ---
 
 ## Resilience and Retry Safety

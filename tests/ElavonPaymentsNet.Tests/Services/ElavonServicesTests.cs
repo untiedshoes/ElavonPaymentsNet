@@ -327,13 +327,13 @@ public sealed class ElavonServicesTests
         var service = CreateWalletsService(async request =>
         {
             captured = request;
-            return Json(HttpStatusCode.OK, "{\"session\":{\"merchantSessionIdentifier\":\"ms\"}}");
+            return Json(HttpStatusCode.OK, "{\"sessionValidationToken\":\"tok-abc\",\"merchantSessionIdentifier\":\"ms-123\",\"status\":\"Ok\"}");
         });
 
-        var response = await service.CreateApplePaySessionAsync(new ApplePaySessionRequest { ValidationUrl = "https://apple/validate", DomainName = "merchant.test" });
+        var response = await service.CreateApplePaySessionAsync(new ApplePaySessionRequest { VendorName = "sandbox", Domain = "merchant.test" });
 
-        Assert.True(response.Session.HasValue);
-        Assert.Equal("ms", response.Session.Value.GetProperty("merchantSessionIdentifier").GetString());
+        Assert.Equal("tok-abc", response.SessionValidationToken);
+        Assert.Equal("ms-123", response.MerchantSessionIdentifier);
         Assert.NotNull(captured);
         Assert.Equal("/applepay/sessions", captured!.RequestUri!.AbsolutePath);
         Assert.Equal("Basic", captured.Headers.Authorization!.Scheme);

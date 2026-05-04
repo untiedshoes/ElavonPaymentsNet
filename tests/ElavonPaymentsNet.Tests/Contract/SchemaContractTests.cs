@@ -192,8 +192,8 @@ public sealed class SchemaContractTests
             },
             {
                 "wallets/applepay-session",
-                new ApplePaySessionRequest { ValidationUrl = "https://apple.example.com/validate", DomainName = "example.com" },
-                new[] { "validationUrl", "domainName" }
+                new ApplePaySessionRequest { VendorName = "sandbox", Domain = "https://www.example.com" },
+                new[] { "vendorName", "domain" }
             },
         };
 

@@ -633,21 +633,29 @@ var tokenPayment = await client.Tokens.PayWithTokenAsync(new PayWithTokenRequest
 
 ## 10. Apple Pay Session
 
-Before processing an Apple Pay payment, your backend must validate the merchant session with Apple. The Apple Pay JS API on the frontend will fire an `onvalidatemerchant` event containing a `validationURL`. Your backend must call this endpoint (via Opayo) and return the session object to the browser within 30 seconds.
+Before processing an Apple Pay payment, your backend must validate the merchant session with Apple. The Apple Pay JS API on the frontend will fire an `onvalidatemerchant` event. Your backend must call the Opayo Apple Pay session endpoint and return the session to the browser within 30 seconds.
+
+The request requires your Opayo vendor name and the domain registered with Opayo.
 
 ```csharp
 // Called from your backend when frontend fires onvalidatemerchant
 var applePaySession = await client.Wallets.CreateApplePaySessionAsync(new ApplePaySessionRequest
 {
-    ValidationUrl = "https://apple-pay-gateway.apple.com/paymentservices/startSession",
-    DomainName = "merchant.example.com"
+    VendorName = "sandbox",             // Your Opayo vendor name (≤15 chars)
+    Domain = "merchant.example.com"     // Domain registered with Opayo
 });
 
-// Return applePaySession.MerchantSession to your frontend
-// The frontend passes it to appleSession.completeMerchantValidation(merchantSession)
+// Pass the session validation token back to the browser
+// The frontend uses applePaySession.SessionValidationToken with completeMerchantValidation
 ```
 
-Once the merchant session is validated, the customer authorises the payment on their device. The Apple Pay JS API returns a payment token, which your frontend sends to your backend. You then submit it as a `Payment` transaction with `PaymentMethod.ApplePayPaymentToken`.
+The response includes:
+- `SessionValidationToken` — pass this to `completeMerchantValidation` in the browser
+- `MerchantSessionIdentifier`, `Nonce`, `MerchantIdentifier`, `DomainName`, `DisplayName`, `Signature`
+- `EpochTimeStamp` / `ExpiresAt` — session validity window (Unix epoch milliseconds)
+- `StatusKind` — `Ok` on success; `Invalid`/`Error` on failure
+
+Once the merchant session is validated, the customer authorises the payment on their device. The Apple Pay JS API returns a payment token, which your frontend sends to your backend. You then submit it as a `Payment` transaction with `PaymentMethod.ApplePay`.
 
 > Note: Your domain must be registered with Opayo and Apple, and you must serve the `apple-developer-merchantid-domain-association` file at `/.well-known/` on that domain.
 

@@ -1,3 +1,14 @@
 {
-    "session": {}
+    "status": "Ok",
+    "statusCode": "string",
+    "statusDetail": "string",
+    "epochTimeStamp": 1663928680,
+    "expiresAt": 1663928680,
+    "merchantSessionIdentifier": "string",
+    "nonce": "string",
+    "merchantIdentifier": "string",
+    "domainName": "https://www.example.com",
+    "displayName": "My Store",
+    "signature": "string",
+    "sessionValidationToken": "SFGVHSBEVGAV/VDAYRR+345S"
 }

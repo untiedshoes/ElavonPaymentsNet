@@ -1,4 +1,4 @@
 {
-    "validationUrl": "string",
-    "domainName": "string"
+    "vendorName": "sandbox",
+    "domain": "https://www.example.com"
 }

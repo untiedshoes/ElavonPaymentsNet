@@ -337,6 +337,46 @@ var complete = await client.ThreeDs.Complete3DsAsync(
     });
 ```
 
+### Retrieve the final transaction after 3D Secure
+
+Whether 3D Secure passed or failed, you must retrieve the updated transaction to get its final status. However, do not retrieve it immediately after completing the 3D Secure challenge—the gateway has a slight processing delay between finalizing the 3D Secure result and making the transaction available for retrieval.
+
+**Recommended polling strategy:**
+
+1. **Initial attempt with delay**: Wait approximately 1 second after receiving the 3D Secure completion response, then retrieve the transaction.
+2. **Fallback polling on 404**: If you receive a 404 error (transaction not found), implement exponential backoff with retries:
+   - Wait 500ms, retry
+   - If still 404, wait 1000ms, retry again
+   - Stop after 2–3 attempts or implement a timeout strategy
+3. **Error handling**: Treat 404 errors as transient for this specific case; all other errors should be handled as standard application errors.
+
+This approach accounts for the occasional processing delay in the gateway's infrastructure while avoiding unnecessary polling in the common case.
+
+```csharp
+// Simple approach: wait then retrieve
+await Task.Delay(TimeSpan.FromSeconds(1));
+var finalTransaction = await client.Transactions.RetrieveTransactionAsync("TRANSACTION_ID");
+
+// Robust approach with polling (pseudocode)
+var maxAttempts = 3;
+var backoffMs = new[] { 500, 1000 };
+TransactionResponse? finalTransaction = null;
+
+for (int i = 0; i < maxAttempts; i++)
+{
+    try
+    {
+        finalTransaction = await client.Transactions.RetrieveTransactionAsync("TRANSACTION_ID");
+        break; // Success
+    }
+    catch (ElavonApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound && i < maxAttempts - 1)
+    {
+        // 404: transaction not yet available, backoff and retry
+        await Task.Delay(backoffMs[Math.Min(i, backoffMs.Length - 1)]);
+    }
+}
+```
+
 ---
 
 ## 8. Instructions Service

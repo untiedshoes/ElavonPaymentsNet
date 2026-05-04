@@ -275,13 +275,30 @@ var result = await client.Transactions.CreateTransactionAsync(new CreateTransact
         BrowserUserAgent            = "Mozilla/5.0",
         ChallengeWindowSize         = "FullScreen",
         TransType                   = "GoodsAndServicePurchase",
-        ThreeDSRequestorChallengeInd= "03"
+        ThreeDSRequestorChallengeInd= "03",
+
+        // Optional advanced metadata for issuer risk scoring / exemptions
+        ThreeDSRequestorExemptionIndicator = "lowValue",
+        MerchantRiskIndicator = new MerchantRiskIndicator
+        {
+            DeliveryEmailAddress = "shopper@example.com",
+            DeliveryTimeframe = "01",
+            ReorderItemsInd = "01"
+        },
+        ThreeDSRequestorPriorAuthenticationInfo = new ThreeDSRequestorPriorAuthenticationInfo
+        {
+            ThreeDSReqPriorAuthMethod = "02",
+            ThreeDSReqPriorAuthTimestamp = "202605041030",
+            ThreeDSReqPriorRef = "AUTH-REF-123"
+        }
     }
 });
 
 Console.WriteLine($"Status: {result.Status}");
 Console.WriteLine($"Transaction: {result.TransactionId}");
 ```
+
+Note: advanced indicator codes are acquirer/gateway specific. Use values defined in your Elavon account documentation.
 
 ---
 

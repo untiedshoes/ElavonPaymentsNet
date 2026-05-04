@@ -309,4 +309,51 @@ public class RequestMapperTests
         Assert.Equal("Mozilla/5.0", dto.StrongCustomerAuthentication.BrowserUserAgent);
         Assert.Equal("03", dto.StrongCustomerAuthentication.ThreeDSRequestorChallengeInd);
     }
+
+    /// <summary>
+    /// Verifies that advanced 3DS metadata (risk, prior auth, exemption) is preserved.
+    /// </summary>
+    [Fact(DisplayName = "CreateTransactionRequest WithAdvanced3DSMetadata MapsObject")]
+    public void CreateTransactionRequest_WithAdvanced3DSMetadata_MapsObject()
+    {
+        var request = new CreateTransactionRequest
+        {
+            TransactionType = TransactionType.Payment,
+            VendorTxCode = "TX-011",
+            Amount = 100,
+            Currency = "GBP",
+            StrongCustomerAuthentication = new StrongCustomerAuthentication
+            {
+                BrowserIP = "203.0.113.10",
+                ThreeDSRequestorExemptionIndicator = "lowValue",
+                MerchantRiskIndicator = new MerchantRiskIndicator
+                {
+                    DeliveryEmailAddress = "shopper@example.com",
+                    DeliveryTimeframe = "01",
+                    ReorderItemsInd = "01"
+                },
+                ThreeDSRequestorPriorAuthenticationInfo = new ThreeDSRequestorPriorAuthenticationInfo
+                {
+                    ThreeDSReqPriorAuthMethod = "02",
+                    ThreeDSReqPriorAuthTimestamp = "202605041030",
+                    ThreeDSReqPriorRef = "AUTH-REF-123"
+                }
+            }
+        };
+
+        var dto = RequestMapper.ToDto(request);
+
+        Assert.NotNull(dto.StrongCustomerAuthentication);
+        Assert.Equal("lowValue", dto.StrongCustomerAuthentication!.ThreeDSRequestorExemptionIndicator);
+
+        Assert.NotNull(dto.StrongCustomerAuthentication.MerchantRiskIndicator);
+        Assert.Equal("shopper@example.com", dto.StrongCustomerAuthentication.MerchantRiskIndicator!.DeliveryEmailAddress);
+        Assert.Equal("01", dto.StrongCustomerAuthentication.MerchantRiskIndicator.DeliveryTimeframe);
+        Assert.Equal("01", dto.StrongCustomerAuthentication.MerchantRiskIndicator.ReorderItemsInd);
+
+        Assert.NotNull(dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo);
+        Assert.Equal("02", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo!.ThreeDSReqPriorAuthMethod);
+        Assert.Equal("202605041030", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo.ThreeDSReqPriorAuthTimestamp);
+        Assert.Equal("AUTH-REF-123", dto.StrongCustomerAuthentication.ThreeDSRequestorPriorAuthenticationInfo.ThreeDSReqPriorRef);
+    }
 }

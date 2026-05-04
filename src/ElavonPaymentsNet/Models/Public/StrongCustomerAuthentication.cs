@@ -70,4 +70,22 @@ public sealed class StrongCustomerAuthentication
     /// <c>03</c> (Challenge Requested — Preference), <c>04</c> (Challenge Requested — Mandate).
     /// </summary>
     public string? ThreeDSRequestorChallengeInd { get; init; }
+
+    /// <summary>
+    /// Merchant risk signals sent to the issuer to support frictionless authentication decisions.
+    /// Populate this for higher acceptance on low-risk transactions and better issuer scoring.
+    /// </summary>
+    public MerchantRiskIndicator? MerchantRiskIndicator { get; init; }
+
+    /// <summary>
+    /// Information about prior cardholder authentication for this shopper/session.
+    /// This can help the issuer evaluate whether step-up challenge is necessary.
+    /// </summary>
+    public ThreeDSRequestorPriorAuthenticationInfo? ThreeDSRequestorPriorAuthenticationInfo { get; init; }
+
+    /// <summary>
+    /// Indicates which SCA exemption the 3DS requestor is attempting to apply, if any.
+    /// Values are acquirer/gateway specific; use the exact code expected by your Elavon configuration.
+    /// </summary>
+    public string? ThreeDSRequestorExemptionIndicator { get; init; }
 }

@@ -315,6 +315,48 @@ There is no separate "initialise 3DS" endpoint in this SDK anymore.
 
 Call `CreateTransactionAsync` with complete `StrongCustomerAuthentication` data.
 
+For advanced issuer risk scoring and SCA handling, you can also send:
+- `MerchantRiskIndicator` (delivery/reorder/gift-card risk context)
+- `ThreeDSRequestorPriorAuthenticationInfo` (prior auth method/timestamp/reference)
+- `ThreeDSRequestorExemptionIndicator` (requested exemption code)
+
+Example:
+
+```csharp
+StrongCustomerAuthentication = new StrongCustomerAuthentication
+{
+    NotificationURL = "https://merchant.example.com/3ds-notify",
+    BrowserIP = "203.0.113.10",
+    BrowserAcceptHeader = "text/html,*/*",
+    BrowserJavascriptEnabled = true,
+    BrowserJavaEnabled = false,
+    BrowserLanguage = "en-GB",
+    BrowserColorDepth = "24",
+    BrowserScreenHeight = "1080",
+    BrowserScreenWidth = "1920",
+    BrowserTZ = "0",
+    BrowserUserAgent = "Mozilla/5.0",
+    ChallengeWindowSize = "FullScreen",
+    TransType = "GoodsAndServicePurchase",
+    ThreeDSRequestorChallengeInd = "03",
+    ThreeDSRequestorExemptionIndicator = "lowValue",
+    MerchantRiskIndicator = new MerchantRiskIndicator
+    {
+        DeliveryEmailAddress = "shopper@example.com",
+        DeliveryTimeframe = "01",
+        ReorderItemsInd = "01"
+    },
+    ThreeDSRequestorPriorAuthenticationInfo = new ThreeDSRequestorPriorAuthenticationInfo
+    {
+        ThreeDSReqPriorAuthMethod = "02",
+        ThreeDSReqPriorAuthTimestamp = "202605041030",
+        ThreeDSReqPriorRef = "AUTH-REF-123"
+    }
+};
+```
+
+Use the exact indicator values supported by your Elavon/acquirer profile.
+
 If 3DS challenge is required, the transaction response includes:
 - `Status = "3DAuth"`
 - `AcsUrl`

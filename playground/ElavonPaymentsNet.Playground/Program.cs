@@ -479,7 +479,9 @@ static void PrintFullResponse<T>(string title, T response, JsonSerializerOptions
 
 static void PrintHeading(string title)
 {
-    Console.WriteLine($"--- {title} ---");
+    Console.WriteLine("======================");
+    Console.WriteLine(title);
+    Console.WriteLine("======================");
     Console.WriteLine();
 }
 

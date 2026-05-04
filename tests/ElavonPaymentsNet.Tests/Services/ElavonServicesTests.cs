@@ -49,6 +49,48 @@ public sealed class ElavonServicesTests
     }
 
     /// <summary>
+    /// Verifies that a bank-decline payload maps to NotAuthed semantics.
+    /// </summary>
+    [Fact(DisplayName = "Transactions CreateTransaction MapsBankDeclineResponse")]
+    public async Task Transactions_CreateTransaction_MapsBankDeclineResponse()
+    {
+        var service = CreateTransactionService(async _ => Json(HttpStatusCode.OK,
+            """
+            {
+              "transactionId":"tx-decline",
+              "status":"NotAuthed",
+              "statusCode":2000,
+              "statusDetail":"The Authorisation was Declined by the bank.",
+              "additionalDeclineDetail":{
+                "additionalDeclineCode":"03",
+                "additionalDeclineCodeDescription":"DECLINED",
+                "additionalDeclineCodeCategory":"03"
+              }
+            }
+            """));
+
+        var response = await service.CreateTransactionAsync(new CreateTransactionRequest
+        {
+            TransactionType = TransactionType.Payment,
+            VendorTxCode = "ORDER-DECLINE-1",
+            Amount = 100,
+            Currency = "GBP",
+            PaymentMethod = new PaymentMethod
+            {
+                Card = new CardDetails { CardNumber = "4929602110085639", ExpiryDate = "1229", SecurityCode = "123" }
+            }
+        });
+
+        Assert.Equal("tx-decline", response.TransactionId);
+        Assert.Equal("NotAuthed", response.Status);
+        Assert.Equal(TransactionStatusKind.NotAuthed, response.StatusKind);
+        Assert.Equal(2000, response.StatusCode);
+        Assert.Equal("The Authorisation was Declined by the bank.", response.StatusDetail);
+        Assert.NotNull(response.AdditionalDeclineDetail);
+        Assert.Equal("03", response.AdditionalDeclineDetail!.AdditionalDeclineCode);
+    }
+
+    /// <summary>
     /// Verifies that SDK routes preserve the /api/v1 base path when BaseAddress has no trailing slash.
     /// </summary>
     [Fact(DisplayName = "Transactions CreateTransaction PreservesApiBasePath")]

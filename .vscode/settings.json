@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd '/Volumes/120GB SSD EXT/Repos/2026/ElavonPaymentsNet' && bash -x tests/ElavonPaymentsNet\\.Tests/Smoke/run_playground_decline_smoke\\.sh$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

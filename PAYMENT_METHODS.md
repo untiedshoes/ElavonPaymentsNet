@@ -160,28 +160,7 @@ var repeat = await client.Transactions.CreateTransactionAsync(new CreateTransact
 });
 ```
 
-Alternatively you can use the dedicated token flow (`client.Tokens`) to create a standalone token without making a payment first:
-
-```csharp
-var token = await client.Tokens.CreateTokenAsync(new CreateTokenRequest
-{
-    Card = new CardDetails
-    {
-        CardNumber     = "4929000000006",
-        ExpiryDate     = "1229",
-        SecurityCode   = "123",
-        CardholderName = "Sandbox Tester"
-    }
-});
-
-var tokenPayment = await client.Tokens.PayWithTokenAsync(new PayWithTokenRequest
-{
-    VendorTxCode = $"TOK-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
-    Amount       = 1000,
-    Currency     = "GBP",
-    Token        = token.Token!
-});
-```
+The `cardIdentifier` returned from a successful `Reusable: true` response is your stored token. The convenience method `client.Tokens.PayWithTokenAsync()` wraps the same transaction call using the `paymentMethod.token` field if you prefer a dedicated API surface.
 
 ---
 

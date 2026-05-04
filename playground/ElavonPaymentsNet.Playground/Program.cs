@@ -78,7 +78,8 @@ Console.WriteLine("  2  Deferred payment → Capture");
 Console.WriteLine("  3  Payment → Full refund");
 Console.WriteLine("  4  Payment → Partial refund");
 Console.WriteLine("  5  Payment → Void");
-Console.WriteLine("  6  Token flow (CreateToken → PayWithToken)");
+Console.WriteLine("  6  Save-and-reuse card identifier flow");
+Console.WriteLine("  7  Declined by the bank (Visa 4929602110085639)");
 Console.WriteLine();
 Console.Write("Select scenario [1]: ");
 var scenarioInput = Console.ReadLine()?.Trim();
@@ -104,7 +105,10 @@ switch (scenario)
         await RunVoidScenarioAsync(client, vendorName, testCardNumber, testExpiryDate, testSecurityCode, testCardholderName, magicCardholderName, apply3DSecure, playgroundJsonOptions);
         break;
     case "6":
-        await RunTokenScenarioAsync(client, testCardNumber, testExpiryDate, testSecurityCode, testCardholderName, playgroundJsonOptions);
+        await RunSaveAndReuseScenarioAsync(client, vendorName, testCardNumber, testExpiryDate, testSecurityCode, testCardholderName, magicCardholderName, apply3DSecure, playgroundJsonOptions);
+        break;
+    case "7":
+        await RunDeclineScenarioAsync(client, vendorName, apply3DSecure, playgroundJsonOptions);
         break;
     default:
         Console.WriteLine($"Unknown scenario '{scenario}'. Exiting.");
@@ -114,6 +118,29 @@ switch (scenario)
 // ===========================================================================
 // Scenario implementations
 // ===========================================================================
+
+static async Task RunDeclineScenarioAsync(
+    ElavonPaymentsClient client,
+    string vendorName,
+    Apply3DSecureOption? apply3DSecure,
+    JsonSerializerOptions jsonOptions)
+{
+    PrintHeading("Scenario 7: Declined by the bank");
+    const string declineCard    = "4929602110085639";
+    const string declineExpiry  = "1229";
+    const string declineCvv     = "123";
+    const string declineName    = "Sandbox Tester";
+    try
+    {
+        var (msk, cardIdentifier) = await CreateMskAndCardIdentifierAsync(client, vendorName, declineCard, declineExpiry, declineCvv, declineName);
+
+        var request = BuildCardIdentifierPurchaseRequest(msk, cardIdentifier, declineName, apply3DSecure, TransactionType.Payment, 100);
+        PrintStep(3, 3, $"Charging decline card — VendorTxCode {request.VendorTxCode}");
+        var result = await client.Transactions.CreateTransactionAsync(request).ConfigureAwait(false);
+        PrintTransactionResult(result, jsonOptions);
+    }
+    catch (ElavonApiException ex) { PrintApiException(ex); }
+}
 
 static async Task RunPaymentScenarioAsync(
     ElavonPaymentsClient client,
@@ -250,51 +277,103 @@ static async Task RunVoidScenarioAsync(
     catch (ElavonApiException ex) { PrintApiException(ex); }
 }
 
-static async Task RunTokenScenarioAsync(
+static async Task RunSaveAndReuseScenarioAsync(
     ElavonPaymentsClient client,
+    string vendorName,
     string cardNumber, string expiryDate, string securityCode,
-    string cardholderName,
+    string cardholderName, string magicCardholderName,
+    Apply3DSecureOption? apply3DSecure,
     JsonSerializerOptions jsonOptions)
 {
-    PrintHeading("Scenario 6: CreateToken → PayWithToken");
+    PrintHeading("Scenario 6: Save-and-reuse card identifier");
     try
     {
-        PrintStep(1, 2, "Creating card token...");
-        var tokenResponse = await client.Tokens.CreateTokenAsync(new CreateTokenRequest
+        var (msk, cardIdentifier) = await CreateMskAndCardIdentifierAsync(client, vendorName, cardNumber, expiryDate, securityCode, magicCardholderName);
+
+        // Step 3: initial payment with save=true to get a reusable card identifier
+        var (firstName3, lastName3) = SplitName(cardholderName);
+        var saveRequest = new CreateTransactionRequest
         {
-            Card = new CardDetails
+            TransactionType   = TransactionType.Payment,
+            VendorTxCode      = $"SAVE-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}",
+            Amount            = 100,
+            Currency          = "GBP",
+            Description       = "Sandbox save-card from SDK playground",
+            CustomerFirstName = firstName3,
+            CustomerLastName  = lastName3,
+            PaymentMethod = new PaymentMethod
             {
-                CardNumber     = cardNumber,
-                ExpiryDate     = expiryDate,
-                SecurityCode   = securityCode,
-                CardholderName = cardholderName
-            }
-        }).ConfigureAwait(false);
+                Card = new CardDetails
+                {
+                    MerchantSessionKey = msk,
+                    CardIdentifier     = cardIdentifier,
+                    Save               = true
+                }
+            },
+            BillingAddress = new BillingAddress
+            {
+                Address1   = "88",
+                City       = "London",
+                PostalCode = "412",
+                Country    = "GB"
+            },
+            Apply3DSecure                = apply3DSecure,
+            StrongCustomerAuthentication = BuildSandboxSca(),
+            CredentialType = new CredentialType { CofUsage = "First", InitiatedType = "CIT" }
+        };
 
-        Console.WriteLine($"Token: {tokenResponse.Token}");
-        PrintFullResponse("Full create-token response JSON", tokenResponse, jsonOptions);
+        PrintStep(3, 4, $"Saving card — VendorTxCode {saveRequest.VendorTxCode}");
+        var saveResult = await client.Transactions.CreateTransactionAsync(saveRequest).ConfigureAwait(false);
+        PrintTransactionResult(saveResult, jsonOptions);
 
-        if (string.IsNullOrWhiteSpace(tokenResponse.Token))
+        var reusableCardId = saveResult.PaymentMethod?.Card?.CardIdentifier;
+        if (string.IsNullOrWhiteSpace(reusableCardId) || saveResult.StatusKind != TransactionStatusKind.Ok)
         {
-            Console.WriteLine("Token was not returned — cannot proceed.");
+            Console.WriteLine($"Save step did not return a reusable card identifier — cannot reuse. (CardIdentifier: {reusableCardId ?? "null"})");
             return;
         }
 
-        var vendorTxCode = $"TOKEN-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}";
-        PrintStep(2, 2, $"Paying with token — VendorTxCode {vendorTxCode}");
-        var tokenPayment = await client.Tokens.PayWithTokenAsync(new PayWithTokenRequest
-        {
-            VendorTxCode = vendorTxCode,
-            Amount       = 100,
-            Currency     = "GBP",
-            Token        = tokenResponse.Token
-        }).ConfigureAwait(false);
+        Console.WriteLine($"Reusable card identifier: {reusableCardId}");
+        Console.WriteLine($"Reusable flag:            {saveResult.PaymentMethod?.Card?.Reusable}");
 
-        Console.WriteLine($"Status:        {tokenPayment.Status}");
-        Console.WriteLine($"StatusCode:    {tokenPayment.StatusCode}");
-        Console.WriteLine($"StatusDetail:  {tokenPayment.StatusDetail}");
-        Console.WriteLine($"TransactionId: {tokenPayment.TransactionId}");
-        PrintFullResponse("Full token payment response JSON", tokenPayment, jsonOptions);
+        // Step 4: reuse the card identifier in a subsequent payment (no MSK required)
+        var reuseVendorTxCode = $"REUSE-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}";
+        PrintStep(4, 4, $"Reusing card — VendorTxCode {reuseVendorTxCode}");
+        var (firstName, lastName) = SplitName(cardholderName);
+        var reuseRequest = new CreateTransactionRequest
+        {
+            TransactionType   = TransactionType.Payment,
+            VendorTxCode      = reuseVendorTxCode,
+            Amount            = 75,
+            Currency          = "GBP",
+            Description       = "Sandbox reuse from SDK playground",
+            CustomerFirstName = firstName,
+            CustomerLastName  = lastName,
+            PaymentMethod = new PaymentMethod
+            {
+                Card = new CardDetails
+                {
+                    CardIdentifier = reusableCardId,
+                    Reusable       = true
+                }
+            },
+            BillingAddress = new BillingAddress
+            {
+                Address1   = "88",
+                City       = "London",
+                PostalCode = "412",
+                Country    = "GB"
+            },
+            CredentialType = new CredentialType
+            {
+                CofUsage      = "Subsequent",
+                InitiatedType = "MIT",
+                MitType       = "Unscheduled"
+            },
+            StrongCustomerAuthentication = BuildSandboxSca()
+        };
+        var reuseResult = await client.Transactions.CreateTransactionAsync(reuseRequest).ConfigureAwait(false);
+        PrintTransactionResult(reuseResult, jsonOptions);
     }
     catch (ElavonApiException ex) { PrintApiException(ex); }
 }

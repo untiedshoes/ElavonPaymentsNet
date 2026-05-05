@@ -18,14 +18,17 @@ public interface IElavonCardIdentifiersService
     /// <summary>
     /// Links a security code (CVV/CV2) to an existing card identifier.
     /// Required when the card identifier was created without a security code.
+    /// Uses Bearer authentication with the merchant session key.
     /// </summary>
+    /// <param name="merchantSessionKey">The MSK used when the card identifier was created.</param>
     /// <param name="cardIdentifier">The card identifier token to update.</param>
     /// <param name="request">The security code to link.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
-    Task LinkCardIdentifierAsync(string cardIdentifier, LinkCardIdentifierRequest request, CancellationToken cancellationToken = default);
+    Task LinkCardIdentifierAsync(string merchantSessionKey, string cardIdentifier, LinkCardIdentifierRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Removes an existing card identifier.
+    /// Uses Basic authentication.
     /// </summary>
     /// <param name="cardIdentifier">The card identifier token to remove.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>

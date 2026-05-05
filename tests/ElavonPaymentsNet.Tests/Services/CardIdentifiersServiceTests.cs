@@ -34,10 +34,10 @@ public sealed class CardIdentifiersServiceTests
     }
 
     /// <summary>
-    /// Verifies that linking a security code uses Basic auth and the expected route.
+    /// Verifies that linking a security code uses Bearer auth and the expected route.
     /// </summary>
-    [Fact(DisplayName = "LinkSecurityCode UsesBasicAuth")]
-    public async Task LinkSecurityCode_UsesBasicAuth()
+    [Fact(DisplayName = "LinkSecurityCode UsesBearerAuth")]
+    public async Task LinkSecurityCode_UsesBearerAuth()
     {
         HttpRequestMessage? captured = null;
         var service = ServiceTestHelpers.CreateCardIdentifiersService(async request =>
@@ -46,12 +46,12 @@ public sealed class CardIdentifiersServiceTests
             return ServiceTestHelpers.Json(HttpStatusCode.OK, "{}");
         });
 
-        await service.LinkCardIdentifierAsync("cid_1", new LinkCardIdentifierRequest { SecurityCode = "123" });
+        await service.LinkCardIdentifierAsync("msk_123", "cid_1", new LinkCardIdentifierRequest { SecurityCode = "123" });
 
         Assert.NotNull(captured);
         Assert.Equal("/card-identifiers/cid_1/security-code", captured!.RequestUri!.AbsolutePath);
-        Assert.Equal("Basic", captured.Headers.Authorization!.Scheme);
-        Assert.Equal(ServiceTestHelpers.BasicParam(), captured.Headers.Authorization!.Parameter);
+        Assert.Equal("Bearer", captured.Headers.Authorization!.Scheme);
+        Assert.Equal("msk_123", captured.Headers.Authorization!.Parameter);
     }
 
     /// <summary>
@@ -89,7 +89,7 @@ public sealed class CardIdentifiersServiceTests
             return ServiceTestHelpers.Json(HttpStatusCode.OK, "{}");
         });
 
-        await service.LinkCardIdentifierAsync("cid/with space", new LinkCardIdentifierRequest { SecurityCode = "123" });
+        await service.LinkCardIdentifierAsync("msk_123", "cid/with space", new LinkCardIdentifierRequest { SecurityCode = "123" });
 
         Assert.NotNull(captured);
         Assert.Equal("/card-identifiers/cid%2Fwith%20space/security-code", captured!.RequestUri!.AbsolutePath);
@@ -134,6 +134,6 @@ public sealed class CardIdentifiersServiceTests
         var service = ServiceTestHelpers.CreateCardIdentifiersService(
             _ => Task.FromResult(ServiceTestHelpers.Json(HttpStatusCode.OK, "{}")));
 
-        await Assert.ThrowsAsync<ArgumentNullException>(() => service.LinkCardIdentifierAsync("cid_123", null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => service.LinkCardIdentifierAsync("msk_123", "cid_123", null!));
     }
 }

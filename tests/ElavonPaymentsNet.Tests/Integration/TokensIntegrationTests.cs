@@ -38,14 +38,14 @@ public sealed class TokensIntegrationTests
 
         Assert.False(string.IsNullOrWhiteSpace(cardId.CardIdentifier));
 
-        // Step 2 — First (CIT) payment: save the card identifier for future use
+        // Step 2 — First payment using the card identifier
         var firstPayment = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
         {
             TransactionType   = TransactionType.Payment,
             VendorTxCode      = $"INTEGRATION-SAVE-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}",
             Amount            = 100,
             Currency          = "GBP",
-            Description       = "Integration test — save card (CIT)",
+            Description       = "Integration test — first payment",
             CustomerFirstName = "Integration",
             CustomerLastName  = "Test",
             PaymentMethod     = new PaymentMethod
@@ -53,8 +53,7 @@ public sealed class TokensIntegrationTests
                 Card = new CardDetails
                 {
                     MerchantSessionKey = session.MerchantSessionKey,
-                    CardIdentifier     = cardId.CardIdentifier,
-                    Save               = true
+                    CardIdentifier     = cardId.CardIdentifier
                 }
             },
             BillingAddress = new BillingAddress
@@ -64,11 +63,6 @@ public sealed class TokensIntegrationTests
                 PostalCode = "412",
                 Country    = "GB"
             },
-            CredentialType = new CredentialType
-            {
-                CofUsage      = "First",
-                InitiatedType = "CIT"
-            },
             Apply3DSecure = Apply3DSecureOption.Disable
         });
 
@@ -76,26 +70,20 @@ public sealed class TokensIntegrationTests
         Assert.False(string.IsNullOrWhiteSpace(firstPayment.TransactionId));
         Assert.Equal("Ok", firstPayment.Status);
 
-        // The saved card identifier is returned in the response for reuse
+        // Use the original card identifier or any returned by the response for the repeat step
         var savedCardIdentifier = firstPayment.PaymentMethod?.Card?.CardIdentifier
                                   ?? cardId.CardIdentifier;
 
         Assert.False(string.IsNullOrWhiteSpace(savedCardIdentifier));
 
-        // Step 3 — Subsequent (MIT) payment: reuse the saved card identifier
+        // Step 3 — Repeat payment referencing the first transaction
         var repeatPayment = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
         {
-            TransactionType   = TransactionType.Repeat,
-            VendorTxCode      = $"INTEGRATION-REUSE-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}",
-            Amount            = 100,
-            Currency          = "GBP",
-            Description       = "Integration test — reuse card (MIT)",
-            CredentialType    = new CredentialType
-            {
-                CofUsage      = "Subsequent",
-                InitiatedType = "MIT",
-                MitType       = "Unscheduled"
-            },
+            TransactionType      = TransactionType.Repeat,
+            VendorTxCode         = $"INTEGRATION-REUSE-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}",
+            Amount               = 100,
+            Currency             = "GBP",
+            Description          = "Integration test — repeat payment",
             RelatedTransactionId = firstPayment.TransactionId
         });
 

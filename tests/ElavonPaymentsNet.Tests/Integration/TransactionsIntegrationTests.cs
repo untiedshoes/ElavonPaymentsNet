@@ -1,98 +1,14 @@
-using ElavonPaymentsNet.Exceptions;
-using ElavonPaymentsNet.Http;
-using ElavonPaymentsNet.Models.Public;
-using ElavonPaymentsNet.Models.Public.Requests;
-
 namespace ElavonPaymentsNet.Tests.Integration;
 
 /// <summary>
-/// Integration tests against the real Elavon sandbox API.
-/// Sandbox credentials are hardcoded — they are publicly available in the Opayo PI REST API
-/// documentation and only work against the non-production sandbox environment.
-/// No environment variables are required to run these tests, except
-/// <c>ELAVON_SAFE_TRANSACTION_ID</c> for the retrieve-transaction test.
+/// Integration tests for the Transactions service against the real Elavon sandbox API.
+/// Covers Payment, Deferred, Repeat, and Retrieve operations, plus bank decline simulation.
 /// </summary>
 [Trait("Category", "Integration")]
-public sealed class ElavonIntegrationTests
+public sealed class TransactionsIntegrationTests
 {
     // ----------------------------------------------------------------
-    // Merchant session key
-    // ----------------------------------------------------------------
-
-    /// <summary>
-    /// Verifies that a merchant session key can be created using the sandbox Basic profile.
-    /// </summary>
-    [Fact(DisplayName = "CreateMerchantSessionKeyAsync ReturnsSessionKeyAndExpiry")]
-    public async Task CreateMerchantSessionKeyAsync_ReturnsSessionKeyAndExpiry()
-    {
-        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
-
-        var response = await client.Wallets.CreateMerchantSessionKeyAsync(
-            new MerchantSessionRequest { VendorName = SandboxCredentials.BasicVendorName });
-
-        Assert.NotNull(response);
-        Assert.False(string.IsNullOrWhiteSpace(response.MerchantSessionKey));
-        Assert.True(response.Expiry.HasValue);
-    }
-
-    /// <summary>
-    /// Verifies that a freshly created merchant session key validates successfully.
-    /// </summary>
-    [Fact(DisplayName = "ValidateMerchantSessionKeyAsync FreshKey ReturnsValid")]
-    public async Task ValidateMerchantSessionKeyAsync_FreshKey_ReturnsValid()
-    {
-        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
-
-        var session = await client.Wallets.CreateMerchantSessionKeyAsync(
-            new MerchantSessionRequest { VendorName = SandboxCredentials.BasicVendorName });
-
-        Assert.False(string.IsNullOrWhiteSpace(session.MerchantSessionKey));
-
-        var response = await client.Wallets.ValidateMerchantSessionKeyAsync(
-            new MerchantSessionValidationRequest { MerchantSessionKey = session.MerchantSessionKey! });
-
-        Assert.NotNull(response);
-        Assert.True(response.Valid);
-    }
-
-    // ----------------------------------------------------------------
-    // Card identifiers
-    // ----------------------------------------------------------------
-
-    /// <summary>
-    /// Verifies that a card identifier can be created from a fresh merchant session key.
-    /// </summary>
-    [Fact(DisplayName = "CreateCardIdentifierAsync ReturnsIdentifierExpiryAndCardType")]
-    public async Task CreateCardIdentifierAsync_ReturnsIdentifierExpiryAndCardType()
-    {
-        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
-
-        var session = await client.Wallets.CreateMerchantSessionKeyAsync(
-            new MerchantSessionRequest { VendorName = SandboxCredentials.BasicVendorName });
-
-        Assert.False(string.IsNullOrWhiteSpace(session.MerchantSessionKey));
-
-        var response = await client.CardIdentifiers.CreateCardIdentifierAsync(
-            session.MerchantSessionKey!,
-            new CreateCardIdentifierRequest
-            {
-                CardDetails = new CardDetails
-                {
-                    CardNumber     = "4929000000006",
-                    ExpiryDate     = "1229",
-                    SecurityCode   = "123",
-                    CardholderName = "SUCCESSFUL"
-                }
-            });
-
-        Assert.NotNull(response);
-        Assert.False(string.IsNullOrWhiteSpace(response.CardIdentifier));
-        Assert.False(string.IsNullOrWhiteSpace(response.Expiry));
-        Assert.False(string.IsNullOrWhiteSpace(response.CardType));
-    }
-
-    // ----------------------------------------------------------------
-    // Transactions — Payment
+    // Payment
     // ----------------------------------------------------------------
 
     /// <summary>
@@ -159,8 +75,8 @@ public sealed class ElavonIntegrationTests
     /// Verifies that the known sandbox decline card (4929602110085639) returns
     /// NotAuthed / 2000 / "Declined by the bank" when 3DS is disabled.
     /// </summary>
-    [Fact(DisplayName = "CreateTransactionAsync CardIdentifierFlow DeclineCard ReturnsBankDecline")]
-    public async Task CreateTransactionAsync_CardIdentifierFlow_DeclineCard_ReturnsBankDecline()
+    [Fact(DisplayName = "CreateTransactionAsync DeclineCard ReturnsBankDecline")]
+    public async Task CreateTransactionAsync_DeclineCard_ReturnsBankDecline()
     {
         var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
 
@@ -219,7 +135,7 @@ public sealed class ElavonIntegrationTests
     }
 
     // ----------------------------------------------------------------
-    // Transactions — Deferred & Repeat
+    // Deferred
     // ----------------------------------------------------------------
 
     /// <summary>
@@ -278,6 +194,10 @@ public sealed class ElavonIntegrationTests
         Assert.Equal("Ok", result.Status);
     }
 
+    // ----------------------------------------------------------------
+    // Repeat
+    // ----------------------------------------------------------------
+
     /// <summary>
     /// Verifies that a repeat transaction can be created from a completed payment.
     /// Uses SandboxHelpers for the prerequisite payment — that path is covered by
@@ -307,7 +227,7 @@ public sealed class ElavonIntegrationTests
     }
 
     // ----------------------------------------------------------------
-    // Transactions — Retrieve
+    // Retrieve
     // ----------------------------------------------------------------
 
     /// <summary>
@@ -330,134 +250,21 @@ public sealed class ElavonIntegrationTests
         Assert.False(string.IsNullOrWhiteSpace(response.Status));
     }
 
-    // ----------------------------------------------------------------
-    // Post-payment — Void, Refund, Capture
-    // ----------------------------------------------------------------
-
-    /// <summary>Verifies that a transaction can be voided via PostPayments.</summary>
-    [Fact(DisplayName = "VoidTransactionAsync AfterPayment ReturnsSuccess")]
-    public async Task VoidTransactionAsync_AfterPayment_ReturnsSuccess()
-    {
-        var txId = await SandboxHelpers.GetSuccessfulTransactionIdAsync(tag: "VOID");
-        if (txId is null) return;
-
-        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
-        var result  = await client.PostPayments.VoidTransactionAsync(txId);
-
-        Assert.NotNull(result);
-        Assert.False(string.IsNullOrWhiteSpace(result.TransactionId));
-    }
-
-    /// <summary>Verifies that a transaction can be refunded via PostPayments.</summary>
-    [Fact(DisplayName = "RefundTransactionAsync AfterPayment ReturnsSuccess")]
-    public async Task RefundTransactionAsync_AfterPayment_ReturnsSuccess()
-    {
-        var txId = await SandboxHelpers.GetSuccessfulTransactionIdAsync(tag: "REFUND");
-        if (txId is null) return;
-
-        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
-        var result  = await client.PostPayments.RefundTransactionAsync(txId, new RefundPaymentRequest
-        {
-            Amount       = 100,
-            VendorTxCode = $"INTEGRATION-RFND-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}",
-            Description  = "Integration test refund payment"
-        });
-
-        Assert.NotNull(result);
-        Assert.False(string.IsNullOrWhiteSpace(result.TransactionId));
-    }
-
-    /// <summary>Verifies that a deferred transaction can be captured via PostPayments.</summary>
-    [Fact(DisplayName = "CaptureTransactionAsync AfterDeferred ReturnsSuccess")]
-    public async Task CaptureTransactionAsync_AfterDeferred_ReturnsSuccess()
-    {
-        var txId = await SandboxHelpers.GetDeferredTransactionIdAsync();
-        if (txId is null) return;
-
-        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
-        var result  = await client.PostPayments.CaptureTransactionAsync(txId, new CapturePaymentRequest
-        {
-            Amount = 100
-        });
-
-        Assert.NotNull(result);
-        Assert.False(string.IsNullOrWhiteSpace(result.TransactionId));
-    }
-
-    // ----------------------------------------------------------------
-    // Instructions — Void, Abort, Release
-    // ----------------------------------------------------------------
-
-    /// <summary>Verifies that a Void instruction can be posted to a completed payment.</summary>
-    [Fact(DisplayName = "CreateInstructionAsync Void ReturnsVoidInstruction")]
-    public async Task CreateInstructionAsync_Void_ReturnsVoidInstruction()
-    {
-        var txId = await SandboxHelpers.GetSuccessfulTransactionIdAsync(tag: "INSTRVOID");
-        if (txId is null) return;
-
-        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
-        var result  = await client.Instructions.CreateInstructionAsync(txId, new InstructionRequest
-        {
-            InstructionType = InstructionType.Void
-        });
-
-        Assert.NotNull(result);
-        Assert.Equal(InstructionType.Void, result.InstructionType);
-    }
-
-    /// <summary>Verifies that an Abort instruction can be posted to a deferred transaction.</summary>
-    [Fact(DisplayName = "CreateInstructionAsync Abort OnDeferred ReturnsAbortInstruction")]
-    public async Task CreateInstructionAsync_Abort_OnDeferred_ReturnsAbortInstruction()
-    {
-        var txId = await SandboxHelpers.GetDeferredTransactionIdAsync();
-        if (txId is null) return;
-
-        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
-        var result  = await client.Instructions.CreateInstructionAsync(txId, new InstructionRequest
-        {
-            InstructionType = InstructionType.Abort
-        });
-
-        Assert.NotNull(result);
-        Assert.Equal(InstructionType.Abort, result.InstructionType);
-    }
-
-    /// <summary>Verifies that a Release instruction can be posted to a deferred transaction.</summary>
-    [Fact(DisplayName = "CreateInstructionAsync Release OnDeferred ReturnsReleaseInstruction")]
-    public async Task CreateInstructionAsync_Release_OnDeferred_ReturnsReleaseInstruction()
-    {
-        var txId = await SandboxHelpers.GetDeferredTransactionIdAsync();
-        if (txId is null) return;
-
-        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
-        var result  = await client.Instructions.CreateInstructionAsync(txId, new InstructionRequest
-        {
-            InstructionType = InstructionType.Release,
-            Amount          = 100
-        });
-
-        Assert.NotNull(result);
-        Assert.Equal(InstructionType.Release, result.InstructionType);
-    }
-
-    // ----------------------------------------------------------------
-    // Failure scenarios
-    // ----------------------------------------------------------------
-
     /// <summary>
-    /// Verifies that invalid credentials are rejected by the real API with an authentication exception.
+    /// Verifies that a freshly created transaction can be retrieved by its transaction ID.
     /// </summary>
-    [Fact(DisplayName = "CreateMerchantSessionKeyAsync WithInvalidCredentials ThrowsAuthenticationException")]
-    public async Task CreateMerchantSessionKeyAsync_WithInvalidCredentials_ThrowsAuthenticationException()
+    [Fact(DisplayName = "RetrieveTransactionAsync AfterPayment ReturnsMatchingTransaction")]
+    public async Task RetrieveTransactionAsync_AfterPayment_ReturnsMatchingTransaction()
     {
-        var client = new ElavonPaymentsClient(new ElavonPaymentsClientOptions
-        {
-            IntegrationKey      = "invalid-key",
-            IntegrationPassword = "invalid-password",
-            Environment         = ElavonEnvironment.Sandbox
-        });
+        var txId = await SandboxHelpers.GetSuccessfulTransactionIdAsync(tag: "RETRIEVE");
+        if (txId is null) return;
 
-        await Assert.ThrowsAsync<ElavonAuthenticationException>(() =>
-            client.Wallets.CreateMerchantSessionKeyAsync(new MerchantSessionRequest()));
+        var client = new ElavonPaymentsClient(SandboxCredentials.Basic);
+
+        var response = await client.Transactions.RetrieveTransactionAsync(txId);
+
+        Assert.NotNull(response);
+        Assert.Equal(txId, response.TransactionId);
+        Assert.Equal("Ok", response.Status);
     }
 }

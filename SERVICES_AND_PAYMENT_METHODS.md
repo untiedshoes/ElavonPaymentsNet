@@ -50,7 +50,7 @@ Use this service when building browser-based payment flows where you want to tok
 
 References:
 - [Opayo session key documentation](https://developer.elavon.com/products/en-uk/opayo/v1/api-reference)
-- [Tokenization flow examples](https://github.com/academe/opayo-pi/blob/master/README.md)
+- [Tokenisation flow examples](https://github.com/academe/opayo-pi/blob/master/README.md)
 
 ### Create a new merchant session key
 

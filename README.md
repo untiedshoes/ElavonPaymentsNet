@@ -596,6 +596,7 @@ Returns `InstructionResponse` -- `InstructionType`, `Date`.
 |---|---|
 | `CreateCardIdentifierAsync(merchantSessionKey, request)` | Tokenise card details against an MSK; uses Bearer auth |
 | `LinkCardIdentifierAsync(cardIdentifier, request)` | Link a security code (CVV) to an existing card identifier |
+| `RemoveCardIdentifierAsync(cardIdentifier)` | Delete a card identifier when it is no longer required |
 
 `CreateCardIdentifierAsync` -> `CreateCardIdentifierResponse` -- `CardIdentifier`, `Expiry`, `CardType`.
 `LinkCardIdentifierAsync` -> `Task` (no response body).
@@ -670,12 +671,27 @@ tests/
     |       +-- FakeHttpMessageHandler.cs
     +-- Contract/
     |   +-- SchemaContractTests.cs
-    +-- Integration/
-    |   +-- ElavonIntegrationTests.cs
+    +-- Integration/                          # One file per service; all require live sandbox
+    |   +-- WalletsIntegrationTests.cs
+    |   +-- CardIdentifiersIntegrationTests.cs
+    |   +-- TransactionsIntegrationTests.cs
+    |   +-- PostPaymentsIntegrationTests.cs
+    |   +-- InstructionsIntegrationTests.cs
+    |   +-- TokensIntegrationTests.cs
+    |   +-- FailureScenariosIntegrationTests.cs
+    |   +-- SandboxCredentials.cs             # Publicly documented sandbox credentials
+    |   +-- SandboxHelpers.cs                 # Prerequisite-setup helpers (return null on failure)
     +-- Mapping/
     |   +-- RequestMapperTests.cs
-    +-- Services/
-        +-- ElavonServicesTests.cs
+    +-- Services/                             # One file per service; all faked via FakeHttpMessageHandler
+        +-- ServiceTestHelpers.cs             # CreateApi(), Json(), BasicParam(), per-service factories
+        +-- TransactionServiceTests.cs
+        +-- PostPaymentsServiceTests.cs
+        +-- ThreeDsServiceTests.cs
+        +-- TokensServiceTests.cs
+        +-- WalletsServiceTests.cs
+        +-- CardIdentifiersServiceTests.cs
+        +-- InstructionsServiceTests.cs
 
 docs/
 +-- sdk-surface.yaml                         # Source-of-truth SDK surface contract (operations, routes, schemas)

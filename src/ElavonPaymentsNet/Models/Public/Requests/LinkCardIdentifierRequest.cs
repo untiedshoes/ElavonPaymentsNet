@@ -5,6 +5,6 @@ namespace ElavonPaymentsNet.Models.Public.Requests;
 /// </summary>
 public sealed class LinkCardIdentifierRequest
 {
-    /// <summary>The card security code (CVV/CV2) to link to the card identifier. Sent as a number per the Opayo PI API spec.</summary>
-    public required int SecurityCode { get; init; }
+    /// <summary>The card security code (CVV/CV2) to link to the card identifier. 3–4 characters.</summary>
+    public required string SecurityCode { get; init; }
 }

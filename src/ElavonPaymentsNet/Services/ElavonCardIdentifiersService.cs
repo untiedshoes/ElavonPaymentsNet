@@ -37,19 +37,21 @@ internal sealed class ElavonCardIdentifiersService : IElavonCardIdentifiersServi
     }
 
     /// <summary>
-    /// Links a security code to an existing card identifier.
-    /// Uses Basic authentication.
+    /// Links a security code to an existing reusable card identifier.
+    /// Uses Bearer authentication with a fresh merchant session key.
     /// </summary>
-    /// <param name="cardIdentifier">The card identifier token returned by <see cref="CreateCardIdentifierAsync"/>.</param>
+    /// <param name="merchantSessionKey">A fresh MSK (separate from the one used to create the card identifier).</param>
+    /// <param name="cardIdentifier">The reusable card identifier token returned by <see cref="CreateCardIdentifierAsync"/>.</param>
     /// <param name="request">The security code to link.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
-    public async Task LinkCardIdentifierAsync(string cardIdentifier, LinkCardIdentifierRequest request, CancellationToken cancellationToken = default)
+    public async Task LinkCardIdentifierAsync(string merchantSessionKey, string cardIdentifier, LinkCardIdentifierRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        Guard.NotNullOrWhiteSpace(merchantSessionKey, nameof(merchantSessionKey));
         Guard.NotNullOrWhiteSpace(cardIdentifier, nameof(cardIdentifier));
 
         await _api.SendVoidAsync<LinkCardIdentifierRequest>(
-            HttpMethod.Post, ElavonApiRoutes.CardIdentifierSecurityCode(cardIdentifier), request, null, cancellationToken)
+            HttpMethod.Post, ElavonApiRoutes.CardIdentifierSecurityCode(cardIdentifier), request, merchantSessionKey, cancellationToken)
             .ConfigureAwait(false);
     }
 

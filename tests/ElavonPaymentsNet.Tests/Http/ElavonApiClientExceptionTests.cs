@@ -178,6 +178,40 @@ public sealed class ElavonApiClientExceptionTests
         Assert.Equal(503, ex.HttpStatusCode);
     }
 
+    /// <summary>
+    /// Verifies that network failures before any HTTP response are normalised
+    /// to <see cref="ElavonTransportException"/>.
+    /// </summary>
+    [Fact(DisplayName = "TransportFailure ThrowsElavonTransportException")]
+    public async Task TransportFailure_ThrowsElavonTransportException()
+    {
+        var service = CreateService(_ => throw new HttpRequestException("connection reset"));
+
+        var ex = await Assert.ThrowsAsync<ElavonTransportException>(
+            () => service.CreateTransactionAsync(MinimalRequest()));
+
+        Assert.Equal(503, ex.HttpStatusCode);
+        Assert.Equal("TransportError", ex.ErrorCode);
+        Assert.IsType<HttpRequestException>(ex.TransportException);
+    }
+
+    /// <summary>
+    /// Verifies that timeout-like transport cancellation (not caller cancellation)
+    /// is normalised to <see cref="ElavonTransportException"/>.
+    /// </summary>
+    [Fact(DisplayName = "TransportTimeout ThrowsElavonTransportException")]
+    public async Task TransportTimeout_ThrowsElavonTransportException()
+    {
+        var service = CreateService(_ => throw new TaskCanceledException("timeout"));
+
+        var ex = await Assert.ThrowsAsync<ElavonTransportException>(
+            () => service.CreateTransactionAsync(MinimalRequest()));
+
+        Assert.Equal(503, ex.HttpStatusCode);
+        Assert.Equal("TransportError", ex.ErrorCode);
+        Assert.IsType<TaskCanceledException>(ex.TransportException);
+    }
+
     // -------------------------------------------------------------------------
     // Exception hierarchy
     // -------------------------------------------------------------------------
@@ -252,6 +286,20 @@ public sealed class ElavonApiClientExceptionTests
     {
         var service = CreateService(_ => Task.FromResult(
             StatusResponse((HttpStatusCode)statusCode)));
+
+        var ex = await Record.ExceptionAsync(
+            () => service.CreateTransactionAsync(MinimalRequest()));
+
+        Assert.IsAssignableFrom<ElavonApiException>(ex);
+    }
+
+    /// <summary>
+    /// Verifies that transport failures are also catchable as <see cref="ElavonApiException"/>.
+    /// </summary>
+    [Fact(DisplayName = "TransportFailure IsCatchableAsElavonApiException")]
+    public async Task TransportFailure_IsCatchableAsElavonApiException()
+    {
+        var service = CreateService(_ => throw new HttpRequestException("offline"));
 
         var ex = await Record.ExceptionAsync(
             () => service.CreateTransactionAsync(MinimalRequest()));

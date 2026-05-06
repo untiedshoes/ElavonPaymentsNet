@@ -97,6 +97,11 @@ public sealed class ElavonPaymentsClient
     /// Initialises the client with a provided <see cref="HttpClient"/>.
     /// Use this overload when managing the client lifetime via <c>IHttpClientFactory</c>.
     /// </summary>
+    /// <remarks>
+    /// This overload assumes your <see cref="HttpClient"/> pipeline is already configured safely.
+    /// Do not attach custom retry handlers that retry non-GET requests, as that can create
+    /// duplicate financial operations if a POST was processed before transport failure.
+    /// </remarks>
     /// <param name="options">Client configuration including credentials and environment.</param>
     /// <param name="httpClient">The preconfigured HTTP client used for all SDK requests.</param>
     public ElavonPaymentsClient(ElavonPaymentsClientOptions options, HttpClient httpClient)

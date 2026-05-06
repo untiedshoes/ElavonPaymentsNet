@@ -43,14 +43,29 @@ internal sealed class ElavonApiClient
         where TResponse : class
     {
         using var request = BuildRequest(method, path, payload, bearerToken);
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new ElavonTransportException("HTTP request timed out before a response was received.", ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new ElavonTransportException("HTTP transport failed before a response was received.", ex);
+        }
 
-        var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        using (response)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
-        if (!response.IsSuccessStatusCode)
-            ThrowApiException(response, body);
+            if (!response.IsSuccessStatusCode)
+                ThrowApiException(response, body);
 
-        return Deserialise<TResponse>(body, response.StatusCode);
+            return Deserialise<TResponse>(body, response.StatusCode);
+        }
     }
 
     /// <summary>Sends a request with no request body and deserialises the response.</summary>
@@ -58,14 +73,29 @@ internal sealed class ElavonApiClient
         where TResponse : class
     {
         using var request = BuildRequest<object>(method, path, null, bearerToken);
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new ElavonTransportException("HTTP request timed out before a response was received.", ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new ElavonTransportException("HTTP transport failed before a response was received.", ex);
+        }
 
-        var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        using (response)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
-        if (!response.IsSuccessStatusCode)
-            ThrowApiException(response, body);
+            if (!response.IsSuccessStatusCode)
+                ThrowApiException(response, body);
 
-        return Deserialise<TResponse>(body, response.StatusCode);
+            return Deserialise<TResponse>(body, response.StatusCode);
+        }
     }
 
     /// <summary>Sends a request and does not attempt to deserialise a response body (e.g. 204 No Content).</summary>
@@ -73,12 +103,27 @@ internal sealed class ElavonApiClient
         where TRequest : class
     {
         using var request = BuildRequest(method, path, payload, bearerToken);
-        using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-        if (!response.IsSuccessStatusCode)
+        HttpResponseMessage response;
+        try
         {
-            var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            ThrowApiException(response, body);
+            response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new ElavonTransportException("HTTP request timed out before a response was received.", ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new ElavonTransportException("HTTP transport failed before a response was received.", ex);
+        }
+
+        using (response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                ThrowApiException(response, body);
+            }
         }
     }
 

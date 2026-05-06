@@ -264,7 +264,9 @@ The SDK makes the **conservative choice** at every decision point:
 
 This follows the same reasoning used by major payment SDKs (e.g. Stripe .NET), which also never retry POST requests automatically.
 
-- **Exception translation happens once, at the HTTP boundary** — `ElavonApiClient` catches all raw infrastructure exceptions (`HttpRequestException`, `JsonException`, non-success HTTP responses) and converts them into typed `ElavonApiException` derivatives before they reach any service method. By the time an exception surfaces to the caller it has already been classified and carries structured information (`HttpStatusCode`, `ErrorCode`, `RawResponse`). Service methods therefore contain no try-catch blocks — not because error handling was omitted, but because it was already done at the correct layer. Adding catch blocks in services would re-wrap already-typed exceptions, losing information and introducing a second translation layer where none is needed.
+- **Exception translation happens once, at the HTTP boundary** — `ElavonApiClient` maps transport failures (`HttpRequestException`, timeout-like `TaskCanceledException`), JSON parse failures, and non-success HTTP responses into typed `ElavonApiException` derivatives before they reach any service method. By the time an exception surfaces to the caller it has already been classified and carries structured information (`HttpStatusCode`, `ErrorCode`, `RawResponse`, and `TransportException` for transport faults). Service methods therefore contain no try-catch blocks — not because error handling was omitted, but because it was already done at the correct layer. Adding catch blocks in services would re-wrap already-typed exceptions, losing information and introducing a second translation layer where none is needed.
+
+- **Custom HttpClient pipelines must preserve POST safety** — if you construct `ElavonPaymentsClient` with your own `HttpClient`, ensure no handler retries non-GET methods. A retry policy that replays POST requests can create duplicate financial operations when the gateway processed the first attempt but the response was lost.
 
 ---
 

@@ -505,23 +505,6 @@ ElavonLoggingHandler → ElavonAuthenticationHandler → ElavonResilienceHandler
 
 ---
 
-## Versioning
-
-This SDK follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) independently of the underlying Opayo PI API version.
-
-| Change | Version bump |
-|---|---|
-| Bug fix, no behaviour change | PATCH |
-| New method, new optional property, new response field | MINOR |
-| Removed/renamed public type, changed method signature | MAJOR |
-| Opayo ships `/api/v2` and the SDK integrates it | MAJOR |
-
-When a new MAJOR is released, the previous MAJOR enters **maintenance mode** — critical and security fixes only.
-
-See [CHANGELOG.md](CHANGELOG.md) for the full release history.
-
----
-
 ## SDK Service Reference
 
 All methods are `async` and accept a `CancellationToken`. Each service group has a corresponding interface.
@@ -946,6 +929,23 @@ Use a custom server URL only if you explicitly need non-default routing (for exa
 
 - [Opayo PI REST API Reference](https://developer.elavon.com/products/en-uk/opayo/v1/api-reference)
 - [Microsoft.Extensions.Http](https://learn.microsoft.com/en-us/dotnet/core/extensions/httpclient-factory)
+
+---
+
+## Versioning
+
+This SDK follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) independently of the underlying Opayo PI API version.
+
+| Change | Version bump |
+|---|---|
+| Bug fix, no behaviour change | PATCH |
+| New method, new optional property, new response field | MINOR |
+| Removed/renamed public type, changed method signature | MAJOR |
+| Opayo ships `/api/v2` and the SDK integrates it | MAJOR |
+
+When a new MAJOR is released, the previous MAJOR enters **maintenance mode** — critical and security fixes only.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 ---
 

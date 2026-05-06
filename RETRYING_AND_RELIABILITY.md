@@ -118,7 +118,7 @@ POST /transactions  →  timeout / 5xx / connection reset
 ### Recommended Recovery Pattern
 
 1. **Do not retry the POST** immediately.
-2. **Reconcile the unknown outcome** using `ReconcileUnknownCreateOutcomeAsync` with your persisted `VendorTxCode -> transactionId` mapping.
+2. **Reconcile the unknown outcome** using `ResolveUnknownTransactionAsync` with your persisted `VendorTxCode -> transactionId` mapping.
 3. **Inspect the status** returned to determine what actually happened.
 4. **Act on confirmed state**, not on the exception type.
 
@@ -131,7 +131,7 @@ try
 catch (ElavonApiException ex) when (ex is ElavonServerException or { HttpStatusCode: 0 })
 {
     // Unknown state — do NOT retry blindly
-  // ReconcileUnknownCreateOutcomeAsync before acting
+  // ResolveUnknownTransactionAsync before acting
 }
 ```
 
@@ -228,7 +228,7 @@ A 5xx or network exception on a **POST** means the operation may or may not have
 ElavonServerException on POST
   → Transaction status: unknown
   → Do NOT retry the POST
-  → DO reconcile via ReconcileUnknownCreateOutcomeAsync
+  → DO reconcile via ResolveUnknownTransactionAsync
   → Act only on confirmed state
 ```
 
@@ -244,7 +244,7 @@ ElavonServerException on POST
 3c. 402      → Card declined. Present to user. Do not retry.
 3d. 429      → Wait RetryAfter seconds. Retry the same request.
 3e. 5xx / network error →
-  4. ReconcileUnknownCreateOutcomeAsync(vendorTxCode, resolver).
+  4. ResolveUnknownTransactionAsync(vendorTxCode, resolver).
       5a. Found + Authorised  → Payment executed. Record. Do not charge again.
       5b. Found + Failed      → Payment failed cleanly. Safe to retry with new VendorTxCode.
       5c. Not found           → Payment did not execute. Safe to retry with new VendorTxCode.
@@ -286,7 +286,7 @@ Exception thrown on GET
 
 Exception thrown on POST
   → "A write was attempted. It may have executed."
-  → ReconcileUnknownCreateOutcomeAsync to determine actual state before acting.
+  → ResolveUnknownTransactionAsync to determine actual state before acting.
 ```
 
 Think of it this way: **an exception from a POST is not a failure report — it is a question mark.**
@@ -330,7 +330,7 @@ catch (ElavonApiException ex) when (ex.HttpStatusCode >= 500)
 // ✅ Reconcile to confirm state before deciding to retry
 catch (ElavonServerException)
 {
-  var txStatus = await client.Transactions.ReconcileUnknownCreateOutcomeAsync(
+  var txStatus = await client.Transactions.ResolveUnknownTransactionAsync(
     request.VendorTxCode,
     async (vendorTxCode, ct) => await orderStore.TryGetTransactionIdByVendorTxCodeAsync(vendorTxCode, ct));
 

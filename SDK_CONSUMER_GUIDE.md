@@ -1325,7 +1325,7 @@ public sealed class SafeCheckoutService
         {
             // Unknown state: operation may have executed.
             // Reconcile using persisted vendorTxCode -> transactionId mapping.
-            var reconciled = await _client.Transactions.ReconcileUnknownCreateOutcomeAsync(
+            var reconciled = await _client.Transactions.ResolveUnknownTransactionAsync(
                 vendorTxCode,
                 async (code, token) => await _store.TryGetGatewayTransactionIdAsync(orderId, code, token),
                 ct);
@@ -1339,7 +1339,7 @@ public sealed class SafeCheckoutService
         catch (ElavonServerException)
         {
             // Also unknown state for POST.
-            var reconciled = await _client.Transactions.ReconcileUnknownCreateOutcomeAsync(
+            var reconciled = await _client.Transactions.ResolveUnknownTransactionAsync(
                 vendorTxCode,
                 async (code, token) => await _store.TryGetGatewayTransactionIdAsync(orderId, code, token),
                 ct);

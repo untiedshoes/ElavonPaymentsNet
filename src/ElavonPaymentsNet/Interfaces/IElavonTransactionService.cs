@@ -27,7 +27,7 @@ public interface IElavonTransactionService
     /// <returns>
     /// The retrieved transaction when a mapping is found; otherwise <see langword="null"/>.
     /// </returns>
-    Task<PaymentResponse?> ReconcileUnknownCreateOutcomeAsync(
+    Task<PaymentResponse?> ResolveUnknownTransactionAsync(
         string vendorTxCode,
         Func<string, CancellationToken, Task<string?>> resolveTransactionIdByVendorTxCode,
         CancellationToken cancellationToken = default);

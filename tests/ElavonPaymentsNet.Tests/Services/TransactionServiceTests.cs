@@ -193,7 +193,7 @@ public sealed class TransactionServiceTests
             return ServiceTestHelpers.Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-recon\",\"status\":\"Ok\"}");
         });
 
-        var response = await service.ReconcileUnknownCreateOutcomeAsync(
+        var response = await service.ResolveUnknownTransactionAsync(
             "ORDER-RECON-1",
             (vendorTxCode, _) => Task.FromResult<string?>(vendorTxCode == "ORDER-RECON-1" ? "tx-recon" : null));
 
@@ -214,7 +214,7 @@ public sealed class TransactionServiceTests
             return Task.FromResult(ServiceTestHelpers.Json(HttpStatusCode.OK, "{\"transactionId\":\"tx\",\"status\":\"Ok\"}"));
         });
 
-        var response = await service.ReconcileUnknownCreateOutcomeAsync(
+        var response = await service.ResolveUnknownTransactionAsync(
             "ORDER-RECON-2",
             (_, _) => Task.FromResult<string?>(null));
 
@@ -229,6 +229,6 @@ public sealed class TransactionServiceTests
             _ => Task.FromResult(ServiceTestHelpers.Json(HttpStatusCode.OK, "{\"transactionId\":\"tx\",\"status\":\"Ok\"}")));
 
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
-            service.ReconcileUnknownCreateOutcomeAsync("ORDER-RECON-3", null!));
+            service.ResolveUnknownTransactionAsync("ORDER-RECON-3", null!));
     }
 }

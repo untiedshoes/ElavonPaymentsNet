@@ -52,7 +52,7 @@ internal sealed class ElavonTransactionService : IElavonTransactionService
     /// Reconciles an unknown create-transaction outcome by resolving the transaction ID from
     /// a stable vendor transaction code, then retrieving the authoritative gateway state.
     /// </summary>
-    public async Task<PaymentResponse?> ReconcileUnknownCreateOutcomeAsync(string vendorTxCode,Func<string, CancellationToken, Task<string?>> resolveTransactionIdByVendorTxCode,CancellationToken cancellationToken = default)
+    public async Task<PaymentResponse?> ResolveUnknownTransactionAsync(string vendorTxCode,Func<string, CancellationToken, Task<string?>> resolveTransactionIdByVendorTxCode,CancellationToken cancellationToken = default)
     {
         Guard.VendorTxCode(vendorTxCode, nameof(vendorTxCode));
         ArgumentNullException.ThrowIfNull(resolveTransactionIdByVendorTxCode);

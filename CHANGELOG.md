@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `IElavonTransactionService.ReconcileUnknownCreateOutcomeAsync` — deterministic resolution path for unknown POST outcomes (e.g. after a transport failure on `CreateTransactionAsync`).
+- `IElavonTransactionService.ResolveUnknownTransactionAsync` — deterministic resolution path for unknown POST outcomes (e.g. after a transport failure on `CreateTransactionAsync`).
 - `ElavonTransportException` — typed exception for network/timeout failures that occur before an HTTP response is received. Inherits `ElavonApiException`; exposes the originating `TransportException` property.
 - `IElavonInstructionsService.GetInstructionsAsync` — retrieves the instruction history for a transaction via `GET /transactions/{id}/instructions`.
 - `InstructionCollectionResponse` response model.

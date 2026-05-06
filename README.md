@@ -435,12 +435,12 @@ catch (ElavonAuthenticationException)
 }
 catch (ElavonServerException)
 {
-    // 5xx -- unknown state on POST; reconcile via ReconcileUnknownCreateOutcomeAsync before retrying
+    // 5xx -- unknown state on POST; reconcile via ResolveUnknownTransactionAsync before retrying
 }
 catch (ElavonTransportException ex)
 {
     // Network failure or timeout -- no HTTP response received
-    // On POST: the request may or may not have reached the gateway; use ReconcileUnknownCreateOutcomeAsync
+    // On POST: the request may or may not have reached the gateway; use ResolveUnknownTransactionAsync
     // Inner cause is available via ex.TransportException
 }
 catch (ElavonApiException ex)

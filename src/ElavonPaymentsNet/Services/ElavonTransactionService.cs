@@ -28,6 +28,7 @@ internal sealed class ElavonTransactionService : IElavonTransactionService
     public async Task<PaymentResponse> CreateTransactionAsync(CreateTransactionRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        Guard.VendorTxCode(request.VendorTxCode, nameof(request.VendorTxCode));
 
         var dto = RequestMapper.ToDto(request);
         return await _api.SendAsync<CreateTransactionRequestDto, PaymentResponse>(
@@ -45,5 +46,23 @@ internal sealed class ElavonTransactionService : IElavonTransactionService
         return await _api.SendAsync<PaymentResponse>(
             HttpMethod.Get, ElavonApiRoutes.TransactionById(transactionId), null, cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Reconciles an unknown create-transaction outcome by resolving the transaction ID from
+    /// a stable vendor transaction code, then retrieving the authoritative gateway state.
+    /// </summary>
+    public async Task<PaymentResponse?> ReconcileUnknownCreateOutcomeAsync(string vendorTxCode,Func<string, CancellationToken, Task<string?>> resolveTransactionIdByVendorTxCode,CancellationToken cancellationToken = default)
+    {
+        Guard.VendorTxCode(vendorTxCode, nameof(vendorTxCode));
+        ArgumentNullException.ThrowIfNull(resolveTransactionIdByVendorTxCode);
+
+        var transactionId = await resolveTransactionIdByVendorTxCode(vendorTxCode, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (string.IsNullOrWhiteSpace(transactionId))
+            return null;
+
+        return await RetrieveTransactionAsync(transactionId, cancellationToken).ConfigureAwait(false);
     }
 }

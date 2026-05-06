@@ -434,7 +434,7 @@ catch (ElavonAuthenticationException)
 }
 catch (ElavonServerException)
 {
-    // 5xx -- unknown state on POST; query by VendorTxCode before retrying
+    // 5xx -- unknown state on POST; reconcile via ReconcileUnknownCreateOutcomeAsync before retrying
 }
 catch (ElavonApiException ex)
 {

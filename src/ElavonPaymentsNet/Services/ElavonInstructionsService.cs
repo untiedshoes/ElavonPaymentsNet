@@ -34,4 +34,18 @@ internal sealed class ElavonInstructionsService : IElavonInstructionsService
             HttpMethod.Post, ElavonApiRoutes.TransactionInstructions(transactionId), request, null, cancellationToken)
             .ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// Retrieves the history of instructions applied to an existing transaction.
+    /// </summary>
+    /// <param name="transactionId">The Elavon transaction ID to query.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    public async Task<InstructionCollectionResponse> GetInstructionsAsync(string transactionId, CancellationToken cancellationToken = default)
+    {
+        Guard.NotNullOrWhiteSpace(transactionId, nameof(transactionId));
+
+        return await _api.SendAsync<InstructionCollectionResponse>(
+            HttpMethod.Get, ElavonApiRoutes.TransactionInstructions(transactionId), null, cancellationToken)
+            .ConfigureAwait(false);
+    }
 }

@@ -162,7 +162,7 @@ Use CreateTransactionAsync with TransactionType to perform Payment, Deferred, Au
 var payment = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Payment,
-    VendorTxCode = $"PAY-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"PAY-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 1000,
     Currency = "GBP",
     Description = "Card payment",
@@ -184,7 +184,7 @@ var payment = await client.Transactions.CreateTransactionAsync(new CreateTransac
 var deferred = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Deferred,
-    VendorTxCode = $"DEF-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"DEF-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 1000,
     Currency = "GBP",
     Description = "Deferred payment",
@@ -206,7 +206,7 @@ var deferred = await client.Transactions.CreateTransactionAsync(new CreateTransa
 var authenticate = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Authenticate,
-    VendorTxCode = $"AUTHN-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"AUTHN-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 100,
     Currency = "GBP",
     Description = "Authenticate cardholder",
@@ -230,7 +230,7 @@ Requires RelatedTransactionId and usually MIT credential metadata.
 var repeat = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Repeat,
-    VendorTxCode = $"REP-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"REP-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 1000,
     Currency = "GBP",
     RelatedTransactionId = "PREVIOUS_TX_ID",
@@ -249,7 +249,7 @@ var repeat = await client.Transactions.CreateTransactionAsync(new CreateTransact
 var refundTx = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Refund,
-    VendorTxCode = $"RFD-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"RFD-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 500,
     Currency = "GBP",
     RelatedTransactionId = "ORIGINAL_TX_ID",
@@ -263,7 +263,7 @@ var refundTx = await client.Transactions.CreateTransactionAsync(new CreateTransa
 var authorise = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Authorise,
-    VendorTxCode = $"AUTH-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"AUTH-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 1000,
     Currency = "GBP",
     Description = "Authorise then capture later",
@@ -430,7 +430,7 @@ var refund = await client.PostPayments.RefundTransactionAsync(
     new RefundPaymentRequest
     {
         Amount = 500,
-        VendorTxCode = $"RFD-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+        VendorTxCode = $"RFD-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
         Description = "Partial refund"
     });
 ```
@@ -461,7 +461,7 @@ References:
 ```csharp
 var tokenPayment = await client.Tokens.PayWithTokenAsync(new PayWithTokenRequest
 {
-    VendorTxCode = $"TOK-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"TOK-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 1000,
     Currency = "GBP",
     Token = "STORED_TOKEN"

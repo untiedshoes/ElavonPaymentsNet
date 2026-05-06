@@ -34,6 +34,9 @@ public sealed class CardIdentifiersIntegrationTests
 
         Assert.NotNull(response);
         Assert.False(string.IsNullOrWhiteSpace(response.CardIdentifier));
+        Assert.Matches(
+            @"(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            response.CardIdentifier!);
         Assert.False(string.IsNullOrWhiteSpace(response.Expiry));
         Assert.False(string.IsNullOrWhiteSpace(response.CardType));
     }

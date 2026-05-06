@@ -82,4 +82,21 @@ public sealed class TokensServiceTests
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => service.PayWithTokenAsync(null!));
     }
+
+    [Fact(DisplayName = "PayWithToken BlankVendorTxCode ThrowsArgumentException")]
+    public async Task PayWithToken_BlankVendorTxCode_ThrowsArgumentException()
+    {
+        var service = ServiceTestHelpers.CreateTokensService(
+            _ => Task.FromResult(ServiceTestHelpers.Json(HttpStatusCode.OK, "{}")));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.PayWithTokenAsync(new PayWithTokenRequest
+        {
+            VendorTxCode = " ",
+            Amount       = 200,
+            Currency     = "GBP",
+            Token        = "tok_abc"
+        }));
+
+        Assert.Equal("VendorTxCode", ex.ParamName);
+    }
 }

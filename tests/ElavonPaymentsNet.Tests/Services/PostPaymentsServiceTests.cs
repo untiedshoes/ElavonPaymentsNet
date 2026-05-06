@@ -154,4 +154,20 @@ public sealed class PostPaymentsServiceTests
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => service.RefundTransactionAsync("tx-123", null!));
     }
+
+    [Fact(DisplayName = "Refund BlankVendorTxCode ThrowsArgumentException")]
+    public async Task Refund_BlankVendorTxCode_ThrowsArgumentException()
+    {
+        var service = ServiceTestHelpers.CreatePostPaymentService(
+            _ => Task.FromResult(ServiceTestHelpers.Json(HttpStatusCode.OK, "{}")));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.RefundTransactionAsync("tx-123", new RefundPaymentRequest
+        {
+            Amount       = 25,
+            VendorTxCode = " ",
+            Description  = "refund"
+        }));
+
+        Assert.Equal("VendorTxCode", ex.ParamName);
+    }
 }

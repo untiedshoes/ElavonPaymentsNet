@@ -15,4 +15,11 @@ public interface IElavonInstructionsService
     /// <param name="request">The instruction to apply, including type and optional amount.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     Task<InstructionResponse> CreateInstructionAsync(string transactionId, InstructionRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves the history of instructions applied to an existing transaction.
+    /// </summary>
+    /// <param name="transactionId">The Elavon transaction ID to query.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    Task<InstructionCollectionResponse> GetInstructionsAsync(string transactionId, CancellationToken cancellationToken = default);
 }

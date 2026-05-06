@@ -58,6 +58,7 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
     {
         ArgumentNullException.ThrowIfNull(request);
         Guard.NotNullOrWhiteSpace(transactionId, nameof(transactionId));
+        Guard.VendorTxCode(request.VendorTxCode, nameof(request.VendorTxCode));
 
         var response = await _api.SendAsync<CreateTransactionRequestDto, PaymentResponse>(HttpMethod.Post, ElavonApiRoutes.Transactions,
             new CreateTransactionRequestDto

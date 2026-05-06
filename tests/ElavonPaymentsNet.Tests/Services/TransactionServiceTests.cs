@@ -161,4 +161,74 @@ public sealed class TransactionServiceTests
         var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.RetrieveTransactionAsync(null!));
         Assert.Equal("transactionId", ex.ParamName);
     }
+
+    [Fact(DisplayName = "CreateTransaction BlankVendorTxCode ThrowsArgumentException")]
+    public async Task CreateTransaction_BlankVendorTxCode_ThrowsArgumentException()
+    {
+        var service = ServiceTestHelpers.CreateTransactionService(
+            _ => Task.FromResult(ServiceTestHelpers.Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-1\",\"status\":\"Ok\"}")));
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.CreateTransactionAsync(new CreateTransactionRequest
+        {
+            TransactionType = TransactionType.Payment,
+            VendorTxCode    = " ",
+            Amount          = 100,
+            Currency        = "GBP",
+            PaymentMethod   = new PaymentMethod
+            {
+                Card = new CardDetails { CardNumber = "4929000000006", ExpiryDate = "1229" }
+            }
+        }));
+
+        Assert.Equal("VendorTxCode", ex.ParamName);
+    }
+
+    [Fact(DisplayName = "ReconcileUnknownCreateOutcome FoundMapping ReturnsTransaction")]
+    public async Task ReconcileUnknownCreateOutcome_FoundMapping_ReturnsTransaction()
+    {
+        HttpRequestMessage? captured = null;
+        var service = ServiceTestHelpers.CreateTransactionService(async request =>
+        {
+            captured = request;
+            return ServiceTestHelpers.Json(HttpStatusCode.OK, "{\"transactionId\":\"tx-recon\",\"status\":\"Ok\"}");
+        });
+
+        var response = await service.ReconcileUnknownCreateOutcomeAsync(
+            "ORDER-RECON-1",
+            (vendorTxCode, _) => Task.FromResult<string?>(vendorTxCode == "ORDER-RECON-1" ? "tx-recon" : null));
+
+        Assert.NotNull(response);
+        Assert.Equal("tx-recon", response!.TransactionId);
+        Assert.NotNull(captured);
+        Assert.Equal(HttpMethod.Get, captured!.Method);
+        Assert.Equal("/transactions/tx-recon", captured.RequestUri!.AbsolutePath);
+    }
+
+    [Fact(DisplayName = "ReconcileUnknownCreateOutcome MissingMapping ReturnsNull")]
+    public async Task ReconcileUnknownCreateOutcome_MissingMapping_ReturnsNull()
+    {
+        var callCount = 0;
+        var service = ServiceTestHelpers.CreateTransactionService(_ =>
+        {
+            callCount++;
+            return Task.FromResult(ServiceTestHelpers.Json(HttpStatusCode.OK, "{\"transactionId\":\"tx\",\"status\":\"Ok\"}"));
+        });
+
+        var response = await service.ReconcileUnknownCreateOutcomeAsync(
+            "ORDER-RECON-2",
+            (_, _) => Task.FromResult<string?>(null));
+
+        Assert.Null(response);
+        Assert.Equal(0, callCount);
+    }
+
+    [Fact(DisplayName = "ReconcileUnknownCreateOutcome NullResolver ThrowsArgumentNullException")]
+    public async Task ReconcileUnknownCreateOutcome_NullResolver_ThrowsArgumentNullException()
+    {
+        var service = ServiceTestHelpers.CreateTransactionService(
+            _ => Task.FromResult(ServiceTestHelpers.Json(HttpStatusCode.OK, "{\"transactionId\":\"tx\",\"status\":\"Ok\"}")));
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.ReconcileUnknownCreateOutcomeAsync("ORDER-RECON-3", null!));
+    }
 }

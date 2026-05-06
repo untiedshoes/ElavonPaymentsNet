@@ -4,6 +4,7 @@ using ElavonPaymentsNet.Mapping;
 using ElavonPaymentsNet.Models.Internal.Dto;
 using ElavonPaymentsNet.Models.Public.Requests;
 using ElavonPaymentsNet.Models.Public.Responses;
+using ElavonPaymentsNet.Validation;
 
 namespace ElavonPaymentsNet.Services;
 
@@ -38,6 +39,7 @@ internal sealed class ElavonTokensService : IElavonTokensService
     public async Task<PaymentResponse> PayWithTokenAsync(PayWithTokenRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        Guard.VendorTxCode(request.VendorTxCode, nameof(request.VendorTxCode));
 
         var dto = RequestMapper.ToDto(request);
         return await _api.SendAsync<PayWithTokenRequestDto, PaymentResponse>(

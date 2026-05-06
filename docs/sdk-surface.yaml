@@ -89,6 +89,17 @@ operations:
       request: docs/schema/transactions/deferred-payment.request.json
       response: docs/schema/transactions/deferred-payment.response.json
 
+  retrieveTransaction:
+    group: Payments
+    method: GET
+    path: /transactions/{transactionId}
+    host: api
+    notes: >
+      Retrieves an existing transaction by its Elavon-assigned transaction ID.
+
+    dto:
+      response: PaymentResponseDto
+
 ---
 
   # ============================================
@@ -144,6 +155,18 @@ operations:
       request: docs/schema/postpayment/void.request.json
       response: docs/schema/postpayment/void.response.json
 
+  getInstructions:
+    group: PostPayment
+    method: GET
+    path: /transactions/{transactionId}/instructions
+    host: api
+    notes: >
+      Returns the full history of instructions applied to the given transaction.
+      The response contains an "instructions" array of instruction objects.
+
+    dto:
+      response: InstructionCollectionResponseDto
+
 ---
 
   # ============================================
@@ -177,6 +200,40 @@ operations:
     schema:
       request: docs/schema/threeds/complete.request.json
       response: docs/schema/threeds/complete.response.json
+
+---
+
+  # ============================================
+  # CARD IDENTIFIERS
+  # ============================================
+
+  createCardIdentifier:
+    group: CardIdentifiers
+    method: POST
+    path: /card-identifiers
+    host: merchantSession
+    auth: Bearer (merchant session key)
+    notes: >
+      Tokenizes card details on behalf of the client-side drop-in UI.
+      Requires a valid merchant session key as a Bearer token.
+      Returns a cardIdentifier (UUID), expiry, and card type.
+
+    dto:
+      request: CreateCardIdentifierRequestDto
+      response: CreateCardIdentifierResponseDto
+
+  linkCardIdentifier:
+    group: CardIdentifiers
+    method: POST
+    path: /card-identifiers/{cardIdentifier}/security-code
+    host: merchantSession
+    auth: Basic
+    notes: >
+      Links a CVV/CV2 security code to an existing reusable card identifier.
+      Uses Basic auth (integration key + password), not Bearer.
+
+    dto:
+      request: LinkCardIdentifierRequestDto
 
 ---
 

@@ -13,4 +13,22 @@ public interface IElavonTransactionService
     /// <param name="transactionId">The Elavon-assigned transaction ID to retrieve.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     Task<PaymentResponse> RetrieveTransactionAsync(string transactionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reconciles an unknown POST outcome using <paramref name="vendorTxCode"/> and a caller-supplied
+    /// lookup function that resolves the Elavon transaction ID in your own persistence layer.
+    /// </summary>
+    /// <param name="vendorTxCode">The stable vendor transaction code used on the original POST attempt.</param>
+    /// <param name="resolveTransactionIdByVendorTxCode">
+    /// A function that returns the Elavon transaction ID associated with the supplied vendorTxCode,
+    /// or <see langword="null"/> if no mapping is known yet.
+    /// </param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>
+    /// The retrieved transaction when a mapping is found; otherwise <see langword="null"/>.
+    /// </returns>
+    Task<PaymentResponse?> ReconcileUnknownCreateOutcomeAsync(
+        string vendorTxCode,
+        Func<string, CancellationToken, Task<string?>> resolveTransactionIdByVendorTxCode,
+        CancellationToken cancellationToken = default);
 }

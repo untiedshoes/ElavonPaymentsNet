@@ -95,7 +95,7 @@ using ElavonPaymentsNet.Models.Public.Requests;
 var payment = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Payment,
-    VendorTxCode = $"ORDER-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"ORDER-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 1000,
     Currency = "GBP",
     Description = "Online order",
@@ -145,7 +145,7 @@ Use this when you need to reserve funds now and capture later (for example, ship
 var authorise = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Authorise,
-    VendorTxCode = $"AUTH-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"AUTH-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 2500,
     Currency = "GBP",
     PaymentMethod = new PaymentMethod
@@ -193,7 +193,7 @@ Use this when you need a deferred transaction lifecycle and intend to release/ca
 var deferred = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Deferred,
-    VendorTxCode = $"DEF-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"DEF-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 5000,
     Currency = "GBP",
     Description = "Deferred order",
@@ -225,7 +225,7 @@ Use this for subsequent charges based on a previous successful transaction refer
 var repeat = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Repeat,
-    VendorTxCode = $"REP-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"REP-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 1000,
     Currency = "GBP",
     Description = "Recurring payment",
@@ -241,7 +241,7 @@ Use this when you want to authenticate the cardholder through 3DS without placin
 var authenticate = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Authenticate,
-    VendorTxCode = $"AUTH-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"AUTH-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 0,
     Currency = "GBP",
     Description = "Card verification",
@@ -290,7 +290,7 @@ Use this when creating a standalone refund transaction linked to a previous tran
 var refund = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Refund,
-    VendorTxCode = $"RFND-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"RFND-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 1000,
     Currency = "GBP",
     Description = "Customer refund",
@@ -474,7 +474,7 @@ var refund = await client.PostPayments.RefundTransactionAsync(
     new RefundPaymentRequest
     {
         Amount = 1000,
-        VendorTxCode = $"REF-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+        VendorTxCode = $"REF-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
         Description = "Customer refund"
     });
 ```
@@ -581,7 +581,7 @@ Pass the MSK and card identifier in `PaymentMethod.Card` instead of raw card det
 var paymentByIdentifier = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Payment,
-    VendorTxCode = $"CARDID-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"CARDID-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 1000,
     Currency = "GBP",
     PaymentMethod = new PaymentMethod
@@ -624,7 +624,7 @@ var token = await client.Tokens.CreateTokenAsync(new CreateTokenRequest
 ```csharp
 var tokenPayment = await client.Tokens.PayWithTokenAsync(new PayWithTokenRequest
 {
-    VendorTxCode = $"TOK-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"TOK-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 1000,
     Currency = "GBP",
     Token = token.Token!
@@ -901,7 +901,7 @@ Use these in exception filters (see §11.1) or for logging/alerting.
 var response = await client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
 {
     TransactionType = TransactionType.Payment,
-    VendorTxCode = $"ORDER-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+    VendorTxCode = $"ORDER-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
     Amount = 100,
     Currency = "GBP",
     PaymentMethod = new PaymentMethod
@@ -1014,7 +1014,7 @@ public sealed class CheckoutPaymentService : ICheckoutPaymentService
         var tx = await _client.Transactions.CreateTransactionAsync(new CreateTransactionRequest
         {
             TransactionType = TransactionType.Payment,
-            VendorTxCode = $"ORDER-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}",
+            VendorTxCode = $"ORDER-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}",
             Amount = request.Amount,
             Currency = request.Currency,
             CustomerEmail = request.CustomerEmail,

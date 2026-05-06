@@ -1,20 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
     <RootNamespace>ElavonPaymentsNet</RootNamespace>
     <AssemblyName>ElavonPaymentsNet</AssemblyName>
 
     <!-- NuGet metadata -->
     <PackageId>ElavonPaymentsNet</PackageId>
     <Version>1.0.0</Version>
-    <Authors>Gerald Richards</Authors>
     <Description>A production-grade .NET 10 SDK for the Elavon / Opayo Payments PI REST API.</Description>
     <PackageTags>elavon;opayo;payments;sdk</PackageTags>
     <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/untiedshoes/ElavonPaymentsNet</RepositoryUrl>
+    <PackageReleaseNotes>https://github.com/untiedshoes/ElavonPaymentsNet/blob/main/CHANGELOG.md</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>

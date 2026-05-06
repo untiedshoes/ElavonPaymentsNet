@@ -1,0 +1,16 @@
+<Project>
+
+  <!--
+    Shared MSBuild properties inherited by every project in this solution.
+    Project-specific overrides belong in each .csproj file.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Authors>Gerald Richards</Authors>
+  </PropertyGroup>
+
+</Project>

@@ -403,9 +403,10 @@ All API errors are mapped to typed exceptions -- the raw `HttpResponseMessage` n
 | `ElavonPaymentDeclinedException` | 402 | Card declined by the issuer |
 | `ElavonRateLimitException` | 429 | Too many requests; exposes `RetryAfter` (`TimeSpan?`) |
 | `ElavonServerException` | 5xx | Server-side fault |
+| `ElavonTransportException` | — | Network failure or timeout before any HTTP response was received; exposes the originating `TransportException` |
 | `ElavonApiException` | any | Base class; catch-all for unmapped status codes |
 
-All exceptions expose `HttpStatusCode` (as `int`), `RawResponse` (original API body), and optionally `ErrorCode`. All are catchable as `ElavonApiException`.
+All exceptions (including `ElavonTransportException`) expose `HttpStatusCode` (as `int`), `RawResponse` (original API body), and optionally `ErrorCode`. All are catchable as `ElavonApiException`.
 
 For a full production pattern (typed exceptions + `StatusKind`) and a complete `ElavonErrorCode` reference table, see [SDK Consumer Guide §11 Error Handling](SDK_CONSUMER_GUIDE.md#11-error-handling).
 
@@ -435,6 +436,12 @@ catch (ElavonAuthenticationException)
 catch (ElavonServerException)
 {
     // 5xx -- unknown state on POST; reconcile via ReconcileUnknownCreateOutcomeAsync before retrying
+}
+catch (ElavonTransportException ex)
+{
+    // Network failure or timeout -- no HTTP response received
+    // On POST: the request may or may not have reached the gateway; use ReconcileUnknownCreateOutcomeAsync
+    // Inner cause is available via ex.TransportException
 }
 catch (ElavonApiException ex)
 {
@@ -495,6 +502,23 @@ ElavonLoggingHandler → ElavonAuthenticationHandler → ElavonResilienceHandler
 - The Opayo API has no `Idempotency-Key` mechanism, so POST retry cannot be made safe by the SDK.
 
 > For the full retry policy, failure semantics, idempotency limitation, unknown-state recovery patterns, and production flow guidance, see **[RETRYING_AND_RELIABILITY.md](RETRYING_AND_RELIABILITY.md)**.
+
+---
+
+## Versioning
+
+This SDK follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) independently of the underlying Opayo PI API version.
+
+| Change | Version bump |
+|---|---|
+| Bug fix, no behaviour change | PATCH |
+| New method, new optional property, new response field | MINOR |
+| Removed/renamed public type, changed method signature | MAJOR |
+| Opayo ships `/api/v2` and the SDK integrates it | MAJOR |
+
+When a new MAJOR is released, the previous MAJOR enters **maintenance mode** — critical and security fixes only.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 ---
 
@@ -645,7 +669,8 @@ src/
     |       +-- ApiErrorResponse.cs          # API error payload (internal)
     |       +-- Dto/ApiDtos.cs               # Wire-format DTOs (internal)
     +-- Mapping/
-    |   +-- RequestMapper.cs                 # Injects transactionType string into DTOs (internal)
+    |   +-- RequestMapper.cs                 # Public request models → internal DTOs (internal)
+    |   +-- ResponseMapper.cs                # Internal DTOs → public response models (internal)
     +-- Validation/
     |   +-- Guard.cs                         # Shared argument validation helpers for service-layer invariants
     +-- Exceptions/
@@ -655,6 +680,7 @@ src/
     |   +-- ElavonPaymentDeclinedException.cs# 402
     |   +-- ElavonRateLimitException.cs      # 429 -- exposes RetryAfter (TimeSpan?)
     |   +-- ElavonServerException.cs         # 5xx
+    |   +-- ElavonTransportException.cs      # Network/timeout failure before HTTP response; exposes TransportException
     +-- Extensions/
         +-- ServiceCollectionExtensions.cs   # AddElavonPayments(...)
 

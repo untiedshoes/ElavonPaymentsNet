@@ -595,8 +595,7 @@ Returns `InstructionResponse` -- `InstructionType`, `Date`.
 | Method | Description |
 |---|---|
 | `CreateCardIdentifierAsync(merchantSessionKey, request)` | Tokenise card details against an MSK; uses Bearer auth |
-| `LinkCardIdentifierAsync(cardIdentifier, request)` | Link a security code (CVV) to an existing card identifier |
-| `RemoveCardIdentifierAsync(cardIdentifier)` | Delete a card identifier when it is no longer required |
+| `LinkCardIdentifierAsync(cardIdentifier, request)` | Link a security code (CVV) to an existing card identifier; uses Basic auth |
 
 `CreateCardIdentifierAsync` -> `CreateCardIdentifierResponse` -- `CardIdentifier`, `Expiry`, `CardType`.
 `LinkCardIdentifierAsync` -> `Task` (no response body).

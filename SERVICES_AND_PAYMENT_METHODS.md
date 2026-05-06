@@ -102,7 +102,7 @@ The Card Identifier (a temporary, tokenised card detail, where the card is actua
 
 Normally it would be created on the front end, using an AJAX request from your browser, so the card details would never touch your application. For testing and development, the card details can be sent from your test script, emulating the front end, and that is detailed below.
 
-Once created, a card identifier can be linked (verified with the security code), saved for recurring use, or removed when no longer needed. The identifier is used in subsequent transactions instead of raw card data.
+Once created, a card identifier can be linked (verified with the security code) or saved for recurring use. The identifier is used in subsequent transactions instead of raw card data.
 
 References:
 - [Card tokenization guide](https://github.com/academe/opayo-pi/blob/master/README.md)
@@ -134,12 +134,6 @@ await client.CardIdentifiers.LinkCardIdentifierAsync(
     {
         SecurityCode = "123"
     });
-```
-
-### Remove a card identifier
-
-```csharp
-await client.CardIdentifiers.RemoveCardIdentifierAsync(cardId.CardIdentifier!);
 ```
 
 ---

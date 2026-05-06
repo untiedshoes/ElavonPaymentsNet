@@ -40,11 +40,12 @@ public class RequestMapperTests
         Assert.Equal(1000, dto.Amount);
         Assert.Equal("GBP", dto.Currency);
         Assert.Equal("Test payment", dto.Description);
-        Assert.NotNull(dto.PaymentMethod.Card);
-        Assert.Equal("4929000000006", dto.PaymentMethod.Card!.CardNumber);
-        Assert.Equal("1225", dto.PaymentMethod.Card.ExpiryDate);
-        Assert.Equal("123", dto.PaymentMethod.Card.SecurityCode);
-        Assert.Equal("Test User", dto.PaymentMethod.Card.CardholderName);
+        Assert.NotNull(dto.PaymentMethod?.Card);
+        var card = dto.PaymentMethod!.Card!;
+        Assert.Equal("4929000000006", card.CardNumber);
+        Assert.Equal("1225", card.ExpiryDate);
+        Assert.Equal("123", card.SecurityCode);
+        Assert.Equal("Test User", card.CardholderName);
     }
 
     /// <summary>

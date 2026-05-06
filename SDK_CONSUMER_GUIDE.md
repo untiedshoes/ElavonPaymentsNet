@@ -1248,6 +1248,118 @@ Your frontend usually needs to auto-submit the customer to ACS using `AcsUrl` an
 
 #### Backend: callback endpoint receives `cres`
 
+## 15. Production-Safe Checkout Template (Copy/Paste)
+
+This template shows the strict happy/unknown/error paths for payment creation with:
+
+- high-entropy `VendorTxCode` generation
+- no blind POST retries
+- deterministic unknown-outcome reconciliation
+
+```csharp
+using ElavonPaymentsNet;
+using ElavonPaymentsNet.Exceptions;
+using ElavonPaymentsNet.Models.Public;
+using ElavonPaymentsNet.Models.Public.Requests;
+using ElavonPaymentsNet.Models.Public.Responses;
+
+public sealed class SafeCheckoutService
+{
+    private readonly ElavonPaymentsClient _client;
+    private readonly IOrderPaymentStore _store;
+
+    public SafeCheckoutService(ElavonPaymentsClient client, IOrderPaymentStore store)
+    {
+        _client = client;
+        _store = store;
+    }
+
+    public async Task<PaymentResponse> ChargeAsync(string orderId, int amountMinor, string currency, CancellationToken ct)
+    {
+        // Stable business key for this logical attempt.
+        var vendorTxCode = $"ORD-{orderId}-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid().ToString("N")[..8]}";
+
+        var request = new CreateTransactionRequest
+        {
+            TransactionType = TransactionType.Payment,
+            VendorTxCode = vendorTxCode,
+            Amount = amountMinor,
+            Currency = currency,
+            Description = $"Order {orderId}",
+            PaymentMethod = new PaymentMethod
+            {
+                Card = new CardDetails
+                {
+                    CardNumber = "4929000000006",
+                    ExpiryDate = "1229",
+                    SecurityCode = "123",
+                    CardholderName = "Sandbox Tester"
+                }
+            },
+            BillingAddress = new BillingAddress
+            {
+                Address1 = "88",
+                City = "London",
+                PostalCode = "412",
+                Country = "GB"
+            }
+        };
+
+        // Persist the attempt anchor before POST so unknown outcomes are recoverable.
+        await _store.RecordAttemptAsync(orderId, vendorTxCode, ct);
+
+        try
+        {
+            var response = await _client.Transactions.CreateTransactionAsync(request, ct);
+
+            // Persist transactionId for deterministic future reconciliation.
+            await _store.SetGatewayTransactionIdAsync(orderId, vendorTxCode, response.TransactionId, ct);
+            return response;
+        }
+        catch (ElavonValidationException ex) when (ex.ErrorCode == ElavonErrorCode.DuplicateVendorTxCode)
+        {
+            // Regenerate and retry as a new logical attempt only when the gateway explicitly says duplicate.
+            throw new InvalidOperationException("Duplicate VendorTxCode detected. Regenerate for a new attempt.", ex);
+        }
+        catch (ElavonTransportException)
+        {
+            // Unknown state: operation may have executed.
+            // Reconcile using persisted vendorTxCode -> transactionId mapping.
+            var reconciled = await _client.Transactions.ReconcileUnknownCreateOutcomeAsync(
+                vendorTxCode,
+                async (code, token) => await _store.TryGetGatewayTransactionIdAsync(orderId, code, token),
+                ct);
+
+            if (reconciled is not null)
+                return reconciled;
+
+            // If still unresolved, propagate to caller/workflow for delayed reconciliation.
+            throw;
+        }
+        catch (ElavonServerException)
+        {
+            // Also unknown state for POST.
+            var reconciled = await _client.Transactions.ReconcileUnknownCreateOutcomeAsync(
+                vendorTxCode,
+                async (code, token) => await _store.TryGetGatewayTransactionIdAsync(orderId, code, token),
+                ct);
+
+            if (reconciled is not null)
+                return reconciled;
+
+            throw;
+        }
+    }
+}
+
+public interface IOrderPaymentStore
+{
+    Task RecordAttemptAsync(string orderId, string vendorTxCode, CancellationToken ct);
+    Task SetGatewayTransactionIdAsync(string orderId, string vendorTxCode, string? transactionId, CancellationToken ct);
+    Task<string?> TryGetGatewayTransactionIdAsync(string orderId, string vendorTxCode, CancellationToken ct);
+}
+```
+
 ```csharp
 [HttpPost("/webhooks/opayo/3ds")]
 [Consumes("application/x-www-form-urlencoded")]

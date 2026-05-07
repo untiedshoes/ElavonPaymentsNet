@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- `Complete3DsResponse.StatusCode` now uses numeric typing (`int?`) with string-compatible deserialization via `JsonNumberHandling.AllowReadingFromString`.
+- `MerchantRiskIndicator` and `StrongCustomerAuthentication` now reject conflicting dual-alias assignments (raw + typed) with `ArgumentException`.
+- `CaptureTransactionAsync` and `VoidTransactionAsync` now return `PostPaymentResponse.Status = "InstructionAccepted"` (instead of synthetic `"Ok"`) and include an explanatory `StatusDetail` timestamped from the instruction response.
+
+### Added
+
+- Unit coverage for alias conflict behavior and status-code parsing in `ModelAliasAndStatusCodeTests`.
+- Updated service/integration test assertions for the `InstructionAccepted` post-payment status contract.
+
+---
+
 ## [1.0.0] - 2026-05-06
 
 ### Added

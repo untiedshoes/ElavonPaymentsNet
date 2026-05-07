@@ -7,6 +7,8 @@ namespace ElavonPaymentsNet.Models.Public;
 /// Must be included on Payment and Authorise transactions when 3D Secure authentication
 /// is required or may be triggered, so that the issuer can perform a risk-based assessment
 /// and optionally issue a challenge.
+/// For properties that expose both raw and typed aliases, set one style only.
+/// Setting aliases with conflicting values throws <see cref="ArgumentException"/>.
 /// </summary>
 public sealed class StrongCustomerAuthentication
 {
@@ -110,7 +112,7 @@ public sealed class StrongCustomerAuthentication
     public string? ThreeDSExemptionIndicator
     {
         get => _threeDSExemptionIndicator;
-        init => _threeDSExemptionIndicator = value;
+        init => _threeDSExemptionIndicator = SetExemptionIndicatorValue(_threeDSExemptionIndicator, value, nameof(ThreeDSExemptionIndicator));
     }
 
     /// <summary>
@@ -120,7 +122,7 @@ public sealed class StrongCustomerAuthentication
     public ThreeDSExemptionIndicatorType? ThreeDSExemptionIndicatorType
     {
         get => ThreeDsIndicatorMapper.Parse<ThreeDSExemptionIndicatorType>(_threeDSExemptionIndicator);
-        init => _threeDSExemptionIndicator = ThreeDsIndicatorMapper.ToApi(value);
+        init => _threeDSExemptionIndicator = SetExemptionIndicatorValue(_threeDSExemptionIndicator, ThreeDsIndicatorMapper.ToApi(value), nameof(ThreeDSExemptionIndicatorType));
     }
 
     /// <summary>
@@ -130,11 +132,24 @@ public sealed class StrongCustomerAuthentication
     public string? ThreeDSRequestorExemptionIndicator
     {
         get => _threeDSExemptionIndicator;
-        init => _threeDSExemptionIndicator = value;
+        init => _threeDSExemptionIndicator = SetExemptionIndicatorValue(_threeDSExemptionIndicator, value, nameof(ThreeDSRequestorExemptionIndicator));
     }
 
     /// <summary>
     /// Merchant website URL associated with the checkout flow.
     /// </summary>
     public string? Website { get; init; }
+
+    private static string? SetExemptionIndicatorValue(string? currentValue, string? newValue, string sourceProperty)
+    {
+        if (!string.IsNullOrWhiteSpace(currentValue)
+            && !string.IsNullOrWhiteSpace(newValue)
+            && !string.Equals(currentValue, newValue, StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                $"Conflicting values supplied via {sourceProperty}. Set one of ThreeDSExemptionIndicator, ThreeDSExemptionIndicatorType, or ThreeDSRequestorExemptionIndicator.");
+        }
+
+        return newValue;
+    }
 }

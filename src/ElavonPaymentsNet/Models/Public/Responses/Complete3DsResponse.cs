@@ -29,7 +29,8 @@ public sealed class Complete3DsResponse
     public TransactionStatusKind StatusKind => TransactionStatus.ParseKind(Status);
 
     /// <summary>A numeric status code accompanying the status.</summary>
-    public string? StatusCode { get; init; }
+    [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
+    public int? StatusCode { get; init; }
 
     /// <summary>A human-readable description of the status.</summary>
     public string? StatusDetail { get; init; }

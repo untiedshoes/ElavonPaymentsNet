@@ -5,6 +5,8 @@ namespace ElavonPaymentsNet.Models.Public;
 /// <summary>
 /// Merchant-provided risk context for EMV 3DS.
 /// These fields help issuers perform risk-based authentication decisions.
+/// For indicator pairs, set either the raw gateway code property or the typed alias.
+/// Setting both with conflicting values throws <see cref="ArgumentException"/>.
 /// </summary>
 public sealed class MerchantRiskIndicator
 {
@@ -24,7 +26,7 @@ public sealed class MerchantRiskIndicator
     public string? DeliveryTimeframe
     {
         get => _deliveryTimeframe;
-        init => _deliveryTimeframe = value;
+        init => _deliveryTimeframe = SetIndicatorValue(_deliveryTimeframe, value, nameof(DeliveryTimeframe), nameof(DeliveryTimeframeIndicator));
     }
 
     /// <summary>
@@ -34,7 +36,7 @@ public sealed class MerchantRiskIndicator
     public DeliveryTimeframeIndicator? DeliveryTimeframeIndicator
     {
         get => ThreeDsIndicatorMapper.Parse<DeliveryTimeframeIndicator>(_deliveryTimeframe);
-        init => _deliveryTimeframe = ThreeDsIndicatorMapper.ToApi(value);
+        init => _deliveryTimeframe = SetIndicatorValue(_deliveryTimeframe, ThreeDsIndicatorMapper.ToApi(value), nameof(DeliveryTimeframe), nameof(DeliveryTimeframeIndicator));
     }
 
     /// <summary>
@@ -43,7 +45,7 @@ public sealed class MerchantRiskIndicator
     public string? PreOrderPurchaseInd
     {
         get => _preOrderPurchaseInd;
-        init => _preOrderPurchaseInd = value;
+        init => _preOrderPurchaseInd = SetIndicatorValue(_preOrderPurchaseInd, value, nameof(PreOrderPurchaseInd), nameof(PreOrderPurchaseIndicator));
     }
 
     /// <summary>
@@ -53,7 +55,7 @@ public sealed class MerchantRiskIndicator
     public PreOrderPurchaseIndicator? PreOrderPurchaseIndicator
     {
         get => ThreeDsIndicatorMapper.Parse<PreOrderPurchaseIndicator>(_preOrderPurchaseInd);
-        init => _preOrderPurchaseInd = ThreeDsIndicatorMapper.ToApi(value);
+        init => _preOrderPurchaseInd = SetIndicatorValue(_preOrderPurchaseInd, ThreeDsIndicatorMapper.ToApi(value), nameof(PreOrderPurchaseInd), nameof(PreOrderPurchaseIndicator));
     }
 
     /// <summary>
@@ -67,7 +69,7 @@ public sealed class MerchantRiskIndicator
     public string? ReorderItemsInd
     {
         get => _reorderItemsInd;
-        init => _reorderItemsInd = value;
+        init => _reorderItemsInd = SetIndicatorValue(_reorderItemsInd, value, nameof(ReorderItemsInd), nameof(ReorderItemsIndicator));
     }
 
     /// <summary>
@@ -77,7 +79,7 @@ public sealed class MerchantRiskIndicator
     public ReorderItemsIndicator? ReorderItemsIndicator
     {
         get => ThreeDsIndicatorMapper.Parse<ReorderItemsIndicator>(_reorderItemsInd);
-        init => _reorderItemsInd = ThreeDsIndicatorMapper.ToApi(value);
+        init => _reorderItemsInd = SetIndicatorValue(_reorderItemsInd, ThreeDsIndicatorMapper.ToApi(value), nameof(ReorderItemsInd), nameof(ReorderItemsIndicator));
     }
 
     /// <summary>
@@ -86,7 +88,7 @@ public sealed class MerchantRiskIndicator
     public string? ShipIndicator
     {
         get => _shipIndicator;
-        init => _shipIndicator = value;
+        init => _shipIndicator = SetIndicatorValue(_shipIndicator, value, nameof(ShipIndicator), nameof(ShipIndicatorType));
     }
 
     /// <summary>
@@ -96,7 +98,7 @@ public sealed class MerchantRiskIndicator
     public ShipIndicatorType? ShipIndicatorType
     {
         get => ThreeDsIndicatorMapper.Parse<ShipIndicatorType>(_shipIndicator);
-        init => _shipIndicator = ThreeDsIndicatorMapper.ToApi(value);
+        init => _shipIndicator = SetIndicatorValue(_shipIndicator, ThreeDsIndicatorMapper.ToApi(value), nameof(ShipIndicator), nameof(ShipIndicatorType));
     }
 
     /// <summary>
@@ -113,4 +115,17 @@ public sealed class MerchantRiskIndicator
     /// Number of gift cards purchased in this order.
     /// </summary>
     public string? GiftCardCount { get; init; }
+
+    private static string? SetIndicatorValue(string? currentValue, string? newValue, string rawProperty, string typedAliasProperty)
+    {
+        if (!string.IsNullOrWhiteSpace(currentValue)
+            && !string.IsNullOrWhiteSpace(newValue)
+            && !string.Equals(currentValue, newValue, StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                $"Conflicting values supplied. Set either {rawProperty} or {typedAliasProperty}, not both with different values.");
+        }
+
+        return newValue;
+    }
 }

@@ -26,6 +26,8 @@ public sealed class PostPaymentsServiceTests
         var response = await service.CaptureTransactionAsync("tx-123", new CapturePaymentRequest { Amount = 50 });
 
         Assert.Equal("tx-123", response.TransactionId);
+        Assert.Equal("InstructionAccepted", response.Status);
+        Assert.Contains("Release instruction accepted", response.StatusDetail);
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Post, captured!.Method);
         Assert.Equal("/transactions/tx-123/instructions", captured.RequestUri!.AbsolutePath);
@@ -86,6 +88,8 @@ public sealed class PostPaymentsServiceTests
         var response = await service.VoidTransactionAsync("tx-123");
 
         Assert.Equal("tx-123", response.TransactionId);
+        Assert.Equal("InstructionAccepted", response.Status);
+        Assert.Contains("Void instruction accepted", response.StatusDetail);
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Post, captured!.Method);
         Assert.Equal("/transactions/tx-123/instructions", captured.RequestUri!.AbsolutePath);

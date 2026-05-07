@@ -19,6 +19,8 @@ public sealed class PostPaymentsIntegrationTests
 
         Assert.NotNull(result);
         Assert.False(string.IsNullOrWhiteSpace(result.TransactionId));
+        Assert.Equal("InstructionAccepted", result.Status);
+        Assert.Contains("Void instruction accepted", result.StatusDetail);
     }
 
     /// <summary>Verifies that a full refund can be issued via PostPayments.</summary>
@@ -74,5 +76,7 @@ public sealed class PostPaymentsIntegrationTests
 
         Assert.NotNull(result);
         Assert.False(string.IsNullOrWhiteSpace(result.TransactionId));
+        Assert.Equal("InstructionAccepted", result.Status);
+        Assert.Contains("Release instruction accepted", result.StatusDetail);
     }
 }

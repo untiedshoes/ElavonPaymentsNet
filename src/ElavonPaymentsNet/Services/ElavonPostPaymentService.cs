@@ -32,7 +32,7 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
         ArgumentNullException.ThrowIfNull(request);
         Guard.NotNullOrWhiteSpace(transactionId, nameof(transactionId));
 
-        _ = await _api.SendAsync<InstructionRequest, InstructionResponse>(HttpMethod.Post, ElavonApiRoutes.TransactionInstructions(transactionId),
+        var instruction = await _api.SendAsync<InstructionRequest, InstructionResponse>(HttpMethod.Post, ElavonApiRoutes.TransactionInstructions(transactionId),
             new InstructionRequest
             {
                 InstructionType = InstructionType.Release,
@@ -44,7 +44,8 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
         return new PostPaymentResponse
         {
             TransactionId = transactionId,
-            Status = "Ok"
+            Status = "InstructionAccepted",
+            StatusDetail = $"{instruction.InstructionType} instruction accepted at {instruction.Date:O}."
         };
     }
 
@@ -89,7 +90,7 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
     {
         Guard.NotNullOrWhiteSpace(transactionId, nameof(transactionId));
 
-        _ = await _api.SendAsync<InstructionRequest, InstructionResponse>(HttpMethod.Post, ElavonApiRoutes.TransactionInstructions(transactionId),
+        var instruction = await _api.SendAsync<InstructionRequest, InstructionResponse>(HttpMethod.Post, ElavonApiRoutes.TransactionInstructions(transactionId),
             new InstructionRequest
             {
                 InstructionType = InstructionType.Void
@@ -100,7 +101,8 @@ internal sealed class ElavonPostPaymentService : IElavonPostPaymentService
         return new PostPaymentResponse
         {
             TransactionId = transactionId,
-            Status = "Ok"
+            Status = "InstructionAccepted",
+            StatusDetail = $"{instruction.InstructionType} instruction accepted at {instruction.Date:O}."
         };
     }
 }

@@ -52,6 +52,63 @@ builder.Services.AddElavonPayments(options =>
 });
 ```
 
+### TLS Configuration
+
+ElavonPaymentsNet targets .NET 10 and relies on platform-level defaults for TLS version negotiation. On modern Windows, macOS, and Linux platforms, this ensures TLS 1.2 or higher is used when communicating with the Elavon API.
+
+**For most consumers**, no explicit configuration is required.
+
+**For environments with TLS compliance requirements** (e.g. legacy deployments, government/PCI mandates, or organisations enforcing specific protocol versions), you can configure TLS explicitly by providing a pre-configured `HttpClient`:
+
+#### Direct instantiation with TLS 1.2 enforcement
+
+```csharp
+using System.Security.Authentication;
+
+var handler = new HttpClientHandler
+{
+    SslProtocols = SslProtocols.Tls12
+};
+var httpClient = new HttpClient(handler)
+{
+    BaseAddress = new Uri("https://sandbox.opayo.eu.elavon.com/api/v1"),
+    Timeout = TimeSpan.FromSeconds(30)
+};
+
+var client = new ElavonPaymentsClient(options, httpClient);
+```
+
+#### Dependency Injection with TLS 1.2 enforcement
+
+When using `IHttpClientFactory` in a DI container, configure TLS on the `HttpClientHandler` within the pipeline:
+
+```csharp
+using System.Security.Authentication;
+
+services.AddHttpClient(nameof(ElavonPaymentsClient))
+    .ConfigureHttpClient(client =>
+    {
+        client.BaseAddress = new Uri("https://sandbox.opayo.eu.elavon.com/api/v1");
+        client.Timeout = TimeSpan.FromSeconds(30);
+    })
+    .ConfigureHttpMessageHandlerBuilder(handlerBuilder =>
+    {
+        if (handlerBuilder.PrimaryHandler is HttpClientHandler handler)
+        {
+            handler.SslProtocols = SslProtocols.Tls12;
+        }
+    });
+
+services.AddElavonPayments(options =>
+{
+    options.IntegrationKey = builder.Configuration["Elavon:IntegrationKey"]!;
+    options.IntegrationPassword = builder.Configuration["Elavon:IntegrationPassword"]!;
+    options.Environment = ElavonEnvironment.Sandbox;
+});
+```
+
+The SDK will use the configured `HttpClient` and respect the TLS settings you have applied.
+
 ## 3. Service Surface Overview
 
 `ElavonPaymentsClient` exposes:
